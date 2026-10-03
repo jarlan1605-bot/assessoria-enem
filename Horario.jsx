@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import { supabase } from '../supabase'
-import { DIAS, MATERIAS, corDaMateria, indiceDeHoje } from '../constants'
+import { supabase } from './supabase'
+import { DIAS, MATERIAS, corDaMateria, indiceDeHoje } from './constants'
 
 const BLOCO_VAZIO = { dia: 0, inicio: '08:00', fim: '09:00', materia: 'Matemática', conteudo: '' }
 

@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { supabase } from '../supabase'
+import { supabase } from './supabase'
 import {
   NOME_SITE, NOME_MENTOR, INSTAGRAM, FOTO_MENTOR, FOTO_PERFIL, FRASE_LOGIN, FOTOS_AULAS,
-} from '../constants'
+} from './constants'
 import Avatar from './Avatar'
 
 export default function Login() {

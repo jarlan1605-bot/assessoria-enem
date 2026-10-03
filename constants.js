@@ -1,17 +1,28 @@
+import fotoMentor from './foto-mentor.jpg'
+import fotoPerfil from './foto-perfil.jpg'
+import aula1 from './aula-1.jpg'
+import aula2 from './aula-2.jpg'
+import aula3 from './aula-3.jpg'
+import aula4 from './aula-4.jpg'
+import aula5 from './aula-5.jpg'
+import aula6 from './aula-6.jpg'
+import aula7 from './aula-7.jpg'
+import aula8 from './aula-8.jpg'
+
 // Troque aqui o nome que aparece no topo do site
 export const NOME_SITE = 'Mentoria ENEM'
 export const NOME_MENTOR = 'Jarlan'
 export const INSTAGRAM = 'jarlanamed' // sem o @; deixe '' para esconder
 
-// Sua foto: coloque o arquivo na pasta "public" com este nome.
+// Sua foto: arquivos foto-mentor.jpg e foto-perfil.jpg (troque mantendo o nome).
 // Enquanto não houver foto, aparecem as iniciais.
-export const FOTO_MENTOR = '/foto-mentor.jpg'
-export const FOTO_PERFIL = '/foto-perfil.jpg'
+export const FOTO_MENTOR = fotoMentor
+export const FOTO_PERFIL = fotoPerfil
 export const FRASE_LOGIN = 'Seu horário de estudos e seus simulados, tudo num lugar só.'
 
-// Fotos das aulas (pasta public/aulas). Para trocar, substitua os arquivos
-// ou edite esta lista; deixe a lista vazia [] para esconder a faixa.
-export const FOTOS_AULAS = Array.from({ length: 8 }, (_, i) => `/aulas/aula-${i + 1}.jpg`)
+// Fotos das aulas: aula-1.jpg a aula-8.jpg. Para trocar, substitua os arquivos
+// mantendo o nome; deixe a lista vazia [] para esconder a faixa.
+export const FOTOS_AULAS = [aula1, aula2, aula3, aula4, aula5, aula6, aula7, aula8]
 
 export const DIAS = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo']
 

@@ -1,11 +1,11 @@
 import { useEffect, useState, useCallback } from 'react'
 import { supabase, configurado } from './supabase'
 import { NOME_SITE, NOME_MENTOR, FOTO_MENTOR } from './constants'
-import Login from './components/Login'
-import Horario from './components/Horario'
-import Simulados from './components/Simulados'
-import Avatar from './components/Avatar'
-import TrocarSenha from './components/TrocarSenha'
+import Login from './Login'
+import Horario from './Horario'
+import Simulados from './Simulados'
+import Avatar from './Avatar'
+import TrocarSenha from './TrocarSenha'
 
 export default function App() {
   const [sessao, setSessao] = useState(undefined) // undefined = ainda verificando

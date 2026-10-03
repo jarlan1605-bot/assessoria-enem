@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import { supabase } from '../supabase'
-import { AREAS } from '../constants'
+import { supabase } from './supabase'
+import { AREAS } from './constants'
 import Grafico from './Grafico'
 
 const hojeISO = () => {

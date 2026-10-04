@@ -42,8 +42,6 @@ export default function Landing({ onEntrar }) {
 
   const wpp = linkWhatsApp(cfg.whatsapp, `Olá! Vi o site da ${NOME_SITE} e quero saber mais sobre a mentoria.`)
   const insta = cfg.instagram ? `https://ig.me/m/${cfg.instagram.replace('@', '')}` : null
-  const contato = wpp || insta
-  const textoContato = wpp ? 'Falar no WhatsApp' : 'Chamar no Instagram'
 
   return (
     <div className="landing">
@@ -61,8 +59,9 @@ export default function Landing({ onEntrar }) {
           <h1>{cfg.titulo}</h1>
           <p>{cfg.subtitulo}</p>
           <div className="land-ctas">
-            {contato && <a className="botao primario grande-cta" href={contato} target="_blank" rel="noreferrer">{textoContato}</a>}
-            <button className="botao grande-cta" onClick={onEntrar}>Já sou aluno · Entrar</button>
+            {wpp && <a className="botao primario grande-cta" href={wpp} target="_blank" rel="noreferrer">💬 Chamar no WhatsApp</a>}
+            {insta && <a className={wpp ? 'botao grande-cta' : 'botao primario grande-cta'} href={insta} target="_blank" rel="noreferrer">📸 Chamar no Instagram</a>}
+            <button className="botao fantasma grande-cta" onClick={onEntrar}>Já sou aluno · Entrar</button>
           </div>
           {cfg.numeros?.length > 0 && (
             <div className="land-numeros">
@@ -100,7 +99,8 @@ export default function Landing({ onEntrar }) {
                 <h3>{p.nome}</h3>
                 {p.preco && <div className="land-preco">{p.preco}</div>}
                 <ul>{(p.itens || []).map((it, k) => <li key={k}>✓ {it}</li>)}</ul>
-                {contato && <a className="botao primario" href={contato} target="_blank" rel="noreferrer">{p.preco ? 'Quero este plano' : 'Consultar valores'}</a>}
+                {wpp && <a className="botao primario" href={wpp} target="_blank" rel="noreferrer">{p.preco ? 'Quero este plano' : 'Consultar valores'} no WhatsApp</a>}
+                {insta && <a className={wpp ? 'botao' : 'botao primario'} href={insta} target="_blank" rel="noreferrer">{wpp ? 'Ou chamar no Instagram' : p.preco ? 'Quero este plano' : 'Consultar valores no Instagram'}</a>}
               </div>
             ))}
           </div>
@@ -139,8 +139,8 @@ export default function Landing({ onEntrar }) {
         <h2>Bora montar o seu plano?</h2>
         <p>Me chama e eu te explico como funciona a mentoria.</p>
         <div className="land-ctas">
-          {wpp && <a className="botao primario grande-cta" href={wpp} target="_blank" rel="noreferrer">WhatsApp</a>}
-          {insta && <a className="botao grande-cta" href={insta} target="_blank" rel="noreferrer">Instagram @{cfg.instagram.replace('@', '')}</a>}
+          {wpp && <a className="botao primario grande-cta" href={wpp} target="_blank" rel="noreferrer">💬 WhatsApp</a>}
+          {insta && <a className="botao grande-cta" href={insta} target="_blank" rel="noreferrer">📸 Instagram @{cfg.instagram.replace('@', '')}</a>}
         </div>
       </section>
 

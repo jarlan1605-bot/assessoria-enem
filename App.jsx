@@ -9,6 +9,8 @@ import TrocarSenha from './TrocarSenha'
 import Agenda from './Agenda'
 import Aulas from './Aulas'
 import Perfil from './Perfil'
+import Comunidade from './Comunidade'
+import Evolucao from './Evolucao'
 
 export default function App() {
   const [sessao, setSessao] = useState(undefined) // undefined = ainda verificando
@@ -31,7 +33,7 @@ function Painel({ usuario }) {
   const [erro, setErro] = useState('')
   const [alunos, setAlunos] = useState([])
   const [alunoId, setAlunoId] = useState(null)
-  const [aba, setAba] = useState('horario')
+  const [aba, setAba] = useState('comunidade')
   const [trocandoSenha, setTrocandoSenha] = useState(false)
   const [editandoPerfil, setEditandoPerfil] = useState(false)
   const [fotoMentor, setFotoMentor] = useState(null)
@@ -120,6 +122,8 @@ function Painel({ usuario }) {
       <main className="conteudo">
         <nav className="abas" role="tablist">
           {[
+            ['comunidade', '📣', 'Comunidade'],
+            ['evolucao', '📈', 'Evolução'],
             ['horario', '🗓️', 'Horário'],
             ['simulados', '📝', 'Simulados'],
             ehMentor ? ['agenda', '📅', 'Agenda'] : ['aulas', '🎓', 'Marcar aula'],
@@ -136,7 +140,7 @@ function Painel({ usuario }) {
           ))}
         </nav>
 
-        {ehMentor && aba !== 'agenda' && (
+        {ehMentor && !['agenda', 'comunidade'].includes(aba) && (
           <SeletorAluno
             alunos={alunos}
             alunoId={alunoId}
@@ -145,7 +149,9 @@ function Painel({ usuario }) {
           />
         )}
 
-        {aba === 'agenda' && ehMentor ? (
+        {aba === 'comunidade' ? (
+          <Comunidade ehMentor={ehMentor} fotoMentor={fotoDaMarca} />
+        ) : aba === 'agenda' && ehMentor ? (
           <Agenda alunos={alunos} />
         ) : aba === 'aulas' && !ehMentor ? (
           <Aulas perfil={perfil} />
@@ -161,7 +167,9 @@ function Painel({ usuario }) {
           </div>
         ) : alunoAtual ? (
           aba === 'simulados' ? (
-            <Simulados key={alunoAtual.id} alunoId={alunoAtual.id} />
+            <Simulados key={alunoAtual.id} alunoId={alunoAtual.id} onVerEvolucao={() => setAba('evolucao')} />
+          ) : aba === 'evolucao' ? (
+            <Evolucao key={alunoAtual.id} alunoId={alunoAtual.id} ehMentor={ehMentor} onLancar={() => setAba('simulados')} />
           ) : (
             <Horario key={alunoAtual.id} alunoId={alunoAtual.id} editavel={ehMentor} />
           )

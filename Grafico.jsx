@@ -1,10 +1,10 @@
 // Gráfico de linhas simples, sem bibliotecas
 import { useEffect, useRef, useState } from 'react'
 
-const A = 220
 const M = { cima: 14, dir: 16, baixo: 30, esq: 40 }
 
-export default function Grafico({ pontos, series, maximo }) {
+export default function Grafico({ pontos, series, maximo, altura = 220, preenchido = false }) {
+  const A = altura
   // O desenho acompanha a largura real, para as letras não ficarem minúsculas no celular
   const caixa = useRef(null)
   const [L, setL] = useState(560)
@@ -24,7 +24,8 @@ export default function Grafico({ pontos, series, maximo }) {
   const alt = A - M.cima - M.baixo
   const x = (i) => M.esq + (comDados.length === 1 ? larg / 2 : (i / (comDados.length - 1)) * larg)
   const y = (v) => M.cima + alt - (v / maximo) * alt
-  const linhasGrade = maximo === 45 ? [0, 15, 30, 45] : [0, 0.25, 0.5, 0.75, 1].map((f) => Math.round(f * maximo))
+  const linhasGrade =
+    maximo === 45 ? [0, 15, 30, 45] : maximo === 180 ? [0, 45, 90, 135, 180] : [0, 0.25, 0.5, 0.75, 1].map((f) => Math.round(f * maximo))
   const passoRotulo = Math.ceil(comDados.length / Math.max(3, Math.floor(L / 80)))
 
   return (
@@ -58,6 +59,17 @@ export default function Grafico({ pontos, series, maximo }) {
           if (atual.length) trechos.push(atual)
           return (
             <g key={s.chave}>
+              {preenchido &&
+                trechos.map((t, k) =>
+                  t.length > 1 ? (
+                    <polygon
+                      key={'f' + k}
+                      points={`${t[0].split(',')[0]},${y(0)} ${t.join(' ')} ${t[t.length - 1].split(',')[0]},${y(0)}`}
+                      fill={s.cor}
+                      opacity="0.12"
+                    />
+                  ) : null
+                )}
               {trechos.map((t, k) => (
                 <polyline key={k} points={t.join(' ')} fill="none" stroke={s.cor} strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
               ))}

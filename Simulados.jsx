@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from './supabase'
 import { AREAS } from './constants'
-import Grafico from './Grafico'
 
 const hojeISO = () => {
   const d = new Date()
@@ -28,7 +27,7 @@ function media(lista, chave) {
   return valores.reduce((a, b) => a + b, 0) / valores.length
 }
 
-export default function Simulados({ alunoId }) {
+export default function Simulados({ alunoId, onVerEvolucao }) {
   const [simulados, setSimulados] = useState([])
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState('')
@@ -113,7 +112,6 @@ export default function Simulados({ alunoId }) {
   }
 
   const ultimo = simulados[0]
-  const cronologico = [...simulados].reverse()
 
   return (
     <section className="secao">
@@ -218,23 +216,16 @@ export default function Simulados({ alunoId }) {
             </div>
           </div>
 
-          <div className="graficos">
-          <div className="cartao">
-            <h2>Evolução dos acertos</h2>
-            <Grafico pontos={cronologico} series={AREAS} maximo={45} />
-          </div>
-
-          {simulados.some((s) => s.redacao !== null) && (
-            <div className="cartao">
-              <h2>Evolução da redação</h2>
-              <Grafico
-                pontos={cronologico}
-                series={[{ chave: 'redacao', nome: 'Redação', cor: '#7048e8' }]}
-                maximo={1000}
-              />
-            </div>
+          {onVerEvolucao && (
+            <button className="cartao chamada-evolucao" onClick={onVerEvolucao}>
+              <span aria-hidden="true">📈</span>
+              <span>
+                <strong>Ver gráficos e métricas de evolução</strong>
+                <span className="suave pequeno">Subida em cada área, total no ano, redação e área para focar</span>
+              </span>
+              <span className="seta" aria-hidden="true">→</span>
+            </button>
           )}
-          </div>
 
           <div className="cartao">
             <h2>Todos os simulados</h2>

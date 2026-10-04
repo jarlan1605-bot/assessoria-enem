@@ -535,3 +535,38 @@ textarea { resize: vertical; }
   .area-numeros strong { font-size: 17px; }
   .area-numeros div { padding: 6px 7px; }
 }
+
+/* ---------- Equipe (CEO) ---------- */
+.selo-ceo { background: #7048e8; color: #fff; margin-left: 6px; font-size: 10px; vertical-align: 2px; }
+.agenda-acoes { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.select-mentor { width: auto; padding: 7px 10px; font-size: 14px; font-weight: 600; }
+.atendimento-mentor { display: block; font-size: 11px; font-weight: 700; color: var(--suave); }
+.mentores-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.mentor-cartao { border: 1px solid var(--borda); border-radius: 12px; padding: 14px; background: var(--superficie-2); display: flex; flex-direction: column; gap: 12px; }
+.mentor-topo { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.mentor-nome { display: flex; flex-direction: column; min-width: 0; }
+.mentor-nome .pequeno { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mentor-numeros { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.mentor-numeros > * { display: flex; flex-direction: column; background: var(--superficie); border-radius: 8px; padding: 8px; border: 0; font: inherit; color: var(--texto); text-align: left; }
+.mentor-numeros strong { font-size: 20px; font-weight: 800; }
+.mentor-numeros span { font-size: 11px; color: var(--suave); font-weight: 700; }
+.link-num { cursor: pointer; }
+.link-num:hover { outline: 1.5px solid var(--primaria); }
+.mentor-acoes { display: flex; gap: 14px; }
+.alunos-topo { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.alunos-filtros { display: flex; gap: 8px; flex-wrap: wrap; }
+.alunos-filtros input { width: 230px; }
+.alunos-filtros select { width: auto; }
+.tabela-alunos td { vertical-align: middle; }
+.credenciais { border: 2px solid var(--primaria); }
+.credenciais-texto { white-space: pre-wrap; font-family: inherit; font-size: 14px; background: var(--superficie-2); border-radius: 10px; padding: 12px 14px; margin: 0; overflow-wrap: anywhere; }
+a.botao { text-decoration: none; display: inline-flex; align-items: center; }
+@media (max-width: 640px) {
+  .alunos-filtros, .alunos-filtros input, .alunos-filtros select { width: 100%; }
+  .agenda-acoes { width: 100%; }
+  .agenda-acoes .select-mentor { flex: 1; }
+}
+@media (max-width: 640px) {
+  .equipe .comunidade-topo .linha-botoes { width: 100%; }
+  .equipe .comunidade-topo .linha-botoes .botao { flex: 1; width: auto; }
+}

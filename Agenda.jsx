@@ -11,9 +11,16 @@ const hojeISO = () => {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-export default function Agenda({ alunos }) {
+export default function Agenda({ alunos: todosAlunos, ehCeo = false, meuId, equipe = [] }) {
+  const [verMentor, setVerMentor] = useState(meuId) // CEO escolhe de quem ver a agenda
+  const filtrandoMentor = ehCeo && verMentor !== 'todos'
+  const alunos = filtrandoMentor ? todosAlunos.filter((a) => a.mentor_id === verMentor) : todosAlunos
+  const nomeDoMentor = (id) => {
+    const m = equipe.find((x) => x.id === id)
+    return m ? (m.id === meuId ? 'você' : (m.nome || '').split(' ')[0]) : ''
+  }
   const [mes, setMes] = useState(() => inicioDoMes(new Date()))
-  const [itens, setItens] = useState([])
+  const [todosItens, setItens] = useState([])
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState('')
   const [diaSel, setDiaSel] = useState(null)
@@ -21,10 +28,10 @@ export default function Agenda({ alunos }) {
 
   const nomeDoAluno = useCallback(
     (id) => {
-      const a = alunos.find((x) => x.id === id)
+      const a = todosAlunos.find((x) => x.id === id)
       return a ? a.nome || a.email : 'Aluno removido'
     },
-    [alunos]
+    [todosAlunos]
   )
 
   const carregar = useCallback(async () => {
@@ -52,6 +59,11 @@ export default function Agenda({ alunos }) {
     const hoje = new Date()
     setDiaSel(mesmoMes(hoje, mes) ? hoje : null)
   }, [mes])
+
+  const itens = useMemo(
+    () => (filtrandoMentor ? todosItens.filter((a) => a.mentor_id === verMentor) : todosItens),
+    [todosItens, filtrandoMentor, verMentor]
+  )
 
   const porDia = useMemo(() => {
     const m = {}
@@ -116,13 +128,23 @@ export default function Agenda({ alunos }) {
             <button className="botao fantasma pequeno" onClick={() => setMes(inicioDoMes(hoje))}>Hoje</button>
           )}
         </div>
-        {!abrirForm && (
-          <button className="botao primario" onClick={() => setAbrirForm(true)}>+ Abrir horários</button>
-        )}
+        <div className="agenda-acoes">
+          {ehCeo && equipe.length > 1 && (
+            <select className="select-mentor" value={verMentor} onChange={(e) => setVerMentor(e.target.value)} aria-label="Agenda de qual mentor">
+              {equipe.map((m) => <option key={m.id} value={m.id}>{m.id === meuId ? 'Minha agenda' : `Agenda de ${m.nome || 'mentor'}`}</option>)}
+              <option value="todos">Todos os mentores</option>
+            </select>
+          )}
+          {!abrirForm && (
+            <button className="botao primario" onClick={() => setAbrirForm(true)}>+ Abrir horários</button>
+          )}
+        </div>
       </div>
 
       {abrirForm && (
         <FormHorarios
+          mentorAlvo={ehCeo && filtrandoMentor && verMentor !== meuId ? verMentor : null}
+          nomeMentorAlvo={filtrandoMentor ? nomeDoMentor(verMentor) : ''}
           onFechar={() => setAbrirForm(false)}
           onCriado={(primeiraData) => {
             setAbrirForm(false)
@@ -217,7 +239,9 @@ export default function Agenda({ alunos }) {
                   <LinhaAtendimento
                     key={a.id}
                     a={a}
-                    alunos={alunos}
+                    alunos={ehCeo ? todosAlunos.filter((x) => x.mentor_id === a.mentor_id) : alunos}
+                    rotuloMentor={ehCeo && !filtrandoMentor ? nomeDoMentor(a.mentor_id) : ''}
+                    todosAlunos={todosAlunos}
                     nomeDoAluno={nomeDoAluno}
                     onApagar={() => apagar(a)}
                     onLiberar={() => liberar(a)}
@@ -258,18 +282,21 @@ export default function Agenda({ alunos }) {
   )
 }
 
-function LinhaAtendimento({ a, alunos, nomeDoAluno, onApagar, onLiberar, onMarcar }) {
+function LinhaAtendimento({ a, alunos, todosAlunos, rotuloMentor, nomeDoAluno, onApagar, onLiberar, onMarcar }) {
   const [escolhendo, setEscolhendo] = useState(false)
   const passou = new Date(a.inicio).getTime() < Date.now()
 
   return (
     <div className={`atendimento ${a.aluno_id ? 'marcado' : 'livre'} ${passou ? 'passou' : ''}`}>
-      <span className="atendimento-hora">{faixaHorario(a)}</span>
+      <span className="atendimento-hora">
+        {faixaHorario(a)}
+        {rotuloMentor && <span className="atendimento-mentor">{rotuloMentor}</span>}
+      </span>
       <div className="atendimento-info">
         {a.aluno_id ? (
           <span className="atendimento-aluno">
             <Avatar
-              src={alunos.find((x) => x.id === a.aluno_id)?.foto_url}
+              src={todosAlunos.find((x) => x.id === a.aluno_id)?.foto_url}
               nome={nomeDoAluno(a.aluno_id)}
               tamanho={30}
             />
@@ -305,7 +332,7 @@ function LinhaAtendimento({ a, alunos, nomeDoAluno, onApagar, onLiberar, onMarca
   )
 }
 
-function FormHorarios({ onFechar, onCriado }) {
+function FormHorarios({ mentorAlvo, nomeMentorAlvo, onFechar, onCriado }) {
   const [data, setData] = useState(hojeISO())
   const [horas, setHoras] = useState(['19:00'])
   const [duracao, setDuracao] = useState(60)
@@ -325,7 +352,7 @@ function FormHorarios({ onFechar, onCriado }) {
         const [ano, mes, dia] = data.split('-').map(Number)
         const [hh, mm] = h.split(':').map(Number)
         const inicio = new Date(ano, mes - 1, dia + s * 7, hh, mm)
-        if (inicio.getTime() > Date.now()) linhas.push({ inicio: inicio.toISOString(), duracao_min: duracao })
+        if (inicio.getTime() > Date.now()) linhas.push({ inicio: inicio.toISOString(), duracao_min: duracao, ...(mentorAlvo ? { mentor_id: mentorAlvo } : {}) })
       }
     }
     if (!linhas.length) return setErro('Esses horários já passaram. Escolha uma data futura.')
@@ -341,7 +368,7 @@ function FormHorarios({ onFechar, onCriado }) {
 
   return (
     <form className="cartao" onSubmit={salvar}>
-      <h2>Abrir horários para atendimento</h2>
+      <h2>Abrir horários para atendimento{nomeMentorAlvo && nomeMentorAlvo !== 'você' ? ` de ${nomeMentorAlvo}` : ''}</h2>
       <div className="grade-form">
         <label>
           Data

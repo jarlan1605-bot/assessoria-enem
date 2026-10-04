@@ -11,6 +11,8 @@ import Aulas from './Aulas'
 import Perfil from './Perfil'
 import Comunidade from './Comunidade'
 import Evolucao from './Evolucao'
+import Equipe from './Equipe'
+import { gruposPorMentor } from './grupos'
 
 export default function App() {
   const [sessao, setSessao] = useState(undefined) // undefined = ainda verificando
@@ -37,13 +39,23 @@ function Painel({ usuario }) {
   const [trocandoSenha, setTrocandoSenha] = useState(false)
   const [editandoPerfil, setEditandoPerfil] = useState(false)
   const [fotoMentor, setFotoMentor] = useState(null)
+  const [equipe, setEquipe] = useState([]) // mentores e CEO (nome e foto)
 
-  const ehMentor = perfil?.papel === 'mentor'
+  const ehCeo = perfil?.papel === 'ceo'
+  const ehMentor = perfil?.papel === 'mentor' || ehCeo
 
   // Foto que o mentor enviou pelo site (se não houver, usa a foto padrão do site)
   useEffect(() => {
     supabase.rpc('foto_do_mentor').then(({ data }) => setFotoMentor(data || null))
   }, [])
+
+  const carregarEquipe = useCallback(async () => {
+    const { data, error } = await supabase.rpc('equipe_publica')
+    if (!error) setEquipe(data ?? [])
+  }, [])
+  useEffect(() => {
+    carregarEquipe()
+  }, [carregarEquipe])
 
   useEffect(() => {
     supabase
@@ -95,18 +107,24 @@ function Painel({ usuario }) {
   if (!perfil) return <Carregando />
 
   const alunoAtual = ehMentor ? alunos.find((a) => a.id === alunoId) : perfil
-  const fotoDaMarca = (ehMentor ? perfil.foto_url : fotoMentor) || FOTO_MENTOR
+  const meuMentor = !ehMentor ? equipe.find((m) => m.id === perfil.mentor_id) : null
+  const fotoDaMarca = (ehMentor ? perfil.foto_url : meuMentor?.foto_url || fotoMentor) || FOTO_MENTOR
   const primeiroNome = (perfil.nome || '').split(' ')[0] || 'Perfil'
+  const subtitulo = ehCeo
+    ? 'Painel do CEO'
+    : ehMentor
+      ? 'Painel do mentor'
+      : `Olá, ${primeiroNome}!${meuMentor ? ` · Mentor: ${(meuMentor.nome || '').split(' ')[0]}` : ''}`
 
   return (
     <div className="app">
       <header className="topo">
         <div className="topo-marca">
-          <Avatar src={fotoDaMarca} nome={NOME_MENTOR} tamanho={40} />
+          <Avatar src={fotoDaMarca} nome={meuMentor?.nome || NOME_MENTOR} tamanho={40} />
           <div>
             <strong>{NOME_SITE}</strong>
             <span className="suave pequeno">
-              {ehMentor ? 'Painel do mentor' : `Olá, ${primeiroNome}!`}
+              {subtitulo}
             </span>
           </div>
         </div>
@@ -127,6 +145,7 @@ function Painel({ usuario }) {
             ['horario', '🗓️', 'Horário'],
             ['simulados', '📝', 'Simulados'],
             ehMentor ? ['agenda', '📅', 'Agenda'] : ['aulas', '🎓', 'Marcar aula'],
+            ...(ehCeo ? [['equipe', '🏢', 'Equipe']] : []),
           ].map(([id, icone, nome]) => (
             <button
               key={id}
@@ -140,9 +159,12 @@ function Painel({ usuario }) {
           ))}
         </nav>
 
-        {ehMentor && !['agenda', 'comunidade'].includes(aba) && (
+        {ehMentor && !['agenda', 'comunidade', 'equipe'].includes(aba) && (
           <SeletorAluno
             alunos={alunos}
+            equipe={equipe}
+            meuId={perfil.id}
+            ehCeo={ehCeo}
             alunoId={alunoId}
             onEscolher={escolherAluno}
             onRenomeado={carregarAlunos}
@@ -150,20 +172,27 @@ function Painel({ usuario }) {
         )}
 
         {aba === 'comunidade' ? (
-          <Comunidade ehMentor={ehMentor} fotoMentor={fotoDaMarca} />
+          <Comunidade ehMentor={ehMentor} ehCeo={ehCeo} meuId={perfil.id} equipe={equipe} fotoPadrao={fotoDaMarca} />
+        ) : aba === 'equipe' && ehCeo ? (
+          <Equipe meuId={perfil.id} onMudou={() => { carregarAlunos(); carregarEquipe() }} />
         ) : aba === 'agenda' && ehMentor ? (
-          <Agenda alunos={alunos} />
+          <Agenda alunos={alunos} ehCeo={ehCeo} meuId={perfil.id} equipe={equipe} />
         ) : aba === 'aulas' && !ehMentor ? (
           <Aulas perfil={perfil} />
         ) : ehMentor && alunos.length === 0 ? (
           <div className="cartao vazio">
             <h2>Nenhum aluno cadastrado ainda</h2>
-            <p>
-              Crie a conta do aluno no Supabase em <b>Authentication → Users → Add user</b>{' '}
-              (com e-mail e senha, marcando “Auto Confirm User”). Depois clique em
-              “Atualizar lista” e ele aparece aqui.
-            </p>
-            <button className="botao" onClick={carregarAlunos}>Atualizar lista</button>
+            {ehCeo ? (
+              <>
+                <p>Cadastre alunos e mentores na aba <b>Equipe</b>.</p>
+                <button className="botao primario" onClick={() => setAba('equipe')}>Ir para Equipe</button>
+              </>
+            ) : (
+              <>
+                <p>Seus alunos aparecem aqui assim que o CEO cadastrar e vincular eles a você.</p>
+                <button className="botao" onClick={carregarAlunos}>Atualizar lista</button>
+              </>
+            )}
           </div>
         ) : alunoAtual ? (
           aba === 'simulados' ? (
@@ -191,7 +220,7 @@ function Painel({ usuario }) {
   )
 }
 
-function SeletorAluno({ alunos, alunoId, onEscolher, onRenomeado }) {
+function SeletorAluno({ alunos, equipe, meuId, ehCeo, alunoId, onEscolher, onRenomeado }) {
   const aluno = alunos.find((a) => a.id === alunoId)
   const [editando, setEditando] = useState(false)
   const [nome, setNome] = useState('')
@@ -216,11 +245,19 @@ function SeletorAluno({ alunos, alunoId, onEscolher, onRenomeado }) {
       <label className="seletor-rotulo">
         Aluno
         <select value={alunoId ?? ''} onChange={(e) => { onEscolher(e.target.value); setEditando(false) }}>
-          {alunos.map((a) => (
-            <option key={a.id} value={a.id}>
-              {a.nome || a.email}
-            </option>
-          ))}
+          {ehCeo
+            ? gruposPorMentor(alunos, equipe, meuId).map((g) => (
+                <optgroup key={g.id} label={g.rotulo}>
+                  {g.alunos.map((a) => (
+                    <option key={a.id} value={a.id}>{a.nome || a.email}</option>
+                  ))}
+                </optgroup>
+              ))
+            : alunos.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.nome || a.email}
+                </option>
+              ))}
         </select>
       </label>
       {aluno && !editando && (

@@ -41,7 +41,7 @@ function TextoComLinks({ texto }) {
   )
 }
 
-export default function Comunidade({ ehMentor, fotoMentor }) {
+export default function Comunidade({ ehMentor, ehCeo = false, meuId, equipe = [], fotoPadrao }) {
   const [avisos, setAvisos] = useState([])
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState('')
@@ -117,7 +117,11 @@ export default function Comunidade({ ehMentor, fotoMentor }) {
         <div>
           <h2 style={{ margin: 0 }}>Comunidade</h2>
           <p className="suave pequeno" style={{ margin: '2px 0 0' }}>
-            {ehMentor ? 'Avisos, simulados e materiais para todos os alunos.' : `Avisos, simulados e materiais do ${NOME_MENTOR}.`}
+            {ehCeo
+              ? 'Suas publicações vão para todos os alunos. As dos mentores, só para os alunos deles.'
+              : ehMentor
+                ? 'Suas publicações vão para os seus alunos. As do CEO aparecem para todos.'
+                : 'Avisos, simulados e materiais da sua mentoria.'}
           </p>
         </div>
         {ehMentor && !editando && (
@@ -163,17 +167,24 @@ export default function Comunidade({ ehMentor, fotoMentor }) {
           {visiveis.map((a) => {
             const t = TIPOS[a.tipo] ?? TIPOS.aviso
             const novo = Date.now() - new Date(a.criado_em).getTime() < 3 * 86400000
+            const autor = equipe.find((m) => m.id === a.autor_id)
+            const autorNome = autor?.nome || NOME_MENTOR
+            const podeEditar = ehCeo || a.autor_id === meuId
             const imagens = (a.anexos || []).filter(ehImagem)
             const arquivos = (a.anexos || []).filter((x) => !ehImagem(x))
             return (
               <article key={a.id} className={a.fixado ? 'cartao post fixado' : 'cartao post'} style={{ '--cor': t.cor }}>
                 <header className="post-topo">
-                  <Avatar src={fotoMentor} nome={NOME_MENTOR} tamanho={38} />
+                  <Avatar src={autor ? autor.foto_url : fotoPadrao} nome={autorNome} tamanho={38} />
                   <div className="post-autor">
-                    <strong>{NOME_MENTOR}</strong>
+                    <strong>
+                      {autorNome}
+                      {autor?.papel === 'ceo' && <span className="selo selo-ceo">CEO</span>}
+                    </strong>
                     <span className="suave pequeno">
                       {quandoFoi(a.criado_em)}
                       {a.editado_em && ' · editado'}
+                      {ehMentor && autor && (autor.papel === 'ceo' ? ' · para todos os alunos' : ` · para os alunos de ${autor.id === meuId ? 'você' : (autor.nome || '').split(' ')[0]}`)}
                     </span>
                   </div>
                   <div className="post-selos">
@@ -219,7 +230,7 @@ export default function Comunidade({ ehMentor, fotoMentor }) {
                   </div>
                 )}
 
-                {ehMentor && (
+                {ehMentor && podeEditar && (
                   <footer className="post-acoes">
                     <button className="link" onClick={() => alternarFixado(a)}>{a.fixado ? 'desafixar' : 'fixar no topo'}</button>
                     <button className="link" onClick={() => { setEditando(a); window.scrollTo({ top: 0, behavior: 'smooth' }) }}>editar</button>

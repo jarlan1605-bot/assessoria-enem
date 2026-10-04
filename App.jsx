@@ -17,7 +17,6 @@ import Landing from './Landing'
 import Contagem from './Contagem'
 import CadernoErros from './CadernoErros'
 import Redacao from './Redacao'
-import Sisu from './Sisu'
 import Relatorio from './Relatorio'
 import Financeiro from './Financeiro'
 import SiteEditor from './SiteEditor'
@@ -53,7 +52,7 @@ export default function App() {
 }
 
 // Abas que mostram os dados de um aluno (o mentor escolhe o aluno no seletor)
-const POR_ALUNO = ['evolucao', 'horario', 'simulados', 'erros', 'redacao', 'sisu', 'relatorio']
+const POR_ALUNO = ['evolucao', 'horario', 'simulados', 'erros', 'redacao', 'relatorio']
 
 function Painel({ usuario }) {
   const [perfil, setPerfil] = useState(null)
@@ -168,7 +167,6 @@ function Painel({ usuario }) {
         ['simulados', '📝', 'Simulados'],
         ['erros', '📕', 'Caderno de erros'],
         ['redacao', '✍️', 'Redação'],
-        ['sisu', '🎯', 'SISU'],
       ],
     },
     ...(ehCeo
@@ -229,7 +227,6 @@ function Painel({ usuario }) {
       horario: <Horario key={k} alunoId={k} editavel={ehMentor} />,
       erros: <CadernoErros key={k} alunoId={k} ehMentor={ehMentor} />,
       redacao: <Redacao key={k} alunoId={k} ehMentor={ehMentor} alunos={alunos} />,
-      sisu: <Sisu key={k} alunoId={k} ehMentor={ehMentor} />,
       relatorio: <Relatorio key={k} aluno={alunoAtual} ehMentor={ehMentor} equipe={equipe} />,
     }[abaAtual]
   }

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from './supabase'
 import {
   MESES, DIAS_CURTOS, inicioDoMes, somarMeses, mesmoDia, mesmoMes, faixaHorario,
-  diaPorExtenso, chaveDoDia, agruparPorDia, semanasDoMes,
+  diaPorExtenso, chaveDoDia, agruparPorDia, semanasDoMes, linkGoogleAgenda, fimDoAtendimento,
 } from './agenda'
 import Avatar from './Avatar'
 
@@ -322,6 +322,22 @@ function LinhaAtendimento({ a, alunos, todosAlunos, rotuloMentor, nomeDoAluno, o
           <>
             {!a.aluno_id && !passou && alunos.length > 0 && (
               <button className="link" onClick={() => setEscolhendo(true)}>marcar aluno</button>
+            )}
+            {a.aluno_id && !passou && (
+              <a
+                className="link"
+                href={linkGoogleAgenda({
+                  titulo: `Mentoria: ${nomeDoAluno(a.aluno_id)}`,
+                  inicio: a.inicio,
+                  fim: fimDoAtendimento(a),
+                  detalhes: a.tema ? `Assunto: ${a.tema}` : '',
+                })}
+                target="_blank"
+                rel="noreferrer"
+                title="Adicionar ao Google Agenda"
+              >
+                📅
+              </a>
             )}
             {a.aluno_id && <button className="link" onClick={onLiberar}>desmarcar</button>}
             <button className="link perigo" onClick={onApagar}>apagar</button>

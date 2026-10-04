@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from './supabase'
 import { DIAS, MATERIAS, corDaMateria, indiceDeHoje } from './constants'
+import { hojeISO, somarDias } from './agenda'
+import { mapaCheckins, resumoAdesao, sequenciaDeDias } from './adesao'
 
 const BLOCO_VAZIO = { dia: 0, inicio: '08:00', fim: '09:00', materia: 'Matemática', conteudo: '' }
 
@@ -27,7 +29,41 @@ export default function Horario({ alunoId, editavel }) {
   const [form, setForm] = useState(BLOCO_VAZIO)
   const [editandoId, setEditandoId] = useState(null)
   const [salvando, setSalvando] = useState(false)
+  const [checkins, setCheckins] = useState([])
   const hoje = indiceDeHoje()
+  const hojeData = hojeISO()
+  const segunda = somarDias(hojeData, -hoje)
+  const datasDaSemana = DIAS.map((_, i) => somarDias(segunda, i))
+
+  const carregarCheckins = useCallback(async () => {
+    const { data } = await supabase
+      .from('checkins')
+      .select('horario_id, dia, status')
+      .eq('aluno_id', alunoId)
+      .gte('dia', somarDias(hojeISO(), -60))
+    setCheckins(data ?? [])
+  }, [alunoId])
+
+  useEffect(() => {
+    carregarCheckins()
+  }, [carregarCheckins])
+
+  // Aluno marca cada bloco: feito, parcial ou não fez (clicar de novo desmarca)
+  async function marcar(bloco, dia, status) {
+    const atual = checkins.find((c) => c.horario_id === bloco.id && c.dia === dia)
+    const novoStatus = atual?.status === status ? null : status
+    setCheckins((l) => {
+      const resto = l.filter((c) => !(c.horario_id === bloco.id && c.dia === dia))
+      return novoStatus ? [...resto, { horario_id: bloco.id, dia, status: novoStatus }] : resto
+    })
+    const { error } = novoStatus
+      ? await supabase.from('checkins').upsert({ aluno_id: alunoId, horario_id: bloco.id, dia, status: novoStatus }, { onConflict: 'horario_id,dia' })
+      : await supabase.from('checkins').delete().eq('horario_id', bloco.id).eq('dia', dia)
+    if (error) {
+      setErro('Não foi possível salvar o check-in: ' + error.message)
+      carregarCheckins()
+    }
+  }
 
   const carregar = useCallback(async () => {
     const { data, error } = await supabase
@@ -163,6 +199,29 @@ export default function Horario({ alunoId, editavel }) {
         )}
       </div>
 
+      {blocos.length > 0 && (() => {
+        const sem7 = resumoAdesao(blocos, checkins, somarDias(hojeData, -6), hojeData)
+        const seq = sequenciaDeDias(blocos, checkins)
+        return (
+          <div className="cartao adesao">
+            <div className="adesao-item">
+              <span className="adesao-numero">{sem7.pct === null ? '—' : `${sem7.pct}%`}</span>
+              <span className="suave pequeno">do plano cumprido nos últimos 7 dias</span>
+              {sem7.pct !== null && <span className="barra larga"><i style={{ width: `${sem7.pct}%` }} className={sem7.pct < 50 ? 'cheia' : ''} /></span>}
+            </div>
+            <div className="adesao-item">
+              <span className="adesao-numero">{seq > 0 ? `🔥 ${seq}` : '0'}</span>
+              <span className="suave pequeno">{seq === 1 ? 'dia seguido' : 'dias seguidos'} cumprindo o plano</span>
+            </div>
+            <p className="suave pequeno adesao-dica">
+              {editavel
+                ? 'O aluno marca cada bloco como feito, parcial ou não fez. Os dias marcados aparecem aqui.'
+                : 'Ao terminar cada bloco, marque ✓ feito, ½ parcial ou ✗ não fiz. Honestidade aqui ajuda seu mentor a ajustar o plano.'}
+            </p>
+          </div>
+        )
+      })()}
+
       {carregando ? (
         <p className="suave">Carregando…</p>
       ) : blocos.length === 0 ? (
@@ -185,11 +244,26 @@ export default function Horario({ alunoId, editavel }) {
               {porDia[i].length === 0 ? (
                 <p className="suave pequeno dia-livre">Livre</p>
               ) : (
-                porDia[i].map((b) => (
-                  <div key={b.id} className="bloco" style={{ '--cor': corDaMateria(b.materia) }}>
+                porDia[i].map((b) => {
+                  const dataBloco = datasDaSemana[i]
+                  const status = mapaCheckins(checkins)[`${b.id}|${dataBloco}`]
+                  const podeMarcar = !editavel && dataBloco <= hojeData && b.materia !== 'Descanso'
+                  return (
+                  <div key={b.id} className={`bloco ${status ? 'marcado-' + status : ''}`} style={{ '--cor': corDaMateria(b.materia) }}>
                     <span className="bloco-hora">{hhmm(b.inicio)}–{hhmm(b.fim)}</span>
                     <strong className="bloco-materia">{b.materia}</strong>
                     {b.conteudo && <span className="bloco-conteudo">{b.conteudo}</span>}
+                    {podeMarcar ? (
+                      <span className="checkin" role="group" aria-label="Como foi este bloco?">
+                        {[['feito', '✓', 'Feito'], ['parcial', '½', 'Parcial'], ['nao', '✗', 'Não fiz']].map(([k, ic, nome]) => (
+                          <button key={k} className={status === k ? `ck ck-${k} ativo` : `ck ck-${k}`} onClick={() => marcar(b, dataBloco, k)} title={nome} aria-pressed={status === k}>
+                            {ic}
+                          </button>
+                        ))}
+                      </span>
+                    ) : status ? (
+                      <span className={`ck-status ck-${status}`}>{status === 'feito' ? '✓ feito' : status === 'parcial' ? '½ parcial' : '✗ não fez'}</span>
+                    ) : null}
                     {editavel && (
                       <span className="bloco-acoes">
                         <button className="link" onClick={() => editar(b)}>editar</button>
@@ -197,7 +271,8 @@ export default function Horario({ alunoId, editavel }) {
                       </span>
                     )}
                   </div>
-                ))
+                  )
+                })
               )}
             </div>
           ))}

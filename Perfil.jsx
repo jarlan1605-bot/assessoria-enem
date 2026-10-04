@@ -97,6 +97,21 @@ export default function Perfil({ perfil, onAtualizado, onTrocarSenha, onFechar }
 
         <p className="suave pequeno perfil-email">E-mail de acesso: {perfil.email}</p>
 
+        {'mostrar_contagem' in perfil && (
+          <label className="caixa-marcar">
+            <input
+              type="checkbox"
+              checked={perfil.mostrar_contagem !== false}
+              onChange={async (e) => {
+                const v = e.target.checked
+                onAtualizado({ mostrar_contagem: v })
+                await supabase.from('perfis').update({ mostrar_contagem: v }).eq('id', perfil.id)
+              }}
+            />
+            <span>Mostrar a contagem regressiva do ENEM</span>
+          </label>
+        )}
+
         {msg.texto && <p className={msg.tipo === 'erro' ? 'erro' : 'aviso-ok'} role="status">{msg.texto}</p>}
 
         <div className="linha-botoes perfil-rodape">

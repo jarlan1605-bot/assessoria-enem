@@ -13,9 +13,19 @@ import Comunidade from './Comunidade'
 import Evolucao from './Evolucao'
 import Equipe from './Equipe'
 import { gruposPorMentor } from './grupos'
+import Landing from './Landing'
+import Contagem from './Contagem'
+import CadernoErros from './CadernoErros'
+import Redacao from './Redacao'
+import Sisu from './Sisu'
+import Relatorio from './Relatorio'
+import Financeiro from './Financeiro'
+import SiteEditor from './SiteEditor'
 
 export default function App() {
   const [sessao, setSessao] = useState(undefined) // undefined = ainda verificando
+  const [verLogin, setVerLogin] = useState(() => window.location.hash === '#entrar')
+  const forcarSite = new URLSearchParams(window.location.search).has('site')
 
   useEffect(() => {
     if (!configurado) return
@@ -24,29 +34,54 @@ export default function App() {
     return () => data.subscription.unsubscribe()
   }, [])
 
+  useEffect(() => {
+    const aoMudar = () => setVerLogin(window.location.hash === '#entrar')
+    window.addEventListener('hashchange', aoMudar)
+    return () => window.removeEventListener('hashchange', aoMudar)
+  }, [])
+
+  const irParaLogin = () => {
+    if (forcarSite) window.location.href = '/#entrar'
+    else window.location.hash = 'entrar'
+  }
+
   if (!configurado) return <FaltaConfigurar />
+  if (forcarSite) return <Landing onEntrar={irParaLogin} />
   if (sessao === undefined) return <Carregando />
-  if (!sessao) return <Login />
+  if (!sessao) return verLogin ? <Login onVoltar={() => { window.location.hash = '' }} /> : <Landing onEntrar={irParaLogin} />
   return <Painel usuario={sessao.user} />
 }
+
+// Abas que mostram os dados de um aluno (o mentor escolhe o aluno no seletor)
+const POR_ALUNO = ['evolucao', 'horario', 'simulados', 'erros', 'redacao', 'sisu', 'relatorio']
 
 function Painel({ usuario }) {
   const [perfil, setPerfil] = useState(null)
   const [erro, setErro] = useState('')
   const [alunos, setAlunos] = useState([])
   const [alunoId, setAlunoId] = useState(null)
-  const [aba, setAba] = useState('comunidade')
+  const [aba, setAbaEstado] = useState(() => {
+    try { return localStorage.getItem('abaAtual') || 'comunidade' } catch { return 'comunidade' }
+  })
   const [trocandoSenha, setTrocandoSenha] = useState(false)
   const [editandoPerfil, setEditandoPerfil] = useState(false)
   const [fotoMentor, setFotoMentor] = useState(null)
   const [equipe, setEquipe] = useState([]) // mentores e CEO (nome e foto)
+  const [config, setConfig] = useState(null) // data do ENEM etc.
 
   const ehCeo = perfil?.papel === 'ceo'
   const ehMentor = perfil?.papel === 'mentor' || ehCeo
 
+  function setAba(id) {
+    setAbaEstado(id)
+    try { localStorage.setItem('abaAtual', id) } catch { /* sem armazenamento */ }
+    window.scrollTo({ top: 0 })
+  }
+
   // Foto que o mentor enviou pelo site (se não houver, usa a foto padrão do site)
   useEffect(() => {
     supabase.rpc('foto_do_mentor').then(({ data }) => setFotoMentor(data || null))
+    supabase.from('site_config').select('data_enem_1, data_enem_2').eq('id', 1).maybeSingle().then(({ data }) => setConfig(data || null))
   }, [])
 
   const carregarEquipe = useCallback(async () => {
@@ -56,6 +91,11 @@ function Painel({ usuario }) {
   useEffect(() => {
     carregarEquipe()
   }, [carregarEquipe])
+
+  // No celular, o menu rola até a aba aberta
+  useEffect(() => {
+    document.querySelector('.menu-item.ativo')?.scrollIntoView({ inline: 'center', block: 'nearest' })
+  }, [aba, perfil?.id])
 
   useEffect(() => {
     supabase
@@ -89,11 +129,16 @@ function Painel({ usuario }) {
     if (!perfil) return
     if (ehMentor) carregarAlunos()
     else setAlunoId(perfil.id)
-  }, [perfil, ehMentor, carregarAlunos])
+  }, [perfil?.id, ehMentor, carregarAlunos]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function escolherAluno(id) {
     setAlunoId(id)
     try { localStorage.setItem('alunoSelecionado', id) } catch { /* sem armazenamento */ }
+  }
+
+  async function alterarContagem(mostrar) {
+    setPerfil((p) => ({ ...p, mostrar_contagem: mostrar }))
+    await supabase.from('perfis').update({ mostrar_contagem: mostrar }).eq('id', perfil.id)
   }
 
   if (erro) {
@@ -106,6 +151,33 @@ function Painel({ usuario }) {
   }
   if (!perfil) return <Carregando />
 
+  const grupos = [
+    {
+      titulo: 'Mentoria',
+      itens: [
+        ['comunidade', '📣', 'Comunidade'],
+        ehMentor ? ['agenda', '📅', 'Agenda'] : ['aulas', '🎓', 'Marcar aula'],
+        ['relatorio', '📄', 'Relatório'],
+      ],
+    },
+    {
+      titulo: 'Estudos',
+      itens: [
+        ['evolucao', '📈', 'Evolução'],
+        ['horario', '🗓️', 'Horário'],
+        ['simulados', '📝', 'Simulados'],
+        ['erros', '📕', 'Caderno de erros'],
+        ['redacao', '✍️', 'Redação'],
+        ['sisu', '🎯', 'SISU'],
+      ],
+    },
+    ...(ehCeo
+      ? [{ titulo: 'Gestão', itens: [['equipe', '🏢', 'Equipe'], ['financeiro', '💰', 'Financeiro'], ['site', '🌐', 'Página de vendas']] }]
+      : []),
+  ]
+  const abasValidas = grupos.flatMap((g) => g.itens.map((i) => i[0]))
+  const abaAtual = abasValidas.includes(aba) ? aba : 'comunidade'
+
   const alunoAtual = ehMentor ? alunos.find((a) => a.id === alunoId) : perfil
   const meuMentor = !ehMentor ? equipe.find((m) => m.id === perfil.mentor_id) : null
   const fotoDaMarca = (ehMentor ? perfil.foto_url : meuMentor?.foto_url || fotoMentor) || FOTO_MENTOR
@@ -115,17 +187,61 @@ function Painel({ usuario }) {
     : ehMentor
       ? 'Painel do mentor'
       : `Olá, ${primeiroNome}!${meuMentor ? ` · Mentor: ${(meuMentor.nome || '').split(' ')[0]}` : ''}`
+  const porAluno = POR_ALUNO.includes(abaAtual)
+
+  let conteudo
+  if (abaAtual === 'comunidade') {
+    conteudo = <Comunidade ehMentor={ehMentor} ehCeo={ehCeo} meuId={perfil.id} equipe={equipe} fotoPadrao={fotoDaMarca} />
+  } else if (abaAtual === 'equipe') {
+    conteudo = <Equipe meuId={perfil.id} onMudou={() => { carregarAlunos(); carregarEquipe() }} />
+  } else if (abaAtual === 'financeiro') {
+    conteudo = <Financeiro meuId={perfil.id} />
+  } else if (abaAtual === 'site') {
+    conteudo = <SiteEditor />
+  } else if (abaAtual === 'agenda') {
+    conteudo = <Agenda alunos={alunos} ehCeo={ehCeo} meuId={perfil.id} equipe={equipe} />
+  } else if (abaAtual === 'aulas') {
+    conteudo = <Aulas perfil={perfil} />
+  } else if (ehMentor && alunos.length === 0) {
+    conteudo = (
+      <div className="cartao vazio">
+        <h2>Nenhum aluno cadastrado ainda</h2>
+        {ehCeo ? (
+          <>
+            <p>Cadastre alunos e mentores na aba <b>Equipe</b>.</p>
+            <button className="botao primario" onClick={() => setAba('equipe')}>Ir para Equipe</button>
+          </>
+        ) : (
+          <>
+            <p>Seus alunos aparecem aqui assim que o CEO cadastrar e vincular eles a você.</p>
+            <button className="botao" onClick={carregarAlunos}>Atualizar lista</button>
+          </>
+        )}
+      </div>
+    )
+  } else if (!alunoAtual) {
+    conteudo = <Carregando />
+  } else {
+    const k = alunoAtual.id
+    conteudo = {
+      simulados: <Simulados key={k} alunoId={k} onVerEvolucao={() => setAba('evolucao')} />,
+      evolucao: <Evolucao key={k} alunoId={k} ehMentor={ehMentor} onLancar={() => setAba('simulados')} />,
+      horario: <Horario key={k} alunoId={k} editavel={ehMentor} />,
+      erros: <CadernoErros key={k} alunoId={k} ehMentor={ehMentor} />,
+      redacao: <Redacao key={k} alunoId={k} ehMentor={ehMentor} alunos={alunos} />,
+      sisu: <Sisu key={k} alunoId={k} ehMentor={ehMentor} />,
+      relatorio: <Relatorio key={k} aluno={alunoAtual} ehMentor={ehMentor} equipe={equipe} />,
+    }[abaAtual]
+  }
 
   return (
     <div className="app">
-      <header className="topo">
+      <header className="topo nao-imprimir">
         <div className="topo-marca">
           <Avatar src={fotoDaMarca} nome={meuMentor?.nome || NOME_MENTOR} tamanho={40} />
           <div>
             <strong>{NOME_SITE}</strong>
-            <span className="suave pequeno">
-              {subtitulo}
-            </span>
+            <span className="suave pequeno">{subtitulo}</span>
           </div>
         </div>
         <div className="topo-acoes">
@@ -137,75 +253,47 @@ function Painel({ usuario }) {
         </div>
       </header>
 
-      <main className="conteudo">
-        <nav className="abas" role="tablist">
-          {[
-            ['comunidade', '📣', 'Comunidade'],
-            ['evolucao', '📈', 'Evolução'],
-            ['horario', '🗓️', 'Horário'],
-            ['simulados', '📝', 'Simulados'],
-            ehMentor ? ['agenda', '📅', 'Agenda'] : ['aulas', '🎓', 'Marcar aula'],
-            ...(ehCeo ? [['equipe', '🏢', 'Equipe']] : []),
-          ].map(([id, icone, nome]) => (
-            <button
-              key={id}
-              role="tab"
-              aria-selected={aba === id}
-              className={aba === id ? 'aba ativa' : 'aba'}
-              onClick={() => setAba(id)}
-            >
-              {icone} {nome}
-            </button>
+      <div className="layout">
+        <nav className="menu nao-imprimir" aria-label="Seções">
+          {grupos.map((g) => (
+            <div key={g.titulo} className="menu-grupo">
+              <span className="menu-titulo">{g.titulo}</span>
+              {g.itens.map(([id, icone, nome]) => (
+                <button
+                  key={id}
+                  className={abaAtual === id ? 'menu-item ativo' : 'menu-item'}
+                  aria-current={abaAtual === id ? 'page' : undefined}
+                  onClick={() => setAba(id)}
+                >
+                  <span aria-hidden="true">{icone}</span> {nome}
+                </button>
+              ))}
+            </div>
           ))}
         </nav>
 
-        {ehMentor && !['agenda', 'comunidade', 'equipe'].includes(aba) && (
-          <SeletorAluno
-            alunos={alunos}
-            equipe={equipe}
-            meuId={perfil.id}
-            ehCeo={ehCeo}
-            alunoId={alunoId}
-            onEscolher={escolherAluno}
-            onRenomeado={carregarAlunos}
-          />
-        )}
-
-        {aba === 'comunidade' ? (
-          <Comunidade ehMentor={ehMentor} ehCeo={ehCeo} meuId={perfil.id} equipe={equipe} fotoPadrao={fotoDaMarca} />
-        ) : aba === 'equipe' && ehCeo ? (
-          <Equipe meuId={perfil.id} onMudou={() => { carregarAlunos(); carregarEquipe() }} />
-        ) : aba === 'agenda' && ehMentor ? (
-          <Agenda alunos={alunos} ehCeo={ehCeo} meuId={perfil.id} equipe={equipe} />
-        ) : aba === 'aulas' && !ehMentor ? (
-          <Aulas perfil={perfil} />
-        ) : ehMentor && alunos.length === 0 ? (
-          <div className="cartao vazio">
-            <h2>Nenhum aluno cadastrado ainda</h2>
-            {ehCeo ? (
-              <>
-                <p>Cadastre alunos e mentores na aba <b>Equipe</b>.</p>
-                <button className="botao primario" onClick={() => setAba('equipe')}>Ir para Equipe</button>
-              </>
-            ) : (
-              <>
-                <p>Seus alunos aparecem aqui assim que o CEO cadastrar e vincular eles a você.</p>
-                <button className="botao" onClick={carregarAlunos}>Atualizar lista</button>
-              </>
-            )}
+        <main className="conteudo">
+          <div className="nao-imprimir">
+            <Contagem config={config} visivel={perfil.mostrar_contagem !== false} onAlterar={alterarContagem} />
           </div>
-        ) : alunoAtual ? (
-          aba === 'simulados' ? (
-            <Simulados key={alunoAtual.id} alunoId={alunoAtual.id} onVerEvolucao={() => setAba('evolucao')} />
-          ) : aba === 'evolucao' ? (
-            <Evolucao key={alunoAtual.id} alunoId={alunoAtual.id} ehMentor={ehMentor} onLancar={() => setAba('simulados')} />
-          ) : (
-            <Horario key={alunoAtual.id} alunoId={alunoAtual.id} editavel={ehMentor} />
-          )
-        ) : (
-          <Carregando />
-        )}
-      </main>
+
+          {ehMentor && porAluno && (
+            <div className="nao-imprimir">
+              <SeletorAluno
+                alunos={alunos}
+                equipe={equipe}
+                meuId={perfil.id}
+                ehCeo={ehCeo}
+                alunoId={alunoId}
+                onEscolher={escolherAluno}
+                onRenomeado={carregarAlunos}
+              />
+            </div>
+          )}
+
+          {conteudo}
+        </main>
+      </div>
 
       {editandoPerfil && (
         <Perfil

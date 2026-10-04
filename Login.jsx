@@ -5,7 +5,7 @@ import {
 } from './constants'
 import Avatar from './Avatar'
 
-export default function Login() {
+export default function Login({ onVoltar }) {
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [erro, setErro] = useState('')
@@ -91,6 +91,11 @@ export default function Login() {
             </button>
           </form>
           <p className="suave pequeno centro">Use o e-mail e a senha que seu mentor enviou.</p>
+          {onVoltar && (
+            <p className="centro pequeno" style={{ marginTop: 8 }}>
+              <button type="button" className="link" onClick={onVoltar}>← Conhecer a mentoria</button>
+            </p>
+          )}
         </div>
       </div>
 

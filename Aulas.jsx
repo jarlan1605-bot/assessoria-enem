@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from './supabase'
 import {
   MESES, inicioDoMes, somarMeses, mesmoMes, faixaHorario, diaPorExtenso, chaveDoDia,
-  agruparPorDia, podeCancelar, HORAS_PARA_CANCELAR,
+  agruparPorDia, podeCancelar, HORAS_PARA_CANCELAR, linkGoogleAgenda, fimDoAtendimento,
 } from './agenda'
 
 export default function Aulas({ perfil }) {
@@ -120,6 +120,19 @@ export default function Aulas({ perfil }) {
                 {a.tema && <span className="suave pequeno">{a.tema}</span>}
               </div>
               <div className="atendimento-acoes">
+                <a
+                  className="link"
+                  href={linkGoogleAgenda({
+                    titulo: 'Aula de mentoria ENEM',
+                    inicio: a.inicio,
+                    fim: fimDoAtendimento(a),
+                    detalhes: a.tema ? `Assunto: ${a.tema}` : '',
+                  })}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  📅 Google Agenda
+                </a>
                 {podeCancelar(a) ? (
                   <button className="link perigo" onClick={() => cancelar(a)}>cancelar</button>
                 ) : (

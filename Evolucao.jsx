@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { supabase } from './supabase'
 import { AREAS } from './constants'
 import Grafico from './Grafico'
+import Metas from './Metas'
 
 const MESES_CURTOS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
 const REDACAO = { chave: 'redacao', nome: 'Redação', cor: '#7048e8' }
@@ -39,6 +40,25 @@ export default function Evolucao({ alunoId, ehMentor, onLancar }) {
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState('')
   const [ano, setAno] = useState(new Date().getFullYear())
+  const [redacoes, setRedacoes] = useState([]) // redações corrigidas pelo mentor
+
+  useEffect(() => {
+    supabase
+      .from('redacoes')
+      .select('id, corrigida_em, c1, c2, c3, c4, c5, tema')
+      .eq('aluno_id', alunoId)
+      .eq('status', 'corrigida')
+      .then(({ data }) =>
+        setRedacoes(
+          (data ?? []).map((r) => ({
+            id: 'r' + r.id,
+            data: (r.corrigida_em || '').slice(0, 10),
+            nome: r.tema ? `Redação: ${r.tema}` : 'Redação corrigida',
+            redacao: (r.c1 ?? 0) + (r.c2 ?? 0) + (r.c3 ?? 0) + (r.c4 ?? 0) + (r.c5 ?? 0),
+          }))
+        )
+      )
+  }, [alunoId])
 
   useEffect(() => {
     setCarregando(true)
@@ -76,7 +96,10 @@ export default function Evolucao({ alunoId, ehMentor, onLancar }) {
   const porMes = MESES_CURTOS.map((_, m) => doAno.filter((s) => Number(s.data.slice(5, 7)) === m + 1).length)
   const maxMes = Math.max(1, ...porMes)
   const estTotal = estatisticas(doAno, 'total')
-  const estRedacao = estatisticas(doAno, 'redacao')
+  // Redação: notas dos simulados + redações corrigidas pelo mentor
+  const pontosRedacao = [...doAno.filter((s) => s.redacao !== null), ...redacoes.filter((r) => Number(r.data.slice(0, 4)) === ano)]
+    .sort((a, b) => a.data.localeCompare(b.data))
+  const estRedacao = estatisticas(pontosRedacao, 'redacao')
   const estAreas = AREAS.map((a) => ({ ...a, est: estatisticas(doAno, a.chave) }))
   const comMedia = estAreas.filter((a) => a.est)
   const foco = comMedia.length > 1 ? comMedia.reduce((p, a) => (a.est.media < p.est.media ? a : p)) : null
@@ -109,6 +132,9 @@ export default function Evolucao({ alunoId, ehMentor, onLancar }) {
           </p>
           {!ehMentor && onLancar && <button className="botao primario" onClick={onLancar}>Lançar simulado</button>}
         </div>
+      ) : null}
+      {doAno.length === 0 ? (
+        <Metas alunoId={alunoId} simulados={[]} ehMentor={ehMentor} />
       ) : (
         <>
           <div className="resumo-cartoes resumo-evolucao">
@@ -159,6 +185,8 @@ export default function Evolucao({ alunoId, ehMentor, onLancar }) {
             </div>
           )}
 
+          <Metas alunoId={alunoId} simulados={doAno} redacoes={redacoes.filter((r) => Number(r.data.slice(0, 4)) === ano)} ehMentor={ehMentor} />
+
           <div className="areas-grade">
             {estAreas.map((a) => (
               <div key={a.chave} className="cartao area-cartao" style={{ '--cor': a.cor }}>
@@ -195,7 +223,7 @@ export default function Evolucao({ alunoId, ehMentor, onLancar }) {
             <div className="cartao">
               <h2>Redação</h2>
               {estRedacao ? (
-                <Grafico pontos={doAno} series={[REDACAO]} maximo={1000} preenchido />
+                <Grafico pontos={pontosRedacao} series={[REDACAO]} maximo={1000} preenchido />
               ) : (
                 <p className="suave pequeno">Nenhuma redação lançada em {ano}.</p>
               )}

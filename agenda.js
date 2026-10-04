@@ -56,3 +56,23 @@ export function semanasDoMes(mes) {
 
 export const podeCancelar = (a) =>
   new Date(a.inicio).getTime() - Date.now() >= HORAS_PARA_CANCELAR * 3600000
+
+// Link "Adicionar ao Google Agenda" (o celular avisa antes da aula)
+const paraGoogle = (d) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')
+export function linkGoogleAgenda({ titulo, inicio, fim, detalhes = '' }) {
+  const p = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: titulo,
+    dates: `${paraGoogle(new Date(inicio))}/${paraGoogle(new Date(fim))}`,
+    details: detalhes,
+  })
+  return `https://calendar.google.com/calendar/render?${p.toString()}`
+}
+
+// Data de hoje no formato AAAA-MM-DD (fuso do aparelho)
+export const hojeISO = (d = new Date()) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+export const somarDias = (iso, n) => {
+  const [a, m, d] = iso.split('-').map(Number)
+  return hojeISO(new Date(a, m - 1, d + n))
+}

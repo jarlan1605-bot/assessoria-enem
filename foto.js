@@ -66,3 +66,18 @@ export async function removerFoto(userId) {
   if (error) throw new Error('Não foi possível remover a foto: ' + error.message)
   apagarFotosAntigas(userId, null).catch(() => {})
 }
+
+// Reduz fotos grandes (ex.: foto da redação pelo celular) mantendo a leitura nítida
+export async function reduzirImagem(arquivo, maximo = 1800) {
+  if (!arquivo.type.startsWith('image/')) return arquivo
+  const img = await carregarImagem(arquivo)
+  const escala = Math.min(1, maximo / Math.max(img.width, img.height))
+  const canvas = document.createElement('canvas')
+  canvas.width = Math.round(img.width * escala)
+  canvas.height = Math.round(img.height * escala)
+  const ctx = canvas.getContext('2d')
+  ctx.imageSmoothingQuality = 'high'
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+  const blob = await new Promise((ok) => canvas.toBlob(ok, 'image/jpeg', 0.85))
+  return blob ? new File([blob], arquivo.name.replace(/\.\w+$/, '') + '.jpg', { type: 'image/jpeg' }) : arquivo
+}

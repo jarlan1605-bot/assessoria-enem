@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 export default function Avatar({ src, nome, tamanho = 40 }) {
   const [falhou, setFalhou] = useState(!src)
+  useEffect(() => setFalhou(!src), [src])
+
   const iniciais = (nome || '?')
     .split(' ')
     .filter(Boolean)

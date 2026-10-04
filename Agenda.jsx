@@ -4,6 +4,7 @@ import {
   MESES, DIAS_CURTOS, inicioDoMes, somarMeses, mesmoDia, mesmoMes, faixaHorario,
   diaPorExtenso, chaveDoDia, agruparPorDia, semanasDoMes,
 } from './agenda'
+import Avatar from './Avatar'
 
 const hojeISO = () => {
   const d = new Date()
@@ -238,7 +239,10 @@ export default function Agenda({ alunos }) {
               const pct = limite ? Math.min(100, (al.usados / limite) * 100) : 0
               return (
                 <div key={al.id} className="por-aluno-linha">
-                  <span className="por-aluno-nome">{al.nome || al.email}</span>
+                  <span className="por-aluno-nome">
+                    <Avatar src={al.foto_url} nome={al.nome || al.email} tamanho={26} />
+                    <span>{al.nome || al.email}</span>
+                  </span>
                   <span className="barra" aria-hidden="true"><i style={{ width: `${pct}%` }} className={al.usados >= limite ? 'cheia' : ''} /></span>
                   <span className="por-aluno-num">{al.usados} de {limite}</span>
                 </div>
@@ -263,10 +267,17 @@ function LinhaAtendimento({ a, alunos, nomeDoAluno, onApagar, onLiberar, onMarca
       <span className="atendimento-hora">{faixaHorario(a)}</span>
       <div className="atendimento-info">
         {a.aluno_id ? (
-          <>
-            <strong>{nomeDoAluno(a.aluno_id)}</strong>
-            {a.tema && <span className="suave pequeno">{a.tema}</span>}
-          </>
+          <span className="atendimento-aluno">
+            <Avatar
+              src={alunos.find((x) => x.id === a.aluno_id)?.foto_url}
+              nome={nomeDoAluno(a.aluno_id)}
+              tamanho={30}
+            />
+            <span className="atendimento-aluno-texto">
+              <strong>{nomeDoAluno(a.aluno_id)}</strong>
+              {a.tema && <span className="suave pequeno">{a.tema}</span>}
+            </span>
+          </span>
         ) : (
           <span className="suave">{passou ? 'Não reservado' : 'Livre'}</span>
         )}

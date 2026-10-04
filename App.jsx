@@ -8,6 +8,7 @@ import Avatar from './Avatar'
 import TrocarSenha from './TrocarSenha'
 import Agenda from './Agenda'
 import Aulas from './Aulas'
+import Perfil from './Perfil'
 
 export default function App() {
   const [sessao, setSessao] = useState(undefined) // undefined = ainda verificando
@@ -32,8 +33,15 @@ function Painel({ usuario }) {
   const [alunoId, setAlunoId] = useState(null)
   const [aba, setAba] = useState('horario')
   const [trocandoSenha, setTrocandoSenha] = useState(false)
+  const [editandoPerfil, setEditandoPerfil] = useState(false)
+  const [fotoMentor, setFotoMentor] = useState(null)
 
   const ehMentor = perfil?.papel === 'mentor'
+
+  // Foto que o mentor enviou pelo site (se não houver, usa a foto padrão do site)
+  useEffect(() => {
+    supabase.rpc('foto_do_mentor').then(({ data }) => setFotoMentor(data || null))
+  }, [])
 
   useEffect(() => {
     supabase
@@ -85,21 +93,26 @@ function Painel({ usuario }) {
   if (!perfil) return <Carregando />
 
   const alunoAtual = ehMentor ? alunos.find((a) => a.id === alunoId) : perfil
+  const fotoDaMarca = (ehMentor ? perfil.foto_url : fotoMentor) || FOTO_MENTOR
+  const primeiroNome = (perfil.nome || '').split(' ')[0] || 'Perfil'
 
   return (
     <div className="app">
       <header className="topo">
         <div className="topo-marca">
-          <Avatar src={FOTO_MENTOR} nome={NOME_MENTOR} tamanho={40} />
+          <Avatar src={fotoDaMarca} nome={NOME_MENTOR} tamanho={40} />
           <div>
             <strong>{NOME_SITE}</strong>
             <span className="suave pequeno">
-              {ehMentor ? 'Painel do mentor' : `Olá, ${perfil.nome || 'aluno'}!`}
+              {ehMentor ? 'Painel do mentor' : `Olá, ${primeiroNome}!`}
             </span>
           </div>
         </div>
         <div className="topo-acoes">
-          <button className="botao fantasma" onClick={() => setTrocandoSenha(true)}>Trocar senha</button>
+          <button className="botao-perfil" onClick={() => setEditandoPerfil(true)} aria-label="Meu perfil">
+            <Avatar src={perfil.foto_url} nome={perfil.nome || perfil.email} tamanho={32} />
+            <span className="botao-perfil-texto">Meu perfil</span>
+          </button>
           <button className="botao fantasma" onClick={() => supabase.auth.signOut()}>Sair</button>
         </div>
       </header>
@@ -157,6 +170,14 @@ function Painel({ usuario }) {
         )}
       </main>
 
+      {editandoPerfil && (
+        <Perfil
+          perfil={perfil}
+          onAtualizado={(mudancas) => setPerfil((p) => ({ ...p, ...mudancas }))}
+          onTrocarSenha={() => { setEditandoPerfil(false); setTrocandoSenha(true) }}
+          onFechar={() => setEditandoPerfil(false)}
+        />
+      )}
       {trocandoSenha && <TrocarSenha onFechar={() => setTrocandoSenha(false)} />}
     </div>
   )
@@ -179,6 +200,11 @@ function SeletorAluno({ alunos, alunoId, onEscolher, onRenomeado }) {
 
   return (
     <section className="cartao seletor">
+      {aluno && (
+        <span className="seletor-avatar">
+          <Avatar src={aluno.foto_url} nome={aluno.nome || aluno.email} tamanho={44} />
+        </span>
+      )}
       <label className="seletor-rotulo">
         Aluno
         <select value={alunoId ?? ''} onChange={(e) => { onEscolher(e.target.value); setEditando(false) }}>

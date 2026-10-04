@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase } from './supabase'
 import {
   NOME_SITE, NOME_MENTOR, INSTAGRAM, FOTO_MENTOR, FOTO_PERFIL, FRASE_LOGIN, FOTOS_AULAS,
@@ -10,6 +10,11 @@ export default function Login() {
   const [senha, setSenha] = useState('')
   const [erro, setErro] = useState('')
   const [entrando, setEntrando] = useState(false)
+  const [fotoMentor, setFotoMentor] = useState(null)
+
+  useEffect(() => {
+    supabase.rpc('foto_do_mentor').then(({ data }) => setFotoMentor(data || null))
+  }, [])
 
   async function entrar(e) {
     e.preventDefault()
@@ -43,7 +48,7 @@ export default function Login() {
         <div className="login-cartao">
           <div className="login-topo">
             <span className="so-celular">
-              <Avatar src={FOTO_MENTOR} nome={NOME_MENTOR} tamanho={84} />
+              <Avatar src={fotoMentor || FOTO_MENTOR} nome={NOME_MENTOR} tamanho={84} />
             </span>
             <h1>{NOME_SITE}</h1>
             <p className="suave">

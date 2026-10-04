@@ -279,3 +279,108 @@ textarea { resize: vertical; }
   .topo-marca .pequeno { display: none; }
   .botao.grande { align-self: stretch; }
 }
+
+/* ---------- Agenda (mentor) e Marcar aula (aluno) ---------- */
+.agenda-topo { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.navegar-mes { display: flex; align-items: center; gap: 4px; }
+.navegar-mes h2 { margin: 0; min-width: 170px; text-align: center; font-size: 20px; }
+.navegar-mes .botao.fantasma:not(.pequeno) { font-size: 22px; padding: 2px 12px; line-height: 1.2; }
+
+.resumo-agenda { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+.agenda-grade { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+
+.calendario { padding: 14px; }
+.cal-cabecalho, .cal-semana { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.cal-cabecalho span { text-align: center; font-size: 12px; font-weight: 700; color: var(--suave); padding-bottom: 6px; }
+.cal-semana { margin-bottom: 4px; }
+.cal-dia {
+  font: inherit; border: 1.5px solid transparent; background: var(--superficie-2); color: var(--texto);
+  border-radius: 10px; min-height: 58px; padding: 6px; display: flex; flex-direction: column;
+  align-items: flex-start; justify-content: space-between; cursor: pointer; min-width: 0;
+}
+.cal-dia:hover { border-color: var(--borda); }
+.cal-dia.vazio { background: transparent; cursor: default; }
+.cal-dia.hoje .cal-numero { background: var(--primaria); color: var(--primaria-texto); border-radius: 99px; padding: 0 7px; }
+.cal-dia.selecionado { border-color: var(--primaria); background: var(--primaria-clara); }
+.cal-numero { font-size: 13px; font-weight: 700; }
+.cal-marcas { display: flex; gap: 3px; flex-wrap: wrap; }
+.marca { font-size: 11px; font-weight: 800; min-width: 18px; height: 18px; border-radius: 99px; display: inline-flex; align-items: center; justify-content: center; padding: 0 5px; }
+.marca.marcado, .marca-cor.marcado { background: var(--primaria); color: var(--primaria-texto); }
+.marca.livre, .marca-cor.livre { background: transparent; color: var(--suave); box-shadow: inset 0 0 0 1.5px var(--suave); }
+.marca-cor { width: 12px; height: 12px; border-radius: 99px; display: inline-block; }
+.cal-legenda { margin-top: 10px; font-size: 12px; color: var(--suave); }
+
+.lista-dia { max-height: 560px; overflow-y: auto; }
+.lista-dia-topo { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.lista-dia-topo h2 { margin: 0; text-transform: capitalize; }
+.grupo-dia + .grupo-dia { margin-top: 14px; }
+.grupo-titulo { font-size: 13px; font-weight: 800; color: var(--suave); text-transform: capitalize; margin: 0 0 6px; }
+
+.atendimento {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 4px 12px; align-items: center;
+  padding: 10px 12px; border-radius: 10px; border-left: 4px solid var(--borda); background: var(--superficie-2);
+}
+.atendimento + .atendimento { margin-top: 6px; }
+.atendimento.marcado { border-left-color: var(--primaria); background: var(--primaria-clara); }
+.atendimento.passou { opacity: 0.6; }
+.atendimento-hora { font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.atendimento-info { display: flex; flex-direction: column; min-width: 0; overflow-wrap: anywhere; }
+.atendimento-acoes { display: flex; gap: 10px; align-items: center; justify-content: flex-end; flex-wrap: wrap; }
+.atendimento-acoes select { width: auto; padding: 5px 8px; font-size: 13px; }
+
+.por-aluno { display: flex; flex-direction: column; gap: 8px; }
+.por-aluno-linha { display: grid; grid-template-columns: minmax(0, 200px) minmax(0, 1fr) auto; gap: 12px; align-items: center; font-size: 14px; }
+.por-aluno-nome { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.por-aluno-num { font-variant-numeric: tabular-nums; color: var(--suave); font-weight: 600; white-space: nowrap; }
+.barra { display: block; height: 8px; background: var(--superficie-2); border-radius: 99px; overflow: hidden; }
+.barra i { display: block; height: 100%; background: var(--primaria); border-radius: 99px; transition: width 0.3s; }
+.barra i.cheia { background: var(--destaque); }
+.barra.larga { height: 10px; margin-top: 8px; width: 100%; max-width: 320px; }
+
+.rotulo-campo { font-size: 13px; font-weight: 600; color: var(--suave); margin: 0 0 6px; }
+.horas-lista { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.hora-item { display: inline-flex; align-items: center; gap: 4px; }
+.hora-item input { width: 130px; }
+.grade-form .largo-2 { grid-column: span 2; }
+
+.limite-aulas { display: inline-flex; align-items: center; gap: 6px; margin-left: 6px; padding-left: 12px; border-left: 1px solid var(--borda); }
+.limite-aulas label { font-size: 13px; font-weight: 600; color: var(--suave); }
+.limite-aulas input { width: 70px; padding: 5px 8px; text-align: center; font-weight: 700; }
+
+.contador-aulas { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; }
+.contador-aulas > p { margin: 0; flex: 1 1 260px; max-width: 460px; }
+.contador-linha { display: flex; align-items: baseline; gap: 6px; }
+.aviso-ok { background: var(--primaria-clara); color: var(--primaria); font-weight: 700; padding: 10px 14px; border-radius: 10px; margin: 0; }
+
+.vagas { display: flex; flex-wrap: wrap; gap: 8px; }
+.vaga {
+  font: inherit; font-weight: 700; font-size: 14px; font-variant-numeric: tabular-nums;
+  padding: 10px 16px; border-radius: 10px; cursor: pointer;
+  border: 1.5px solid var(--primaria); background: var(--superficie); color: var(--primaria);
+}
+.vaga:hover:not(:disabled) { background: var(--primaria); color: var(--primaria-texto); }
+.vaga:disabled { border-color: var(--borda); color: var(--suave); cursor: not-allowed; }
+.vaga-form {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px; width: 100%;
+  padding: 10px; border-radius: 10px; border: 1.5px solid var(--primaria); background: var(--primaria-clara);
+}
+.vaga-form input { flex: 1 1 200px; width: auto; }
+
+@media (max-width: 1000px) {
+  .resumo-agenda { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .agenda-grade { grid-template-columns: 1fr; }
+  .lista-dia { max-height: none; }
+}
+@media (max-width: 640px) {
+  .navegar-mes h2 { min-width: 0; font-size: 18px; }
+  .agenda-topo .botao.primario { width: 100%; }
+  .cal-dia { min-height: 46px; padding: 4px; border-radius: 8px; }
+  .marca { min-width: 15px; height: 15px; font-size: 10px; padding: 0 3px; }
+  .atendimento { grid-template-columns: auto minmax(0, 1fr); }
+  .atendimento-acoes { grid-column: 1 / -1; justify-content: flex-start; }
+  .por-aluno-linha { grid-template-columns: minmax(0, 1fr) auto; }
+  .por-aluno-linha .barra { grid-column: 1 / -1; grid-row: 2; }
+  .grade-form .largo-2 { grid-column: 1 / -1; }
+  .limite-aulas { margin-left: 0; padding-left: 0; border-left: 0; }
+}

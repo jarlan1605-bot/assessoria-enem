@@ -6,6 +6,8 @@ import Horario from './Horario'
 import Simulados from './Simulados'
 import Avatar from './Avatar'
 import TrocarSenha from './TrocarSenha'
+import Agenda from './Agenda'
+import Aulas from './Aulas'
 
 export default function App() {
   const [sessao, setSessao] = useState(undefined) // undefined = ainda verificando
@@ -103,7 +105,25 @@ function Painel({ usuario }) {
       </header>
 
       <main className="conteudo">
-        {ehMentor && (
+        <nav className="abas" role="tablist">
+          {[
+            ['horario', '🗓️', 'Horário'],
+            ['simulados', '📝', 'Simulados'],
+            ehMentor ? ['agenda', '📅', 'Agenda'] : ['aulas', '🎓', 'Marcar aula'],
+          ].map(([id, icone, nome]) => (
+            <button
+              key={id}
+              role="tab"
+              aria-selected={aba === id}
+              className={aba === id ? 'aba ativa' : 'aba'}
+              onClick={() => setAba(id)}
+            >
+              {icone} {nome}
+            </button>
+          ))}
+        </nav>
+
+        {ehMentor && aba !== 'agenda' && (
           <SeletorAluno
             alunos={alunos}
             alunoId={alunoId}
@@ -112,7 +132,11 @@ function Painel({ usuario }) {
           />
         )}
 
-        {ehMentor && alunos.length === 0 ? (
+        {aba === 'agenda' && ehMentor ? (
+          <Agenda alunos={alunos} />
+        ) : aba === 'aulas' && !ehMentor ? (
+          <Aulas perfil={perfil} />
+        ) : ehMentor && alunos.length === 0 ? (
           <div className="cartao vazio">
             <h2>Nenhum aluno cadastrado ainda</h2>
             <p>
@@ -123,32 +147,11 @@ function Painel({ usuario }) {
             <button className="botao" onClick={carregarAlunos}>Atualizar lista</button>
           </div>
         ) : alunoAtual ? (
-          <>
-            <nav className="abas" role="tablist">
-              <button
-                role="tab"
-                aria-selected={aba === 'horario'}
-                className={aba === 'horario' ? 'aba ativa' : 'aba'}
-                onClick={() => setAba('horario')}
-              >
-                🗓️ Horário de estudos
-              </button>
-              <button
-                role="tab"
-                aria-selected={aba === 'simulados'}
-                className={aba === 'simulados' ? 'aba ativa' : 'aba'}
-                onClick={() => setAba('simulados')}
-              >
-                📝 Simulados
-              </button>
-            </nav>
-
-            {aba === 'horario' ? (
-              <Horario key={alunoAtual.id} alunoId={alunoAtual.id} editavel={ehMentor} />
-            ) : (
-              <Simulados key={alunoAtual.id} alunoId={alunoAtual.id} />
-            )}
-          </>
+          aba === 'simulados' ? (
+            <Simulados key={alunoAtual.id} alunoId={alunoAtual.id} />
+          ) : (
+            <Horario key={alunoAtual.id} alunoId={alunoAtual.id} editavel={ehMentor} />
+          )
         ) : (
           <Carregando />
         )}
@@ -195,6 +198,7 @@ function SeletorAluno({ alunos, alunoId, onEscolher, onRenomeado }) {
           <button className="botao fantasma pequeno" onClick={onRenomeado}>
             Atualizar lista
           </button>
+          <LimiteAulas key={aluno.id} aluno={aluno} onSalvo={onRenomeado} />
         </div>
       )}
       {editando && (
@@ -207,6 +211,42 @@ function SeletorAluno({ alunos, alunoId, onEscolher, onRenomeado }) {
         </form>
       )}
     </section>
+  )
+}
+
+function LimiteAulas({ aluno, onSalvo }) {
+  const atual = aluno.limite_mensal
+  const [valor, setValor] = useState(atual ?? 4)
+  const [estado, setEstado] = useState('') // '', 'salvando', 'ok', 'erro'
+
+  if (atual === undefined) return null // agenda.sql ainda não foi rodado
+
+  async function salvar(e) {
+    e.preventDefault()
+    const n = Math.max(0, Math.min(60, Number(valor) || 0))
+    setEstado('salvando')
+    const { error } = await supabase.from('perfis').update({ limite_mensal: n }).eq('id', aluno.id)
+    setEstado(error ? 'erro' : 'ok')
+    if (!error) onSalvo()
+  }
+
+  return (
+    <form className="limite-aulas" onSubmit={salvar}>
+      <label htmlFor="limite">Aulas/mês</label>
+      <input
+        id="limite"
+        type="number"
+        min="0"
+        max="60"
+        value={valor}
+        onChange={(e) => { setValor(e.target.value); setEstado('') }}
+      />
+      {Number(valor) !== atual && (
+        <button className="botao primario pequeno" disabled={estado === 'salvando'}>Salvar</button>
+      )}
+      {estado === 'ok' && Number(valor) === atual && <span className="suave pequeno">✓ salvo</span>}
+      {estado === 'erro' && <span className="erro pequeno">não salvou</span>}
+    </form>
   )
 }
 

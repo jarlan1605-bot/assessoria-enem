@@ -1,15 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from './supabase'
-import { AREAS, MATERIAS } from './constants'
+import { AREAS, MATERIAS, TIPOS_ERRO, MATERIAS_POR_AREA } from './constants'
 import { hojeISO, somarDias } from './agenda'
 
-export const MOTIVOS = {
-  conteudo: { nome: 'Não sabia o conteúdo', curto: 'Conteúdo', cor: '#c2255c' },
-  interpretacao: { nome: 'Interpretei errado', curto: 'Interpretação', cor: '#7048e8' },
-  atencao: { nome: 'Falta de atenção', curto: 'Atenção', cor: '#e67700' },
-  tempo: { nome: 'Faltou tempo', curto: 'Tempo', cor: '#1971c2' },
-  chute: { nome: 'Chutei', curto: 'Chute', cor: '#868e96' },
-}
+export const MOTIVOS = Object.fromEntries(
+  Object.entries(TIPOS_ERRO).map(([k, t]) => [k, { nome: t.nome, curto: t.nome, desc: t.desc, cor: t.cor }])
+)
 // Revisão espaçada: 1 dia depois de registrar, depois 7, depois 30 → dominado
 const PROXIMO_INTERVALO = [7, 30]
 const corArea = (k) => AREAS.find((a) => a.chave === k)?.cor ?? '#868e96'
@@ -159,7 +155,7 @@ export default function CadernoErros({ alunoId, ehMentor }) {
               Matéria
               <input list="lista-materias" value={form.materia} onChange={(e) => setForm({ ...form, materia: e.target.value })} placeholder="Ex.: Biologia" />
               <datalist id="lista-materias">
-                {MATERIAS.filter((m) => !['Revisão', 'Simulado', 'Descanso', 'Outro'].includes(m.nome)).map((m) => <option key={m.nome} value={m.nome} />)}
+                {[...new Set([...(MATERIAS_POR_AREA[form.area] || []), ...MATERIAS.filter((m) => !['Revisão', 'Simulado', 'Descanso', 'Outro', 'Escola/Cursinho', 'Humanas', 'Natureza'].includes(m.nome)).map((m) => m.nome)])].map((m) => <option key={m} value={m} />)}
               </datalist>
             </label>
             <label className="largo-2">
@@ -174,8 +170,8 @@ export default function CadernoErros({ alunoId, ehMentor }) {
           <p className="rotulo-campo">Por que errou?</p>
           <div className="tipos-escolha">
             {Object.entries(MOTIVOS).map(([k, m]) => (
-              <button type="button" key={k} className={form.motivo === k ? 'tipo-op ativo' : 'tipo-op'} style={{ '--cor': m.cor }} onClick={() => setForm({ ...form, motivo: k })}>
-                {m.nome}
+              <button type="button" key={k} className={form.motivo === k ? 'tipo-op ativo' : 'tipo-op'} style={{ '--cor': m.cor }} onClick={() => setForm({ ...form, motivo: k })} title={m.desc}>
+                {m.nome} <span className="tipo-desc">· {m.desc}</span>
               </button>
             ))}
           </div>
@@ -262,11 +258,9 @@ export default function CadernoErros({ alunoId, ehMentor }) {
             </div>
             {motivoTop?.n > 0 && (
               <p className="suave pequeno" style={{ marginTop: 10, marginBottom: 0 }}>
-                {motivoTop.k === 'conteudo' && 'Dica: a maioria é falta de conteúdo. Volte à teoria desses assuntos antes de fazer mais questões.'}
-                {motivoTop.k === 'atencao' && 'Dica: a maioria é falta de atenção. Sublinhe o comando da questão e confira as alternativas antes de marcar.'}
-                {motivoTop.k === 'tempo' && 'Dica: o tempo está pesando. Treine com cronômetro e pule as questões longas na primeira passada.'}
-                {motivoTop.k === 'interpretacao' && 'Dica: muitos erros de interpretação. Leia primeiro a pergunta, depois o texto-base.'}
-                {motivoTop.k === 'chute' && 'Dica: muitos chutes. Marque essas questões e revise o assunto com calma.'}
+                {motivoTop.k === 'conteudo' && 'Dica: a maioria é de conteúdo. Revise a teoria desses assuntos e faça questões só deles antes de voltar aos simulados.'}
+                {motivoTop.k === 'descuido' && 'Dica: a maioria é descuido. Sublinhe o comando da questão, confira as contas e releia a alternativa antes de marcar.'}
+                {motivoTop.k === 'lacuna' && 'Dica: a maioria é lacuna. Converse com seu mentor para encaixar esses assuntos no horário de estudos.'}
               </p>
             )}
           </div>

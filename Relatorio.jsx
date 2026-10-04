@@ -83,7 +83,7 @@ export default function Relatorio({ aluno, ehMentor, equipe = [] }) {
   const redacoesNotas = [...doMes.map((s) => s.redacao).filter((v) => v !== null), ...dados.redacoes.map(totalRedacao)]
   const redMes = media(redacoesNotas)
   const adesao = resumoAdesao(dados.horarios, dados.checkins, ini, fim)
-  const minSemana = dados.horarios.filter((b) => b.materia !== 'Descanso').reduce((t, b) => t + minutos(b.fim) - minutos(b.inicio), 0)
+  const minSemana = dados.horarios.filter((b) => b.materia !== 'Descanso' && b.conta_estudo !== false).reduce((t, b) => t + minutos(b.fim) - minutos(b.inicio), 0)
   const aulasFeitas = dados.atendimentos.filter((a) => new Date(a.inicio) < new Date())
   const errosMes = dados.erros.filter((e) => e.criado_em.slice(0, 10) >= ini && e.criado_em.slice(0, 10) <= fim)
   const topAssuntos = Object.entries(
@@ -91,7 +91,7 @@ export default function Relatorio({ aluno, ehMentor, equipe = [] }) {
   ).sort((a, b) => b[1] - a[1]).slice(0, 3)
   const motivoTop = Object.keys(MOTIVOS).map((k) => [k, errosMes.filter((e) => e.motivo === k).length]).sort((a, b) => b[1] - a[1])[0]
   const horasPorMateria = Object.entries(
-    dados.horarios.filter((b) => b.materia !== 'Descanso').reduce((m, b) => { m[b.materia] = (m[b.materia] || 0) + minutos(b.fim) - minutos(b.inicio); return m }, {})
+    dados.horarios.filter((b) => b.materia !== 'Descanso' && b.conta_estudo !== false).reduce((m, b) => { m[b.materia] = (m[b.materia] || 0) + minutos(b.fim) - minutos(b.inicio); return m }, {})
   ).sort((a, b) => b[1] - a[1]).slice(0, 6)
 
   return (

@@ -21,7 +21,7 @@ export function pontuacaoDoDia(iso, blocos, mapa) {
   const hoje = hojeISO()
   const agora = new Date()
   const minAgora = agora.getHours() * 60 + agora.getMinutes()
-  const doDia = blocos.filter((b) => b.dia === diaDaSemana(iso) && b.materia !== 'Descanso')
+  const doDia = blocos.filter((b) => b.dia === diaDaSemana(iso) && b.materia !== 'Descanso' && b.conta_estudo !== false)
   let total = 0
   let pontos = 0
   let marcados = 0

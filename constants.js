@@ -43,6 +43,9 @@ export const MATERIAS = [
   { nome: 'Revisão', cor: '#495057' },
   { nome: 'Simulado', cor: '#d9480f' },
   { nome: 'Descanso', cor: '#868e96' },
+  { nome: 'Humanas', cor: '#e67700' },
+  { nome: 'Natureza', cor: '#2f9e44' },
+  { nome: 'Escola/Cursinho', cor: '#1864ab' },
   { nome: 'Outro', cor: '#868e96' },
 ]
 
@@ -61,4 +64,19 @@ export const AREAS = [
 // 0 = segunda ... 6 = domingo
 export function indiceDeHoje() {
   return (new Date().getDay() + 6) % 7
+}
+
+// Tipos de erro (iguais aos da planilha de simulados)
+export const TIPOS_ERRO = {
+  descuido: { nome: 'Descuido', desc: 'Sabia, mas errou por atenção ou pressa', cor: '#e67700' },
+  conteudo: { nome: 'Conteúdo', desc: 'Já estudou, mas não lembrou ou não domina', cor: '#c2255c' },
+  lacuna: { nome: 'Lacuna', desc: 'Assunto que ainda não estudou', cor: '#7048e8' },
+}
+
+// Matérias de cada área do ENEM (em Matemática, por tema)
+export const MATERIAS_POR_AREA = {
+  linguagens: ['Português', 'Literatura', 'Língua estrangeira', 'Artes'],
+  humanas: ['História', 'Geografia', 'Filosofia', 'Sociologia'],
+  natureza: ['Física', 'Química', 'Biologia'],
+  matematica: ['Básica', 'Álgebra e funções', 'Geometria', 'Estatística e probabilidade'],
 }

@@ -4,7 +4,8 @@ import { DIAS, MATERIAS, corDaMateria, indiceDeHoje } from './constants'
 import { hojeISO, somarDias } from './agenda'
 import { mapaCheckins, resumoAdesao, sequenciaDeDias } from './adesao'
 
-const BLOCO_VAZIO = { dia: 0, inicio: '08:00', fim: '09:00', materia: 'Matemática', conteudo: '' }
+const BLOCO_VAZIO = { dia: 0, inicio: '08:00', fim: '09:00', materia: 'Matemática', conteudo: '', conta_estudo: true }
+const CORES_SUGERIDAS = ['#1864ab', '#2f9e44', '#e8590c', '#c2255c', '#7048e8', '#0c8599', '#e67700', '#495057']
 
 const hhmm = (t) => (t || '').slice(0, 5)
 const emMinutos = (t) => {
@@ -30,6 +31,56 @@ export default function Horario({ alunoId, editavel }) {
   const [editandoId, setEditandoId] = useState(null)
   const [salvando, setSalvando] = useState(false)
   const [checkins, setCheckins] = useState([])
+  const [personalizadas, setPersonalizadas] = useState([]) // matérias/tópicos criados pela equipe
+  const [novaMateria, setNovaMateria] = useState(null) // { nome, cor, conta_estudo }
+  const [gerenciando, setGerenciando] = useState(false)
+
+  const carregarPersonalizadas = useCallback(async () => {
+    const { data } = await supabase.from('materias_personalizadas').select('*').order('nome')
+    setPersonalizadas(data ?? [])
+  }, [])
+  useEffect(() => {
+    carregarPersonalizadas()
+  }, [carregarPersonalizadas])
+
+  const personalizadaDe = (nome) => personalizadas.find((m) => m.nome === nome)
+  const corDe = (nome) => personalizadaDe(nome)?.cor || corDaMateria(nome)
+  const contaPorPadrao = (nome) => nome !== 'Descanso' && personalizadaDe(nome)?.conta_estudo !== false
+  const contaEstudo = (b) => b.materia !== 'Descanso' && b.conta_estudo !== false
+
+  function escolherMateria(nome) {
+    if (nome === '__nova') {
+      setNovaMateria({ nome: '', cor: CORES_SUGERIDAS[0], conta_estudo: true })
+      return
+    }
+    setForm((f) => ({ ...f, materia: nome, conta_estudo: contaPorPadrao(nome) }))
+  }
+
+  async function criarMateria() {
+    const nome = novaMateria.nome.trim()
+    if (!nome) return setErro('Dê um nome para a matéria ou tópico.')
+    if (MATERIAS.some((m) => m.nome.toLowerCase() === nome.toLowerCase()) || personalizadas.some((m) => m.nome.toLowerCase() === nome.toLowerCase())) {
+      setNovaMateria(null)
+      return escolherMateria(MATERIAS.find((m) => m.nome.toLowerCase() === nome.toLowerCase())?.nome || personalizadas.find((m) => m.nome.toLowerCase() === nome.toLowerCase()).nome)
+    }
+    const { error } = await supabase.from('materias_personalizadas').insert({ nome, cor: novaMateria.cor, conta_estudo: novaMateria.conta_estudo })
+    if (error) return setErro(/materias_personalizadas/.test(error.message) ? 'Rode o arquivo detalhes.sql no Supabase para criar matérias personalizadas.' : 'Não foi possível criar: ' + error.message)
+    setErro('')
+    await carregarPersonalizadas()
+    setForm((f) => ({ ...f, materia: nome, conta_estudo: novaMateria.conta_estudo }))
+    setNovaMateria(null)
+  }
+
+  async function apagarMateria(m) {
+    if (!confirm(`Remover “${m.nome}” da lista? Os blocos que já usam esse nome continuam no horário.`)) return
+    await supabase.from('materias_personalizadas').delete().eq('id', m.id)
+    carregarPersonalizadas()
+  }
+
+  async function mudarCorMateria(m, cor) {
+    await supabase.from('materias_personalizadas').update({ cor }).eq('id', m.id)
+    carregarPersonalizadas()
+  }
   const hoje = indiceDeHoje()
   const hojeData = hojeISO()
   const segunda = somarDias(hojeData, -hoje)
@@ -100,25 +151,26 @@ export default function Horario({ alunoId, editavel }) {
       fim: form.fim,
       materia: form.materia,
       conteudo: form.conteudo.trim(),
+      conta_estudo: !!form.conta_estudo,
     }
     const { error } = editandoId
       ? await supabase.from('horarios').update(registro).eq('id', editandoId)
       : await supabase.from('horarios').insert(registro)
     setSalvando(false)
     if (error) {
-      setErro('Não foi possível salvar: ' + error.message)
+      setErro(/conta_estudo/.test(error.message) ? 'Rode o arquivo detalhes.sql no Supabase para salvar blocos com essa opção.' : 'Não foi possível salvar: ' + error.message)
       return
     }
     setErro('')
     // Já deixa o próximo bloco pronto, começando onde este terminou
-    setForm((f) => ({ ...BLOCO_VAZIO, dia: f.dia, inicio: f.fim, fim: somarUmaHora(f.fim), materia: f.materia }))
+    setForm((f) => ({ ...BLOCO_VAZIO, dia: f.dia, inicio: f.fim, fim: somarUmaHora(f.fim), materia: f.materia, conta_estudo: f.conta_estudo }))
     setEditandoId(null)
     carregar()
   }
 
   function editar(b) {
     setEditandoId(b.id)
-    setForm({ dia: b.dia, inicio: hhmm(b.inicio), fim: hhmm(b.fim), materia: b.materia, conteudo: b.conteudo })
+    setForm({ dia: b.dia, inicio: hhmm(b.inicio), fim: hhmm(b.fim), materia: b.materia, conteudo: b.conteudo, conta_estudo: contaEstudo(b) })
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
@@ -136,7 +188,7 @@ export default function Horario({ alunoId, editavel }) {
 
   const porDia = DIAS.map((_, i) => blocos.filter((b) => b.dia === i))
   const minutosDoDia = porDia.map((lista) =>
-    lista.filter((b) => b.materia !== 'Descanso').reduce((s, b) => s + emMinutos(b.fim) - emMinutos(b.inicio), 0)
+    lista.filter(contaEstudo).reduce((s, b) => s + emMinutos(b.fim) - emMinutos(b.inicio), 0)
   )
   const totalSemana = minutosDoDia.reduce((a, b) => a + b, 0)
 
@@ -163,11 +215,22 @@ export default function Horario({ alunoId, editavel }) {
               <input type="time" value={form.fim} onChange={mudar('fim')} required />
             </label>
             <label>
-              Matéria
-              <select value={form.materia} onChange={mudar('materia')}>
-                {MATERIAS.map((m) => (
-                  <option key={m.nome} value={m.nome}>{m.nome}</option>
-                ))}
+              Matéria ou tópico
+              <select value={form.materia} onChange={(e) => escolherMateria(e.target.value)}>
+                {personalizadas.length > 0 && (
+                  <optgroup label="Criadas por você">
+                    {personalizadas.map((m) => <option key={m.id} value={m.nome}>{m.nome}</option>)}
+                  </optgroup>
+                )}
+                <optgroup label="Padrão">
+                  {MATERIAS.map((m) => (
+                    <option key={m.nome} value={m.nome}>{m.nome}</option>
+                  ))}
+                </optgroup>
+                {!MATERIAS.some((m) => m.nome === form.materia) && !personalizadas.some((m) => m.nome === form.materia) && (
+                  <option value={form.materia}>{form.materia}</option>
+                )}
+                <option value="__nova">➕ Criar nova matéria ou tópico…</option>
               </select>
             </label>
             <label className="largo">
@@ -179,6 +242,50 @@ export default function Horario({ alunoId, editavel }) {
               />
             </label>
           </div>
+
+          {novaMateria && (
+            <div className="nova-materia">
+              <strong>Nova matéria ou tópico</strong>
+              <div className="linha-campo">
+                <input autoFocus value={novaMateria.nome} maxLength={40} onChange={(e) => setNovaMateria({ ...novaMateria, nome: e.target.value })} placeholder="Ex.: FACEX, Anki, Caminhada, Aula do Adilson" />
+              </div>
+              <div className="cores-op" role="radiogroup" aria-label="Cor">
+                {CORES_SUGERIDAS.map((c) => (
+                  <button type="button" key={c} role="radio" aria-checked={novaMateria.cor === c} className={novaMateria.cor === c ? 'cor-op ativo' : 'cor-op'} style={{ background: c }} onClick={() => setNovaMateria({ ...novaMateria, cor: c })} aria-label={c} />
+                ))}
+                <input type="color" value={novaMateria.cor} onChange={(e) => setNovaMateria({ ...novaMateria, cor: e.target.value })} aria-label="Outra cor" />
+              </div>
+              <label className="caixa-marcar" style={{ marginTop: 0 }}>
+                <input type="checkbox" checked={novaMateria.conta_estudo} onChange={(e) => setNovaMateria({ ...novaMateria, conta_estudo: e.target.checked })} />
+                <span>Conta como hora de estudo <span className="suave pequeno">(desmarque para almoço, caminhada, lazer…)</span></span>
+              </label>
+              <div className="linha-botoes" style={{ marginTop: 0 }}>
+                <button type="button" className="botao fantasma pequeno" onClick={() => setNovaMateria(null)}>Cancelar</button>
+                <button type="button" className="botao primario pequeno" onClick={criarMateria}>Criar e usar</button>
+              </div>
+            </div>
+          )}
+
+          <div className="form-bloco-opcoes">
+            <label className="caixa-marcar" style={{ marginTop: 0 }}>
+              <input type="checkbox" checked={!!form.conta_estudo} onChange={(e) => setForm({ ...form, conta_estudo: e.target.checked })} />
+              <span>Este bloco conta como hora de estudo</span>
+            </label>
+            {personalizadas.length > 0 && (
+              <button type="button" className="link" onClick={() => setGerenciando((g) => !g)}>{gerenciando ? 'fechar' : 'gerenciar matérias criadas'}</button>
+            )}
+          </div>
+          {gerenciando && (
+            <div className="gerenciar-materias">
+              {personalizadas.map((m) => (
+                <span key={m.id} className="chip" style={{ borderColor: m.cor }}>
+                  <input type="color" value={m.cor} onChange={(e) => mudarCorMateria(m, e.target.value)} aria-label={`Cor de ${m.nome}`} className="chip-cor" />
+                  {m.nome}{m.conta_estudo ? '' : ' · não conta'}
+                  <button type="button" onClick={() => apagarMateria(m)} aria-label={`Remover ${m.nome}`}>✕</button>
+                </span>
+              ))}
+            </div>
+          )}
           <div className="linha-botoes">
             {editandoId && (
               <button type="button" className="botao fantasma" onClick={cancelarEdicao}>Cancelar</button>
@@ -247,9 +354,9 @@ export default function Horario({ alunoId, editavel }) {
                 porDia[i].map((b) => {
                   const dataBloco = datasDaSemana[i]
                   const status = mapaCheckins(checkins)[`${b.id}|${dataBloco}`]
-                  const podeMarcar = !editavel && dataBloco <= hojeData && b.materia !== 'Descanso'
+                  const podeMarcar = !editavel && dataBloco <= hojeData && contaEstudo(b)
                   return (
-                  <div key={b.id} className={`bloco ${status ? 'marcado-' + status : ''}`} style={{ '--cor': corDaMateria(b.materia) }}>
+                  <div key={b.id} className={`bloco ${status ? 'marcado-' + status : ''}`} style={{ '--cor': corDe(b.materia) }}>
                     <span className="bloco-hora">{hhmm(b.inicio)}–{hhmm(b.fim)}</span>
                     <strong className="bloco-materia">{b.materia}</strong>
                     {b.conteudo && <span className="bloco-conteudo">{b.conteudo}</span>}

@@ -20,6 +20,7 @@ import Redacao from './Redacao'
 import Relatorio from './Relatorio'
 import Financeiro from './Financeiro'
 import SiteEditor from './SiteEditor'
+import BancoQuestoes from './BancoQuestoes'
 
 export default function App() {
   const [sessao, setSessao] = useState(undefined) // undefined = ainda verificando
@@ -165,6 +166,7 @@ function Painel({ usuario }) {
         ['evolucao', '📈', 'Evolução'],
         ['horario', '🗓️', 'Horário'],
         ['simulados', '📝', 'Simulados'],
+        ['questoes', '🧠', 'Banco de questões'],
         ['erros', '📕', 'Caderno de erros'],
         ['redacao', '✍️', 'Redação'],
       ],
@@ -190,6 +192,8 @@ function Painel({ usuario }) {
   let conteudo
   if (abaAtual === 'comunidade') {
     conteudo = <Comunidade ehMentor={ehMentor} ehCeo={ehCeo} meuId={perfil.id} equipe={equipe} fotoPadrao={fotoDaMarca} />
+  } else if (abaAtual === 'questoes') {
+    conteudo = <BancoQuestoes perfil={perfil} ehMentor={ehMentor} alunos={alunos} />
   } else if (abaAtual === 'equipe') {
     conteudo = <Equipe meuId={perfil.id} onMudou={() => { carregarAlunos(); carregarEquipe() }} />
   } else if (abaAtual === 'financeiro') {

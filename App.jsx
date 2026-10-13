@@ -21,6 +21,7 @@ import Relatorio from './Relatorio'
 import Financeiro from './Financeiro'
 import SiteEditor from './SiteEditor'
 import BancoQuestoes from './BancoQuestoes'
+import SimuladorProva from './SimuladorProva'
 
 export default function App() {
   const [sessao, setSessao] = useState(undefined) // undefined = ainda verificando
@@ -167,6 +168,7 @@ function Painel({ usuario }) {
         ['horario', '🗓️', 'Horário'],
         ['simulados', '📝', 'Simulados'],
         ['questoes', '🧠', 'Banco de questões'],
+        ['cronometro', '⏱️', 'Simulador do ENEM'],
         ['erros', '📕', 'Caderno de erros'],
         ['redacao', '✍️', 'Redação'],
       ],
@@ -192,6 +194,8 @@ function Painel({ usuario }) {
   let conteudo
   if (abaAtual === 'comunidade') {
     conteudo = <Comunidade ehMentor={ehMentor} ehCeo={ehCeo} meuId={perfil.id} equipe={equipe} fotoPadrao={fotoDaMarca} />
+  } else if (abaAtual === 'cronometro') {
+    conteudo = <SimuladorProva />
   } else if (abaAtual === 'questoes') {
     conteudo = <BancoQuestoes perfil={perfil} ehMentor={ehMentor} alunos={alunos} />
   } else if (abaAtual === 'equipe') {

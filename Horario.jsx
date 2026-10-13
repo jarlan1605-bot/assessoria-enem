@@ -3,6 +3,7 @@ import { supabase } from './supabase'
 import { DIAS, MATERIAS, corDaMateria, indiceDeHoje } from './constants'
 import { hojeISO, somarDias } from './agenda'
 import { mapaCheckins, resumoAdesao, sequenciaDeDias } from './adesao'
+import ExportarHorario from './ExportarHorario'
 
 const BLOCO_VAZIO = { dia: 0, inicio: '08:00', fim: '09:00', materia: 'Matemática', conteudo: '', conta_estudo: true }
 const CORES_SUGERIDAS = ['#1864ab', '#2f9e44', '#e8590c', '#c2255c', '#7048e8', '#0c8599', '#e67700', '#495057']
@@ -23,7 +24,21 @@ export const formatarDuracao = (min) => {
   return m ? `${h}h${String(m).padStart(2, '0')}` : `${h}h`
 }
 
-export default function Horario({ alunoId, editavel }) {
+// Escala da grade: quantos pixels vale cada minuto (1 hora = 66 px)
+const PX_MIN = 1.1
+
+function useLargo(consulta) {
+  const [ok, setOk] = useState(() => typeof window !== 'undefined' && window.matchMedia(consulta).matches)
+  useEffect(() => {
+    const m = window.matchMedia(consulta)
+    const f = () => setOk(m.matches)
+    m.addEventListener('change', f)
+    return () => m.removeEventListener('change', f)
+  }, [consulta])
+  return ok
+}
+
+export default function Horario({ alunoId, editavel, aluno }) {
   const [blocos, setBlocos] = useState([])
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState('')
@@ -34,6 +49,8 @@ export default function Horario({ alunoId, editavel }) {
   const [personalizadas, setPersonalizadas] = useState([]) // matérias/tópicos criados pela equipe
   const [novaMateria, setNovaMateria] = useState(null) // { nome, cor, conta_estudo }
   const [gerenciando, setGerenciando] = useState(false)
+  const [exportando, setExportando] = useState(false)
+  const largo = useLargo('(min-width: 1001px)')
 
   const carregarPersonalizadas = useCallback(async () => {
     const { data } = await supabase.from('materias_personalizadas').select('*').order('nome')
@@ -304,7 +321,15 @@ export default function Horario({ alunoId, editavel }) {
         {blocos.length > 0 && (
           <span className="etiqueta">{formatarDuracao(totalSemana)} de estudo por semana</span>
         )}
+        {blocos.length > 0 && (
+          <button className="botao primario pequeno botao-whats" onClick={() => setExportando(true)} style={{ marginLeft: 'auto' }}>
+            Enviar pelo WhatsApp
+          </button>
+        )}
       </div>
+      {exportando && (
+        <ExportarHorario nome={aluno?.nome || aluno?.email || 'Aluno'} blocos={blocos} corDe={corDe} contaEstudo={contaEstudo} onFechar={() => setExportando(false)} />
+      )}
 
       {blocos.length > 0 && (() => {
         const sem7 = resumoAdesao(blocos, checkins, somarDias(hojeData, -6), hojeData)
@@ -340,50 +365,96 @@ export default function Horario({ alunoId, editavel }) {
           </p>
         </div>
       ) : (
-        <div className="semana">
-          {DIAS.map((dia, i) => (
-            <div key={dia} className={i === hoje ? 'dia hoje' : 'dia'}>
-              <div className="dia-cabecalho">
-                <span>{dia}</span>
-                {i === hoje && <span className="selo-hoje">hoje</span>}
-                {minutosDoDia[i] > 0 && <span className="suave pequeno">{formatarDuracao(minutosDoDia[i])}</span>}
-              </div>
-              {porDia[i].length === 0 ? (
-                <p className="suave pequeno dia-livre">Livre</p>
-              ) : (
-                porDia[i].map((b) => {
-                  const dataBloco = datasDaSemana[i]
-                  const status = mapaCheckins(checkins)[`${b.id}|${dataBloco}`]
-                  const podeMarcar = !editavel && dataBloco <= hojeData && contaEstudo(b)
-                  return (
-                  <div key={b.id} className={`bloco ${status ? 'marcado-' + status : ''}`} style={{ '--cor': corDe(b.materia) }}>
-                    <span className="bloco-hora">{hhmm(b.inicio)}–{hhmm(b.fim)}</span>
-                    <strong className="bloco-materia">{b.materia}</strong>
-                    {b.conteudo && <span className="bloco-conteudo">{b.conteudo}</span>}
-                    {podeMarcar ? (
-                      <span className="checkin" role="group" aria-label="Como foi este bloco?">
-                        {[['feito', '✓', 'Feito'], ['parcial', '½', 'Parcial'], ['nao', '✗', 'Não fiz']].map(([k, ic, nome]) => (
-                          <button key={k} className={status === k ? `ck ck-${k} ativo` : `ck ck-${k}`} onClick={() => marcar(b, dataBloco, k)} title={nome} aria-pressed={status === k}>
-                            {ic}
-                          </button>
-                        ))}
-                      </span>
-                    ) : status ? (
-                      <span className={`ck-status ck-${status}`}>{status === 'feito' ? '✓ feito' : status === 'parcial' ? '½ parcial' : '✗ não fez'}</span>
-                    ) : null}
-                    {editavel && (
-                      <span className="bloco-acoes">
-                        <button className="link" onClick={() => editar(b)}>editar</button>
-                        <button className="link perigo" onClick={() => remover(b)}>remover</button>
-                      </span>
+        (() => {
+          // Grade proporcional: a altura de cada bloco é a duração dele.
+          // No computador, todos os dias usam a mesma régua de horas (ficam alinhados);
+          // no celular, cada dia começa no seu primeiro bloco.
+          const ini = (lista) => Math.floor(Math.min(...lista.map((b) => emMinutos(b.inicio))) / 60) * 60
+          const fim = (lista) => Math.ceil(Math.max(...lista.map((b) => emMinutos(b.fim))) / 60) * 60
+          const iniGeral = ini(blocos)
+          const fimGeral = Math.max(fim(blocos), iniGeral + 60)
+          const horas = []
+          for (let m = iniGeral; m <= fimGeral; m += 60) horas.push(m)
+          return (
+            <div className={largo ? 'semana grade-horas' : 'semana'}>
+              {largo && (
+                <div className="regua" aria-hidden="true">
+                  <div className="dia-cabecalho regua-topo" />
+                  <div className="regua-horas" style={{ height: (fimGeral - iniGeral) * PX_MIN }}>
+                    {horas.map((m) => (
+                      <span key={m} style={{ top: (m - iniGeral) * PX_MIN }}>{String(Math.floor(m / 60)).padStart(2, '0')}h</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {DIAS.map((dia, i) => {
+                const lista = porDia[i]
+                const comeco = largo ? iniGeral : lista.length ? ini(lista) : 0
+                const termino = largo ? fimGeral : lista.length ? Math.max(fim(lista), comeco + 60) : 0
+                return (
+                  <div key={dia} className={i === hoje ? 'dia hoje' : 'dia'}>
+                    <div className="dia-cabecalho">
+                      <span>{dia}</span>
+                      {i === hoje && <span className="selo-hoje">hoje</span>}
+                      {minutosDoDia[i] > 0 && <span className="suave pequeno">{formatarDuracao(minutosDoDia[i])}</span>}
+                    </div>
+                    {lista.length === 0 && !largo ? (
+                      <p className="suave pequeno dia-livre">Livre</p>
+                    ) : (
+                      <div className="dia-linha" style={{ height: (termino - comeco) * PX_MIN, '--hora': `${60 * PX_MIN}px` }}>
+                        {lista.length === 0 && <p className="suave pequeno dia-livre">Livre</p>}
+                        {lista.map((b) => {
+                          const dataBloco = datasDaSemana[i]
+                          const status = mapaCheckins(checkins)[`${b.id}|${dataBloco}`]
+                          const podeMarcar = !editavel && dataBloco <= hojeData && contaEstudo(b)
+                          const dur = Math.max(emMinutos(b.fim) - emMinutos(b.inicio), 15)
+                          const altura = dur * PX_MIN
+                          const tamanho = altura < 46 ? 'mini' : altura < 84 ? 'curto' : ''
+                          const extras = (podeMarcar ? 34 : 0) + (editavel ? 24 : 0) + (status && !podeMarcar ? 20 : 0)
+                          const linhas = Math.floor((altura - 52 - extras) / 17)
+                          return (
+                            <div
+                              key={b.id}
+                              className={`bloco ${tamanho} ${linhas < 1 ? 'sem-conteudo' : ''} ${status ? 'marcado-' + status : ''}`}
+                              style={{ '--cor': corDe(b.materia), '--linhas': Math.max(1, linhas), top: (emMinutos(b.inicio) - comeco) * PX_MIN, height: altura }}
+                              tabIndex={0}
+                              title={`${hhmm(b.inicio)}–${hhmm(b.fim)} · ${b.materia}${b.conteudo ? ' — ' + b.conteudo : ''}`}
+                            >
+                              <div className="bloco-caixa">
+                                <span className="bloco-topo">
+                                  <span className="bloco-hora">{hhmm(b.inicio)}–{hhmm(b.fim)}</span>
+                                  <strong className="bloco-materia">{b.materia}</strong>
+                                </span>
+                                {b.conteudo && <span className="bloco-conteudo">{b.conteudo}</span>}
+                                {podeMarcar ? (
+                                  <span className="checkin" role="group" aria-label="Como foi este bloco?">
+                                    {[['feito', '✓', 'Feito'], ['parcial', '½', 'Parcial'], ['nao', '✗', 'Não fiz']].map(([k, ic, nome]) => (
+                                      <button key={k} className={status === k ? `ck ck-${k} ativo` : `ck ck-${k}`} onClick={() => marcar(b, dataBloco, k)} title={nome} aria-pressed={status === k}>
+                                        {ic}
+                                      </button>
+                                    ))}
+                                  </span>
+                                ) : status ? (
+                                  <span className={`ck-status ck-${status}`}>{status === 'feito' ? '✓ feito' : status === 'parcial' ? '½ parcial' : '✗ não fez'}</span>
+                                ) : null}
+                                {editavel && (
+                                  <span className="bloco-acoes">
+                                    <button className="link" onClick={() => editar(b)}>editar</button>
+                                    <button className="link perigo" onClick={() => remover(b)}>remover</button>
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
                     )}
                   </div>
-                  )
-                })
-              )}
+                )
+              })}
             </div>
-          ))}
-        </div>
+          )
+        })()
       )}
     </section>
   )

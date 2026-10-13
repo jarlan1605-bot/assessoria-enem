@@ -59,6 +59,8 @@ Depois de mexer nas variáveis, faça **Redeploy**.
 
 ## Como algumas coisas funcionam
 
+- **Horário proporcional**: cada bloco tem a altura da sua duração (1 hora = 66 px), com uma régua de horas ao lado no computador. Blocos curtos mostram só horário e matéria; passe o mouse (ou toque) para ver tudo, marcar o check-in, editar ou remover.
+- **Enviar horário pelo WhatsApp**: botão verde na aba Horário. Gera o texto formatado com o nome do aluno (copiar ou abrir direto no WhatsApp) e uma imagem do horário (baixar ou, no celular, compartilhar).
 - **Check-in**: o aluno marca cada bloco do horário como ✓ feito, ½ parcial ou ✗ não fiz. A % de plano cumprido considera os últimos 7 dias. A sequência conta os dias seguidos com pelo menos 70% do plano cumprido; dias sem estudo planejado não quebram a sequência.
 - **Caderno de erros**: cada erro volta para revisão 1 dia depois de registrado, depois em 7 dias e depois em 30. Depois de 3 revisões certas, vira "dominado". Se o aluno clicar em "Ainda erro", a contagem recomeça.
 - **Redação**: o aluno envia a foto ou o PDF. O mentor corrige com notas de 0 a 200 em cada competência, e a nota vai sozinha para a Evolução e para as metas de redação. O aluno não consegue mudar a nota.

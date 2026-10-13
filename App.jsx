@@ -228,7 +228,7 @@ function Painel({ usuario }) {
     conteudo = {
       simulados: <Simulados key={k} alunoId={k} onVerEvolucao={() => setAba('evolucao')} />,
       evolucao: <Evolucao key={k} alunoId={k} ehMentor={ehMentor} onLancar={() => setAba('simulados')} />,
-      horario: <Horario key={k} alunoId={k} editavel={ehMentor} />,
+      horario: <Horario key={k} alunoId={k} editavel={ehMentor} aluno={alunoAtual} />,
       erros: <CadernoErros key={k} alunoId={k} ehMentor={ehMentor} />,
       redacao: <Redacao key={k} alunoId={k} ehMentor={ehMentor} alunos={alunos} />,
       relatorio: <Relatorio key={k} aluno={alunoAtual} ehMentor={ehMentor} equipe={equipe} />,

@@ -1009,3 +1009,71 @@ span.q-bolinha { cursor: default; }
 }
 @media print { .questao { break-inside: avoid; } }
 @media (max-width: 900px) { .q-barra { top: 118px; } }
+
+/* ---------- Horário proporcional (altura = duração) ---------- */
+.semana .dia-cabecalho { height: 46px; flex-wrap: wrap; align-content: flex-start; overflow: hidden; row-gap: 2px; }
+.dia-linha {
+  position: relative;
+  background-image: repeating-linear-gradient(to bottom, color-mix(in srgb, var(--borda) 75%, transparent) 0 1px, transparent 1px var(--hora));
+  border-radius: 8px;
+}
+.dia-linha .dia-livre { position: absolute; top: 6px; left: 4px; }
+.dia-linha .bloco {
+  position: absolute; left: 0; right: 0;
+  padding: 0; border: 0; background: none; border-radius: 9px; outline: none;
+}
+.bloco-caixa {
+  position: absolute; inset: 0 0 1px 0;
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 6px 8px 6px 10px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--cor) 13%, var(--superficie));
+  border-left: 4px solid var(--cor);
+  overflow: hidden;
+  transition: box-shadow 0.15s;
+}
+.bloco.marcado-feito .bloco-caixa { background: color-mix(in srgb, #2f9e44 16%, var(--superficie)); }
+.bloco-topo { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.dia-linha .bloco-conteudo { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: var(--linhas, 2); overflow: hidden; }
+.bloco.sem-conteudo .bloco-conteudo, .bloco.curto .bloco-conteudo { display: none; }
+.bloco.curto .checkin, .bloco.curto .bloco-acoes, .bloco.curto .ck-status,
+.bloco.mini .checkin, .bloco.mini .bloco-acoes, .bloco.mini .ck-status, .bloco.mini .bloco-conteudo { display: none; }
+.bloco.mini .bloco-caixa { padding: 2px 6px 2px 8px; justify-content: center; }
+.bloco.mini .bloco-topo { flex-direction: row; gap: 6px; align-items: baseline; white-space: nowrap; }
+.bloco.mini .bloco-hora { font-size: 11px; }
+.bloco.mini .bloco-materia { font-size: 12px; overflow: hidden; text-overflow: ellipsis; }
+/* Ao passar o mouse ou tocar, o bloco abre por cima dos outros e mostra tudo */
+.dia-linha .bloco:hover, .dia-linha .bloco:focus-within { z-index: 6; }
+.bloco:hover .bloco-caixa, .bloco:focus-within .bloco-caixa {
+  bottom: auto; min-height: calc(100% - 1px); overflow: visible;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.16);
+  background: color-mix(in srgb, var(--cor) 13%, var(--superficie));
+}
+.bloco:hover .bloco-caixa > *, .bloco:focus-within .bloco-caixa > * { display: flex; -webkit-line-clamp: unset; }
+.bloco:hover .bloco-conteudo, .bloco:focus-within .bloco-conteudo { display: block; }
+.bloco.mini:hover .bloco-caixa, .bloco.mini:focus-within .bloco-caixa { padding: 6px 8px 6px 10px; }
+.bloco.mini:hover .bloco-topo, .bloco.mini:focus-within .bloco-topo { flex-direction: column; white-space: normal; }
+.bloco-caixa .checkin { flex-wrap: wrap; }
+.bloco-caixa .ck { width: 30px; height: 26px; }
+/* régua de horas (computador) */
+.semana.grade-horas { grid-template-columns: 34px repeat(7, minmax(0, 1fr)); gap: 8px; }
+.grade-horas .dia { padding: 8px 6px; }
+.regua { display: flex; flex-direction: column; gap: 8px; padding: 8px 0; }
+.regua-topo { border-bottom-color: transparent; }
+.regua-horas { position: relative; }
+.regua-horas span { position: absolute; right: 0; transform: translateY(-50%); font-size: 11px; font-weight: 700; color: var(--suave); font-variant-numeric: tabular-nums; }
+.regua-horas span:first-child { transform: none; }
+
+/* ---------- Enviar horário pelo WhatsApp ---------- */
+.botao.botao-whats, .botao-whats { background: #1fa855; border-color: #1fa855; color: #fff; }
+.botao.botao-whats:hover, .botao-whats:hover { background: #178a45; border-color: #178a45; }
+.modal-exportar { max-width: 900px; width: 100%; max-height: 92vh; overflow-y: auto; }
+.exportar-grade { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 8px; }
+.exportar-coluna { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.exportar-texto {
+  margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font-family: inherit; font-size: 13px; line-height: 1.5;
+  background: #e7f6dd; color: #1d1b18; border-radius: 12px; padding: 12px 14px; max-height: 380px; overflow-y: auto;
+}
+.exportar-imagem { background: var(--superficie-2); border-radius: 12px; padding: 8px; max-height: 380px; overflow-y: auto; display: grid; place-items: center; min-height: 120px; }
+.exportar-imagem img { width: 100%; height: auto; border-radius: 8px; display: block; }
+@media (max-width: 720px) { .exportar-grade { grid-template-columns: 1fr; } }

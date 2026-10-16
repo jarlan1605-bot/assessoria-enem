@@ -22,6 +22,7 @@ import Financeiro from './Financeiro'
 import SiteEditor from './SiteEditor'
 import BancoQuestoes from './BancoQuestoes'
 import SimuladorProva from './SimuladorProva'
+import { precisaVoce } from './cobranca'
 
 export default function App() {
   const [sessao, setSessao] = useState(undefined) // undefined = ainda verificando
@@ -69,9 +70,22 @@ function Painel({ usuario }) {
   const [fotoMentor, setFotoMentor] = useState(null)
   const [equipe, setEquipe] = useState([]) // mentores e CEO (nome e foto)
   const [config, setConfig] = useState(null) // data do ENEM etc.
+  const [aCobrar, setACobrar] = useState(0) // CEO: cobranças para fazer hoje
 
   const ehCeo = perfil?.papel === 'ceo'
   const ehMentor = perfil?.papel === 'mentor' || ehCeo
+
+  // CEO: quantos alunos precisam ser cobrados hoje (aparece no menu e num aviso)
+  useEffect(() => {
+    if (!ehCeo) return
+    Promise.all([
+      supabase.from('contratos').select('*'),
+      supabase.from('financeiro_config').select('*').eq('id', 1).maybeSingle(),
+    ]).then(([c, cfg]) => {
+      if (c.error || cfg.error) return
+      setACobrar((c.data ?? []).filter((x) => precisaVoce({ ativo: true, ...x }, cfg.data || { dias_antes: 3 })).length)
+    })
+  }, [ehCeo, aba])
 
   function setAba(id) {
     setAbaEstado(id)
@@ -271,6 +285,7 @@ function Painel({ usuario }) {
                   onClick={() => setAba(id)}
                 >
                   <span aria-hidden="true">{icone}</span> {nome}
+                  {id === 'financeiro' && aCobrar > 0 && <span className="menu-badge" aria-label={`${aCobrar} para cobrar`}>{aCobrar}</span>}
                 </button>
               ))}
             </div>
@@ -280,6 +295,11 @@ function Painel({ usuario }) {
         <main className="conteudo">
           <div className="nao-imprimir">
             <Contagem config={config} visivel={perfil.mostrar_contagem !== false} onAlterar={alterarContagem} />
+            {ehCeo && aCobrar > 0 && abaAtual !== 'financeiro' && (
+              <button className="aviso-cobranca" onClick={() => setAba('financeiro')}>
+                💰 <b>{aCobrar} {aCobrar === 1 ? 'aluno para você cobrar' : 'alunos para você cobrar'} hoje.</b> <span>Abrir o financeiro →</span>
+              </button>
+            )}
           </div>
 
           {ehMentor && porAluno && (

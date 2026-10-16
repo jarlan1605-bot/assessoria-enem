@@ -1215,3 +1215,30 @@ span.q-bolinha { cursor: default; }
 }
 .sp-st-pausa { color: #e67700 !important; }
 .sp-st-rodando { color: #2f9e44 !important; }
+
+/* ---------- Cobrança mensal ---------- */
+.menu-badge { margin-left: auto; background: #e03131; color: #fff; font-size: 11px; font-weight: 800; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 99px; display: inline-grid; place-items: center; }
+.menu-item { display: flex; align-items: center; gap: 6px; }
+.aviso-cobranca {
+  font: inherit; width: 100%; text-align: left; cursor: pointer; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  margin: 10px 0 0; padding: 12px 14px; border-radius: var(--raio); border: 1.5px solid #f2c94c; background: #fff7d6; color: #5c4400; font-size: 14px;
+}
+.aviso-cobranca span { margin-left: auto; font-weight: 700; text-decoration: underline; }
+.cobrar-hoje { border: 2px solid color-mix(in srgb, #e8590c 45%, var(--borda)); }
+.cobrar-hoje.vazio-ok { border-color: color-mix(in srgb, #2f9e44 40%, var(--borda)); }
+.cobrar-item { display: flex; align-items: center; gap: 10px 12px; padding: 10px 0; border-top: 1px solid var(--borda); flex-wrap: wrap; }
+.cobrar-info { display: flex; flex-direction: column; min-width: 160px; flex: 1; }
+.cobrar-acoes { display: flex; gap: 6px; flex-wrap: wrap; }
+.fin-hoje { background: #e8590c; color: #fff; }
+.modal-largo { max-width: 760px; width: 100%; max-height: 92vh; overflow-y: auto; }
+.pix-codigo { display: block; margin-top: 4px; padding: 8px 10px; background: var(--superficie-2); border-radius: 8px; font-size: 11px; overflow-wrap: anywhere; user-select: all; }
+@media (max-width: 720px) { .cobrar-acoes { width: 100%; } .cobrar-acoes .botao { flex: 1; } }
+.robo-linha { font-size: 13px; background: var(--primaria-clara); border-radius: 10px; padding: 9px 12px; margin: 0 0 10px; }
+.robo-env { display: inline-block; margin: 3px 0 0 6px; font-size: 11px; font-weight: 700; color: var(--suave); white-space: nowrap; }
+.robo-env.erro { color: var(--perigo); }
+.robo-config { background: var(--superficie-2); border-radius: 12px; padding: 12px 14px; }
+.robo-teste { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.robo-teste input { flex: 1 1 180px; }
+.robo-resposta { white-space: pre-wrap; font-family: inherit; font-size: 13px; border-radius: 10px; padding: 10px 12px; margin: 8px 0 0; }
+.robo-resposta.ok { background: color-mix(in srgb, #2f9e44 12%, var(--superficie)); }
+.robo-resposta.erro { background: color-mix(in srgb, #c92a2a 10%, var(--superficie)); color: var(--perigo); }

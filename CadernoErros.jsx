@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from './supabase'
 import { AREAS, MATERIAS, TIPOS_ERRO, MATERIAS_POR_AREA } from './constants'
 import { hojeISO, somarDias } from './agenda'
+import { ASSUNTOS } from './incidencia'
 
 export const MOTIVOS = Object.fromEntries(
   Object.entries(TIPOS_ERRO).map(([k, t]) => [k, { nome: t.nome, curto: t.nome, desc: t.desc, cor: t.cor }])
@@ -160,7 +161,10 @@ export default function CadernoErros({ alunoId, ehMentor }) {
             </label>
             <label className="largo-2">
               Assunto
-              <input value={form.assunto} onChange={(e) => setForm({ ...form, assunto: e.target.value })} placeholder="Ex.: Genética — 2ª Lei de Mendel" />
+              <input list="lista-assuntos" value={form.assunto} onChange={(e) => setForm({ ...form, assunto: e.target.value })} placeholder="Ex.: Circuitos elétricos" />
+              <datalist id="lista-assuntos">
+                {ASSUNTOS.filter((a) => a.area === form.area).map((a) => <option key={a.id} value={a.nome}>{a.materia}</option>)}
+              </datalist>
             </label>
             <label>
               De onde veio

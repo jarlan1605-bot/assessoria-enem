@@ -1270,3 +1270,24 @@ span.q-bolinha { cursor: default; }
 @media (max-width: 640px) {
   .videoaulas-busca, .videoaulas-busca select, .videoaulas-busca input { width: 100%; }
 }
+
+/* ---------- Onde estão seus pontos ---------- */
+.pontos .cartao, .pontos .matriz-pontos { max-width: 860px; width: 100%; }
+.matriz-pontos { display: grid; grid-template-columns: auto 1fr 1fr; gap: 8px; align-items: stretch; }
+.matriz-rotulo { font-size: 12px; font-weight: 800; color: var(--suave); text-transform: uppercase; letter-spacing: 0.04em; text-align: center; align-self: end; }
+.matriz-rotulo.lateral { align-self: center; text-align: right; padding-right: 4px; }
+.matriz-celula { border-radius: 12px; padding: 12px 14px; background: color-mix(in srgb, var(--cor) 12%, var(--superficie)); border: 1px solid color-mix(in srgb, var(--cor) 35%, var(--borda)); display: flex; flex-direction: column; gap: 2px; }
+.matriz-celula strong { font-size: 22px; font-variant-numeric: tabular-nums; }
+.matriz-celula span { font-size: 13px; font-weight: 700; color: color-mix(in srgb, var(--cor) 70%, var(--texto)); }
+.grupo-pontos { border-left: 4px solid var(--cor); }
+.lista-pontos { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.lista-pontos li { display: flex; flex-direction: column; gap: 5px; padding: 12px 0; border-top: 1px solid var(--borda); }
+.lista-pontos li:first-child { border-top: 0; padding-top: 4px; }
+.ponto-topo { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: baseline; }
+.ponto-numeros { display: flex; gap: 14px; flex-wrap: wrap; }
+.lista-pontos .barra { max-width: 420px; }
+.chips-pontos { display: flex; flex-wrap: wrap; gap: 6px; }
+@media (max-width: 640px) {
+  .matriz-celula { padding: 10px; }
+  .matriz-celula strong { font-size: 18px; }
+}

@@ -8,6 +8,7 @@ import Avatar from './Avatar'
 import TrocarSenha from './TrocarSenha'
 import Agenda from './Agenda'
 import Aulas from './Aulas'
+import Videoaulas from './Videoaulas'
 import Perfil from './Perfil'
 import Comunidade from './Comunidade'
 import Evolucao from './Evolucao'
@@ -171,6 +172,7 @@ function Painel({ usuario }) {
       titulo: 'Mentoria',
       itens: [
         ['comunidade', '📣', 'Comunidade'],
+        ['videoaulas', '🎬', 'Aulas e mentorias'],
         ehMentor ? ['agenda', '📅', 'Agenda'] : ['aulas', '🎓', 'Marcar aula'],
         ['relatorio', '📄', 'Relatório'],
       ],
@@ -208,6 +210,8 @@ function Painel({ usuario }) {
   let conteudo
   if (abaAtual === 'comunidade') {
     conteudo = <Comunidade ehMentor={ehMentor} ehCeo={ehCeo} meuId={perfil.id} equipe={equipe} fotoPadrao={fotoDaMarca} />
+  } else if (abaAtual === 'videoaulas') {
+    conteudo = <Videoaulas ehMentor={ehMentor} ehCeo={ehCeo} meuId={perfil.id} equipe={equipe} />
   } else if (abaAtual === 'cronometro') {
     conteudo = <SimuladorProva />
   } else if (abaAtual === 'questoes') {

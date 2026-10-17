@@ -1287,20 +1287,7 @@ span.q-bolinha { cursor: default; }
 .ponto-numeros { display: flex; gap: 14px; flex-wrap: wrap; }
 .lista-pontos .barra { max-width: 420px; }
 .chips-pontos { display: flex; flex-wrap: wrap; gap: 6px; }
-.pergunte-claude { border: 1px solid color-mix(in srgb, var(--primaria) 40%, var(--borda)); background: color-mix(in srgb, var(--primaria-clara) 45%, var(--superficie)); }
-.pergunta-linha { display: flex; gap: 8px; margin-top: 10px; }
-.pergunta-linha input { flex: 1; min-width: 0; }
-.resposta-claude { margin-top: 14px; padding: 14px 16px; background: var(--superficie); border: 1px solid var(--borda); border-radius: 12px; }
-.resposta-claude h3 { font-size: 15px; margin: 12px 0 6px; }
-.resposta-claude h3:first-child { margin-top: 0; }
-.resposta-claude p { margin: 6px 0; }
-.resposta-claude ul { margin: 6px 0; padding-left: 20px; }
-.resposta-claude li { margin: 3px 0; }
-.respostas-antigas { margin-top: 12px; }
-.respostas-antigas summary { cursor: pointer; }
-.resposta-antiga { margin-top: 8px; }
 @media (max-width: 640px) {
-  .pergunta-linha { flex-direction: column; }
   .matriz-celula { padding: 10px; }
   .matriz-celula strong { font-size: 18px; }
 }

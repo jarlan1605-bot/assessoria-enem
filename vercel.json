@@ -1,7 +1,4 @@
 {
-  "functions": {
-    "api/o-que-estudar.js": { "maxDuration": 60 }
-  },
   "crons": [
     { "path": "/api/cobranca-automatica", "schedule": "0 15 * * *" }
   ]

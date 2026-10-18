@@ -167,6 +167,7 @@ function Painel({ usuario }) {
     )
   }
   if (!perfil) return <Carregando />
+  if (perfil.papel === 'aluno' && perfil.suspenso) return <AcessoSuspenso perfil={perfil} />
 
   const grupos = [
     {
@@ -193,7 +194,9 @@ function Painel({ usuario }) {
     },
     ...(ehCeo
       ? [{ titulo: 'Gestão', itens: [['equipe', '🏢', 'Equipe'], ['financeiro', '💰', 'Financeiro'], ['site', '🌐', 'Página de vendas']] }]
-      : []),
+      : ehMentor
+        ? [{ titulo: 'Gestão', itens: [['equipe', '👥', 'Meus alunos']] }]
+        : []),
   ]
   const abasValidas = grupos.flatMap((g) => g.itens.map((i) => i[0]))
   const abaAtual = abasValidas.includes(aba) ? aba : 'comunidade'
@@ -219,7 +222,7 @@ function Painel({ usuario }) {
   } else if (abaAtual === 'questoes') {
     conteudo = <BancoQuestoes perfil={perfil} ehMentor={ehMentor} alunos={alunos} />
   } else if (abaAtual === 'equipe') {
-    conteudo = <Equipe meuId={perfil.id} onMudou={() => { carregarAlunos(); carregarEquipe() }} />
+    conteudo = <Equipe meuId={perfil.id} ehCeo={ehCeo} onMudou={() => { carregarAlunos(); carregarEquipe() }} />
   } else if (abaAtual === 'financeiro') {
     conteudo = <Financeiro meuId={perfil.id} />
   } else if (abaAtual === 'site') {
@@ -239,8 +242,8 @@ function Painel({ usuario }) {
           </>
         ) : (
           <>
-            <p>Seus alunos aparecem aqui assim que o CEO cadastrar e vincular eles a você.</p>
-            <button className="botao" onClick={carregarAlunos}>Atualizar lista</button>
+            <p>Cadastre seus alunos na aba <b>Meus alunos</b>. Os que o CEO vincular a você também aparecem aqui.</p>
+            <button className="botao primario" onClick={() => setAba('equipe')}>Ir para Meus alunos</button>
           </>
         )}
       </div>
@@ -369,13 +372,13 @@ function SeletorAluno({ alunos, equipe, meuId, ehCeo, alunoId, onEscolher, onRen
             ? gruposPorMentor(alunos, equipe, meuId).map((g) => (
                 <optgroup key={g.id} label={g.rotulo}>
                   {g.alunos.map((a) => (
-                    <option key={a.id} value={a.id}>{a.nome || a.email}</option>
+                    <option key={a.id} value={a.id}>{a.nome || a.email}{a.suspenso ? ' (suspenso)' : ''}</option>
                   ))}
                 </optgroup>
               ))
             : alunos.map((a) => (
                 <option key={a.id} value={a.id}>
-                  {a.nome || a.email}
+                  {a.nome || a.email}{a.suspenso ? ' (suspenso)' : ''}
                 </option>
               ))}
         </select>
@@ -383,6 +386,7 @@ function SeletorAluno({ alunos, equipe, meuId, ehCeo, alunoId, onEscolher, onRen
       {aluno && !editando && (
         <div className="seletor-info">
           <span className="suave pequeno">{aluno.email}</span>
+          {aluno.suspenso && <span className="selo selo-suspenso">⛔ Acesso suspenso</span>}
           <button className="botao fantasma pequeno" onClick={() => { setNome(aluno.nome); setEditando(true) }}>
             Editar nome
           </button>
@@ -438,6 +442,41 @@ function LimiteAulas({ aluno, onSalvo }) {
       {estado === 'ok' && Number(valor) === atual && <span className="suave pequeno">✓ salvo</span>}
       {estado === 'erro' && <span className="erro pequeno">não salvou</span>}
     </form>
+  )
+}
+
+// O que o aluno suspenso vê: o login funciona, mas o resto da plataforma fica fechado
+function AcessoSuspenso({ perfil }) {
+  const [whatsapp, setWhatsapp] = useState('')
+
+  useEffect(() => {
+    supabase.from('site_config').select('whatsapp').eq('id', 1).maybeSingle().then(({ data }) => setWhatsapp((data?.whatsapp || '').replace(/\D/g, '')))
+  }, [])
+
+  const primeiroNome = (perfil.nome || '').split(' ')[0]
+  const mensagem = `Olá! Aqui é ${perfil.nome || perfil.email}. Meu acesso à ${NOME_SITE} está suspenso e quero regularizar.`
+
+  return (
+    <div className="centro-tela">
+      <div className="cartao suspenso-cartao">
+        <span className="suspenso-icone" aria-hidden="true">⛔</span>
+        <h1>Acesso suspenso</h1>
+        <p>
+          {primeiroNome ? `${primeiroNome}, seu` : 'Seu'} acesso à {NOME_SITE} está suspenso no momento, normalmente por causa de um pagamento em aberto.
+        </p>
+        <p className="suave">
+          Nada foi apagado: seu horário, seus simulados e seu caderno de erros continuam guardados. Assim que o pagamento for regularizado, é só entrar de novo.
+        </p>
+        <div className="linha-botoes" style={{ justifyContent: 'center' }}>
+          {whatsapp && (
+            <a className="botao primario" href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(mensagem)}`} target="_blank" rel="noreferrer">
+              Falar no WhatsApp
+            </a>
+          )}
+          <button className="botao fantasma" onClick={() => supabase.auth.signOut()}>Sair</button>
+        </div>
+      </div>
+    </div>
   )
 }
 

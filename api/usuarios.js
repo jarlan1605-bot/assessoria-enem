@@ -1,6 +1,6 @@
 // Função do Vercel: cria contas, redefine senhas e remove contas.
-// Só o CEO consegue usar. A chave secreta fica SÓ aqui no servidor
-// (variável SUPABASE_SERVICE_ROLE_KEY no Vercel) e nunca vai para o navegador.
+// O CEO faz tudo. O mentor só cadastra alunos para si mesmo e troca a senha dos próprios alunos.
+// A chave secreta fica SÓ aqui no servidor (variável SUPABASE_SERVICE_ROLE_KEY no Vercel) e nunca vai para o navegador.
 import { createClient } from '@supabase/supabase-js'
 
 const URL_SUPABASE = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     auth: { persistSession: false, autoRefreshToken: false },
   })
 
-  // 1) Quem está pedindo? Precisa estar logado e ser CEO.
+  // 1) Quem está pedindo? Precisa estar logado e ser CEO ou mentor.
   const token = (req.headers.authorization || '').replace(/^Bearer\s+/i, '')
   if (!token) return responder(res, 401, { erro: 'Faça login de novo.' })
   const { data: dadosUsuario, error: erroUsuario } = await admin.auth.getUser(token)
@@ -27,7 +27,8 @@ export default async function handler(req, res) {
   if (erroUsuario || !quem) return responder(res, 401, { erro: 'Sessão expirada. Faça login de novo.' })
 
   const { data: eu } = await admin.from('perfis').select('papel').eq('id', quem.id).single()
-  if (eu?.papel !== 'ceo') return responder(res, 403, { erro: 'Só o CEO pode fazer isso.' })
+  const ehCeo = eu?.papel === 'ceo'
+  if (!ehCeo && eu?.papel !== 'mentor') return responder(res, 403, { erro: 'Só a equipe pode fazer isso.' })
 
   let corpo = req.body
   if (typeof corpo === 'string') {
@@ -42,6 +43,7 @@ export default async function handler(req, res) {
       const senha = String(corpo.senha || '')
       const nome = String(corpo.nome || '').trim().slice(0, 80)
       const papel = corpo.papel === 'mentor' ? 'mentor' : 'aluno'
+      if (papel === 'mentor' && !ehCeo) return responder(res, 403, { erro: 'Só o CEO pode cadastrar mentores.' })
 
       if (!nome) return responder(res, 400, { erro: 'Coloque o nome.' })
       if (!emailValido(email)) return responder(res, 400, { erro: 'E-mail inválido.' })
@@ -49,7 +51,7 @@ export default async function handler(req, res) {
 
       let mentorId = null
       if (papel === 'aluno') {
-        mentorId = corpo.mentor_id || quem.id
+        mentorId = ehCeo ? corpo.mentor_id || quem.id : quem.id // o mentor cadastra sempre para si
         const { data: mentor } = await admin.from('perfis').select('papel').eq('id', mentorId).single()
         if (!mentor || !['mentor', 'ceo'].includes(mentor.papel)) {
           return responder(res, 400, { erro: 'Mentor responsável inválido.' })
@@ -86,6 +88,12 @@ export default async function handler(req, res) {
       const senha = String(corpo.senha || '')
       if (!corpo.id) return responder(res, 400, { erro: 'Pessoa não informada.' })
       if (senha.length < 6) return responder(res, 400, { erro: 'A senha precisa ter pelo menos 6 caracteres.' })
+      if (!ehCeo) {
+        const { data: alvo } = await admin.from('perfis').select('papel, mentor_id').eq('id', corpo.id).single()
+        if (alvo?.papel !== 'aluno' || alvo.mentor_id !== quem.id) {
+          return responder(res, 403, { erro: 'Você só pode trocar a senha dos seus alunos.' })
+        }
+      }
       const { error } = await admin.auth.admin.updateUserById(corpo.id, { password: senha })
       if (error) return responder(res, 400, { erro: 'Não foi possível trocar a senha: ' + error.message })
       return responder(res, 200, { ok: true })
@@ -93,6 +101,7 @@ export default async function handler(req, res) {
 
     // 4) Remover conta (apaga horário e simulados do aluno)
     if (corpo.acao === 'excluir') {
+      if (!ehCeo) return responder(res, 403, { erro: 'Só o CEO pode remover contas.' })
       if (!corpo.id) return responder(res, 400, { erro: 'Pessoa não informada.' })
       if (corpo.id === quem.id) return responder(res, 400, { erro: 'Você não pode remover a própria conta.' })
       const { data: alvo } = await admin.from('perfis').select('papel').eq('id', corpo.id).single()

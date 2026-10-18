@@ -1291,3 +1291,10 @@ span.q-bolinha { cursor: default; }
   .matriz-celula { padding: 10px; }
   .matriz-celula strong { font-size: 18px; }
 }
+
+/* ---------- Acesso suspenso ---------- */
+.selo-suspenso { background: color-mix(in srgb, var(--perigo) 14%, var(--superficie)); color: var(--perigo); }
+.selo-ativo { background: var(--primaria-clara); color: var(--primaria); }
+.linha-suspensa td:first-child { opacity: 0.6; }
+.suspenso-cartao { max-width: 460px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 28px 22px; }
+.suspenso-icone { font-size: 40px; }

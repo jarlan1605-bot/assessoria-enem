@@ -35,7 +35,8 @@ function gerarSenha() {
 
 const dataBR = (iso) => (iso ? iso.split('-').reverse().join('/') : '—')
 
-export default function Equipe({ meuId, onMudou }) {
+// O CEO vê e gerencia todo mundo. O mentor vê só os próprios alunos (as regras do banco já filtram)
+export default function Equipe({ meuId, ehCeo = true, onMudou }) {
   const [pessoas, setPessoas] = useState([])
   const [atendimentos, setAtendimentos] = useState([])
   const [simulados, setSimulados] = useState([])
@@ -46,6 +47,7 @@ export default function Equipe({ meuId, onMudou }) {
   const [credenciais, setCredenciais] = useState(null)
   const [busca, setBusca] = useState('')
   const [filtroMentor, setFiltroMentor] = useState('todos')
+  const [filtroStatus, setFiltroStatus] = useState('todos')
 
   const mes = inicioDoMes(new Date())
 
@@ -76,7 +78,8 @@ export default function Equipe({ meuId, onMudou }) {
     () => pessoas.filter((p) => p.papel === 'mentor' || p.papel === 'ceo').sort((a, b) => (a.id === meuId ? -1 : b.id === meuId ? 1 : (a.nome || '').localeCompare(b.nome || ''))),
     [pessoas, meuId]
   )
-  const alunos = useMemo(() => pessoas.filter((p) => p.papel === 'aluno'), [pessoas])
+  const alunos = useMemo(() => pessoas.filter((p) => p.papel === 'aluno' && (ehCeo || p.mentor_id === meuId)), [pessoas, ehCeo, meuId])
+  const suspensos = alunos.filter((a) => a.suspenso).length
 
   const inicioMesISO = mes.toISOString().slice(0, 10)
   const simuladosDoMes = simulados.filter((s) => s.data >= inicioMesISO)
@@ -100,6 +103,8 @@ export default function Equipe({ meuId, onMudou }) {
   }
 
   const alunosVisiveis = alunos.filter((a) => {
+    if (filtroStatus === 'ativos' && a.suspenso) return false
+    if (filtroStatus === 'suspensos' && !a.suspenso) return false
     if (filtroMentor === 'sem' && a.mentor_id && mentores.some((m) => m.id === a.mentor_id)) return false
     if (filtroMentor !== 'todos' && filtroMentor !== 'sem' && a.mentor_id !== filtroMentor) return false
     const t = busca.trim().toLowerCase()
@@ -127,6 +132,20 @@ export default function Equipe({ meuId, onMudou }) {
     }
   }
 
+  async function alternarSuspensao(a) {
+    const nome = a.nome || a.email
+    const suspender = !a.suspenso
+    if (suspender && !confirm(`Suspender o acesso de ${nome}?\n\nO login continua existindo, mas ao entrar ${nome.split(' ')[0]} só vai ver um aviso de acesso suspenso. Nada é apagado: quando reativar, tudo volta como estava.`)) return
+    const { error } = await supabase.from('perfis').update({ suspenso: suspender }).eq('id', a.id)
+    if (error) {
+      return setErro(/suspenso/.test(error.message) ? 'Falta rodar o arquivo acesso.sql no Supabase.' : 'Não foi possível alterar: ' + error.message)
+    }
+    setErro('')
+    setAviso(suspender ? `Acesso de ${nome} suspenso.` : `Acesso de ${nome} reativado.`)
+    carregar()
+    onMudou()
+  }
+
   async function remover(p) {
     const ehMentorAlvo = p.papel === 'mentor'
     const seus = alunos.filter((a) => a.mentor_id === p.id).length
@@ -151,12 +170,16 @@ export default function Equipe({ meuId, onMudou }) {
     <section className="secao equipe">
       <div className="comunidade-topo">
         <div>
-          <h2 style={{ margin: 0 }}>Equipe</h2>
-          <p className="suave pequeno" style={{ margin: '2px 0 0' }}>Mentores, alunos e o que está acontecendo em {MESES[mes.getMonth()].toLowerCase()}.</p>
+          <h2 style={{ margin: 0 }}>{ehCeo ? 'Equipe' : 'Meus alunos'}</h2>
+          <p className="suave pequeno" style={{ margin: '2px 0 0' }}>
+            {ehCeo
+              ? `Mentores, alunos e o que está acontecendo em ${MESES[mes.getMonth()].toLowerCase()}.`
+              : 'Cadastre seus alunos, troque a senha deles e suspenda o acesso de quem não pagou.'}
+          </p>
         </div>
         {!cadastrando && (
           <div className="linha-botoes" style={{ marginTop: 0 }}>
-            <button className="botao" onClick={() => { setCadastrando('mentor'); setCredenciais(null) }}>+ Mentor</button>
+            {ehCeo && <button className="botao" onClick={() => { setCadastrando('mentor'); setCredenciais(null) }}>+ Mentor</button>}
             <button className="botao primario" onClick={() => { setCadastrando('aluno'); setCredenciais(null) }}>+ Aluno</button>
           </div>
         )}
@@ -172,6 +195,7 @@ export default function Equipe({ meuId, onMudou }) {
           tipoInicial={cadastrando}
           mentores={mentores}
           meuId={meuId}
+          ehCeo={ehCeo}
           onFechar={() => setCadastrando(null)}
           onCriado={(dados) => {
             setCadastrando(null)
@@ -184,20 +208,22 @@ export default function Equipe({ meuId, onMudou }) {
       )}
 
       <div className="resumo-cartoes resumo-agenda">
-        <div className="cartao mini" style={{ '--cor': '#7048e8' }}>
-          <span className="mini-titulo">Mentores</span>
-          <strong className="mini-numero">{mentores.length}</strong>
-          <span className="suave pequeno">contando você</span>
-        </div>
+        {ehCeo && (
+          <div className="cartao mini" style={{ '--cor': '#7048e8' }}>
+            <span className="mini-titulo">Mentores</span>
+            <strong className="mini-numero">{mentores.length}</strong>
+            <span className="suave pequeno">contando você</span>
+          </div>
+        )}
         <div className="cartao mini" style={{ '--cor': 'var(--primaria)' }}>
           <span className="mini-titulo">Alunos</span>
-          <strong className="mini-numero">{alunos.length}</strong>
-          <span className="suave pequeno">ativos na plataforma</span>
+          <strong className="mini-numero">{alunos.length - suspensos}</strong>
+          <span className="suave pequeno">com acesso ativo{suspensos ? ` · ${suspensos} suspenso${suspensos > 1 ? 's' : ''}` : ''}</span>
         </div>
         <div className="cartao mini" style={{ '--cor': '#e67700' }}>
           <span className="mini-titulo">Atendimentos</span>
           <strong className="mini-numero">{atendimentos.filter((a) => a.aluno_id).length}</strong>
-          <span className="suave pequeno">marcados no mês (todos)</span>
+          <span className="suave pequeno">marcados no mês{ehCeo ? ' (todos)' : ''}</span>
         </div>
         <div className="cartao mini" style={{ '--cor': '#c2255c' }}>
           <span className="mini-titulo">Simulados</span>
@@ -206,51 +232,60 @@ export default function Equipe({ meuId, onMudou }) {
         </div>
       </div>
 
-      <div className="cartao">
-        <h2>Mentores</h2>
-        <div className="mentores-grade">
-          {mentores.map((m) => {
-            const st = statsMentor(m.id)
-            return (
-              <div key={m.id} className="mentor-cartao">
-                <div className="mentor-topo">
-                  <Avatar src={m.foto_url} nome={m.nome || m.email} tamanho={44} />
-                  <div className="mentor-nome">
-                    <strong>
-                      {m.nome || m.email}
-                      {m.papel === 'ceo' && <span className="selo selo-ceo">CEO</span>}
-                    </strong>
-                    <span className="suave pequeno">{m.email}</span>
+      {ehCeo && (
+        <div className="cartao">
+          <h2>Mentores</h2>
+          <div className="mentores-grade">
+            {mentores.map((m) => {
+              const st = statsMentor(m.id)
+              return (
+                <div key={m.id} className="mentor-cartao">
+                  <div className="mentor-topo">
+                    <Avatar src={m.foto_url} nome={m.nome || m.email} tamanho={44} />
+                    <div className="mentor-nome">
+                      <strong>
+                        {m.nome || m.email}
+                        {m.papel === 'ceo' && <span className="selo selo-ceo">CEO</span>}
+                      </strong>
+                      <span className="suave pequeno">{m.email}</span>
+                    </div>
                   </div>
-                </div>
-                <div className="mentor-numeros">
-                  <button className="link-num" onClick={() => setFiltroMentor(m.id)} title="Ver alunos">
-                    <strong>{st.alunos}</strong><span>alunos</span>
-                  </button>
-                  <div><strong>{st.atendimentos}</strong><span>aulas no mês</span></div>
-                  <div><strong>{st.simulados}</strong><span>simulados no mês</span></div>
-                </div>
-                {m.id !== meuId && (
-                  <div className="mentor-acoes">
-                    <button className="link" onClick={() => redefinirSenha(m)}>redefinir senha</button>
-                    {m.papel !== 'ceo' && <button className="link perigo" onClick={() => remover(m)}>remover</button>}
+                  <div className="mentor-numeros">
+                    <button className="link-num" onClick={() => setFiltroMentor(m.id)} title="Ver alunos">
+                      <strong>{st.alunos}</strong><span>alunos</span>
+                    </button>
+                    <div><strong>{st.atendimentos}</strong><span>aulas no mês</span></div>
+                    <div><strong>{st.simulados}</strong><span>simulados no mês</span></div>
                   </div>
-                )}
-              </div>
-            )
-          })}
+                  {m.id !== meuId && (
+                    <div className="mentor-acoes">
+                      <button className="link" onClick={() => redefinirSenha(m)}>redefinir senha</button>
+                      {m.papel !== 'ceo' && <button className="link perigo" onClick={() => remover(m)}>remover</button>}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="cartao">
         <div className="alunos-topo">
           <h2 style={{ margin: 0 }}>Alunos</h2>
           <div className="alunos-filtros">
             <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar por nome ou e-mail" />
-            <select value={filtroMentor} onChange={(e) => setFiltroMentor(e.target.value)}>
-              <option value="todos">Todos os mentores</option>
-              {mentores.map((m) => <option key={m.id} value={m.id}>{m.id === meuId ? 'Seus alunos' : `Alunos de ${m.nome || m.email}`}</option>)}
-              <option value="sem">Sem mentor</option>
+            {ehCeo && (
+              <select value={filtroMentor} onChange={(e) => setFiltroMentor(e.target.value)}>
+                <option value="todos">Todos os mentores</option>
+                {mentores.map((m) => <option key={m.id} value={m.id}>{m.id === meuId ? 'Seus alunos' : `Alunos de ${m.nome || m.email}`}</option>)}
+                <option value="sem">Sem mentor</option>
+              </select>
+            )}
+            <select value={filtroStatus} onChange={(e) => setFiltroStatus(e.target.value)}>
+              <option value="todos">Ativos e suspensos</option>
+              <option value="ativos">Só ativos</option>
+              <option value="suspensos">Só suspensos</option>
             </select>
           </div>
         </div>
@@ -262,7 +297,8 @@ export default function Equipe({ meuId, onMudou }) {
               <thead>
                 <tr>
                   <th>Aluno</th>
-                  <th>Mentor</th>
+                  <th>Acesso</th>
+                  {ehCeo && <th>Mentor</th>}
                   <th className="num">Aulas/mês</th>
                   <th>Último simulado</th>
                   <th></th>
@@ -270,7 +306,7 @@ export default function Equipe({ meuId, onMudou }) {
               </thead>
               <tbody>
                 {alunosVisiveis.map((a) => (
-                  <tr key={a.id}>
+                  <tr key={a.id} className={a.suspenso ? 'linha-suspensa' : undefined}>
                     <td>
                       <span className="atendimento-aluno">
                         <Avatar src={a.foto_url} nome={a.nome || a.email} tamanho={32} />
@@ -281,16 +317,26 @@ export default function Equipe({ meuId, onMudou }) {
                       </span>
                     </td>
                     <td>
-                      <select className="select-mentor" value={a.mentor_id ?? ''} onChange={(e) => trocarMentor(a, e.target.value)}>
-                        {!a.mentor_id && <option value="">Sem mentor</option>}
-                        {mentores.map((m) => <option key={m.id} value={m.id}>{m.id === meuId ? 'Você' : m.nome || m.email}</option>)}
-                      </select>
+                      {a.suspenso ? (
+                        <span className="selo selo-suspenso" title={a.suspenso_em ? `Desde ${new Date(a.suspenso_em).toLocaleDateString('pt-BR')}` : undefined}>⛔ Suspenso</span>
+                      ) : (
+                        <span className="selo selo-ativo">Ativo</span>
+                      )}
                     </td>
+                    {ehCeo && (
+                      <td>
+                        <select className="select-mentor" value={a.mentor_id ?? ''} onChange={(e) => trocarMentor(a, e.target.value)}>
+                          {!a.mentor_id && <option value="">Sem mentor</option>}
+                          {mentores.map((m) => <option key={m.id} value={m.id}>{m.id === meuId ? 'Você' : m.nome || m.email}</option>)}
+                        </select>
+                      </td>
+                    )}
                     <td className="num">{a.limite_mensal ?? '—'}</td>
                     <td>{dataBR(ultimoSimulado[a.id])}</td>
                     <td className="acoes-tabela">
+                      <button className={a.suspenso ? 'link' : 'link perigo'} onClick={() => alternarSuspensao(a)}>{a.suspenso ? 'reativar' : 'suspender'}</button>
                       <button className="link" onClick={() => redefinirSenha(a)}>senha</button>
-                      <button className="link perigo" onClick={() => remover(a)}>remover</button>
+                      {ehCeo && <button className="link perigo" onClick={() => remover(a)}>remover</button>}
                     </td>
                   </tr>
                 ))}
@@ -303,7 +349,7 @@ export default function Equipe({ meuId, onMudou }) {
   )
 }
 
-function FormCadastro({ tipoInicial, mentores, meuId, onFechar, onCriado }) {
+function FormCadastro({ tipoInicial, mentores, meuId, ehCeo, onFechar, onCriado }) {
   const [papel, setPapel] = useState(tipoInicial)
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
@@ -335,10 +381,12 @@ function FormCadastro({ tipoInicial, mentores, meuId, onFechar, onCriado }) {
 
   return (
     <form className="cartao" onSubmit={salvar}>
-      <div className="tipos-escolha" role="radiogroup" aria-label="Tipo de conta">
-        <button type="button" role="radio" aria-checked={papel === 'aluno'} className={papel === 'aluno' ? 'tipo-op ativo' : 'tipo-op'} style={{ '--cor': 'var(--primaria)' }} onClick={() => setPapel('aluno')}>🎓 Aluno</button>
-        <button type="button" role="radio" aria-checked={papel === 'mentor'} className={papel === 'mentor' ? 'tipo-op ativo' : 'tipo-op'} style={{ '--cor': '#7048e8' }} onClick={() => setPapel('mentor')}>🧑‍🏫 Mentor</button>
-      </div>
+      {ehCeo && (
+        <div className="tipos-escolha" role="radiogroup" aria-label="Tipo de conta">
+          <button type="button" role="radio" aria-checked={papel === 'aluno'} className={papel === 'aluno' ? 'tipo-op ativo' : 'tipo-op'} style={{ '--cor': 'var(--primaria)' }} onClick={() => setPapel('aluno')}>🎓 Aluno</button>
+          <button type="button" role="radio" aria-checked={papel === 'mentor'} className={papel === 'mentor' ? 'tipo-op ativo' : 'tipo-op'} style={{ '--cor': '#7048e8' }} onClick={() => setPapel('mentor')}>🧑‍🏫 Mentor</button>
+        </div>
+      )}
       <h2>{papel === 'aluno' ? 'Cadastrar aluno' : 'Cadastrar mentor'}</h2>
       <div className="grade-form">
         <label className="largo-2">
@@ -358,12 +406,14 @@ function FormCadastro({ tipoInicial, mentores, meuId, onFechar, onCriado }) {
         </label>
         {papel === 'aluno' && (
           <>
-            <label>
-              Mentor responsável
-              <select value={mentorId} onChange={(e) => setMentorId(e.target.value)}>
-                {mentores.map((m) => <option key={m.id} value={m.id}>{m.id === meuId ? 'Você' : m.nome || m.email}</option>)}
-              </select>
-            </label>
+            {ehCeo && (
+              <label>
+                Mentor responsável
+                <select value={mentorId} onChange={(e) => setMentorId(e.target.value)}>
+                  {mentores.map((m) => <option key={m.id} value={m.id}>{m.id === meuId ? 'Você' : m.nome || m.email}</option>)}
+                </select>
+              </label>
+            )}
             <label>
               Aulas por mês
               <input type="number" min="0" max="60" value={limite} onChange={(e) => setLimite(e.target.value)} />

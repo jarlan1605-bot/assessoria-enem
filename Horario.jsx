@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from './supabase'
 import { DIAS, MATERIAS, corDaMateria, indiceDeHoje } from './constants'
-import { hojeISO, somarDias } from './agenda'
-import { mapaCheckins, resumoAdesao, sequenciaDeDias } from './adesao'
+import { MESES, DIAS_CURTOS, hojeISO, somarDias } from './agenda'
+import { horarioVigente, mapaCheckins, mesDe, resumoAdesao, sequenciaDeDias } from './adesao'
 import ExportarHorario from './ExportarHorario'
 
-const BLOCO_VAZIO = { dia: 0, inicio: '08:00', fim: '09:00', materia: 'Matemática', conteudo: '', conta_estudo: true }
+const BLOCO_VAZIO = { dias: [0], inicio: '08:00', fim: '09:00', materia: 'Matemática', conteudo: '', conta_estudo: true }
 const CORES_SUGERIDAS = ['#1864ab', '#2f9e44', '#e8590c', '#c2255c', '#7048e8', '#0c8599', '#e67700', '#495057']
 
 const hhmm = (t) => (t || '').slice(0, 5)
@@ -24,6 +24,18 @@ export const formatarDuracao = (min) => {
   return m ? `${h}h${String(m).padStart(2, '0')}` : `${h}h`
 }
 
+// Meses guardados como '2026-10-01'
+const somarMesISO = (mes, n) => {
+  const [a, m] = mes.split('-').map(Number)
+  const d = new Date(a, m - 1 + n, 1)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`
+}
+export const nomeDoMes = (mes) => {
+  const [a, m] = mes.split('-').map(Number)
+  return `${MESES[m - 1]} de ${a}`
+}
+const ATALHOS_DIAS = [['Seg a Sex', [0, 1, 2, 3, 4]], ['Seg a Sáb', [0, 1, 2, 3, 4, 5]], ['Todos', [0, 1, 2, 3, 4, 5, 6]]]
+
 // Escala da grade: quantos pixels vale cada minuto (1 hora = 66 px)
 const PX_MIN = 1.1
 
@@ -39,7 +51,11 @@ function useLargo(consulta) {
 }
 
 export default function Horario({ alunoId, editavel, aluno }) {
-  const [blocos, setBlocos] = useState([])
+  const [todos, setTodos] = useState([]) // blocos de todos os meses
+  const [mes, setMes] = useState(null) // mês que está na tela
+  const [repetindo, setRepetindo] = useState(false)
+  const [observacoes, setObservacoes] = useState('')
+  const [copiando, setCopiando] = useState(false)
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState('')
   const [form, setForm] = useState(BLOCO_VAZIO)
@@ -100,6 +116,7 @@ export default function Horario({ alunoId, editavel, aluno }) {
   }
   const hoje = indiceDeHoje()
   const hojeData = hojeISO()
+  const mesAtual = mesDe(hojeData)
   const segunda = somarDias(hojeData, -hoje)
   const datasDaSemana = DIAS.map((_, i) => somarDias(segunda, i))
 
@@ -143,10 +160,13 @@ export default function Horario({ alunoId, editavel, aluno }) {
     if (error) setErro('Não foi possível carregar o horário.')
     else {
       setErro('')
-      setBlocos(data ?? [])
+      const lista = data ?? []
+      setTodos(lista)
+      // Abre no mês atual; se ele ainda não tem horário, no último mês que tem (o que está valendo)
+      setMes((m) => m ?? (lista.some((b) => b.mes === mesAtual) || editavel ? mesAtual : horarioVigente(lista, mesAtual).mes ?? mesAtual))
     }
     setCarregando(false)
-  }, [alunoId])
+  }, [alunoId, mesAtual, editavel])
 
   useEffect(() => {
     carregar()
@@ -160,40 +180,76 @@ export default function Horario({ alunoId, editavel, aluno }) {
       setErro('O horário de fim precisa ser depois do início.')
       return
     }
+    if (!form.dias.length) {
+      setErro('Escolha pelo menos um dia.')
+      return
+    }
     setSalvando(true)
     const registro = {
       aluno_id: alunoId,
-      dia: Number(form.dia),
+      mes,
       inicio: form.inicio,
       fim: form.fim,
       materia: form.materia,
       conteudo: form.conteudo.trim(),
       conta_estudo: !!form.conta_estudo,
     }
+    // Um bloco para cada dia escolhido (assim dá para repetir o mesmo bloco em vários dias de uma vez)
     const { error } = editandoId
-      ? await supabase.from('horarios').update(registro).eq('id', editandoId)
-      : await supabase.from('horarios').insert(registro)
+      ? await supabase.from('horarios').update({ ...registro, dia: form.dias[0] }).eq('id', editandoId)
+      : await supabase.from('horarios').insert([...form.dias].sort().map((dia) => ({ ...registro, dia })))
     setSalvando(false)
     if (error) {
-      setErro(/conta_estudo/.test(error.message) ? 'Rode o arquivo detalhes.sql no Supabase para salvar blocos com essa opção.' : 'Não foi possível salvar: ' + error.message)
+      setErro(/conta_estudo/.test(error.message) ? 'Rode o arquivo detalhes.sql no Supabase para salvar blocos com essa opção.' : /mes/.test(error.message) ? 'Falta rodar o arquivo horario_meses.sql no Supabase.' : 'Não foi possível salvar: ' + error.message)
       return
     }
     setErro('')
     // Já deixa o próximo bloco pronto, começando onde este terminou
-    setForm((f) => ({ ...BLOCO_VAZIO, dia: f.dia, inicio: f.fim, fim: somarUmaHora(f.fim), materia: f.materia, conta_estudo: f.conta_estudo }))
+    setForm((f) => ({ ...BLOCO_VAZIO, dias: editandoId ? [f.dias[0]] : f.dias, inicio: f.fim, fim: somarUmaHora(f.fim), materia: f.materia, conta_estudo: f.conta_estudo }))
     setEditandoId(null)
+    setRepetindo(false)
     carregar()
   }
 
   function editar(b) {
     setEditandoId(b.id)
-    setForm({ dia: b.dia, inicio: hhmm(b.inicio), fim: hhmm(b.fim), materia: b.materia, conteudo: b.conteudo, conta_estudo: contaEstudo(b) })
+    setRepetindo(false)
+    setForm({ dias: [b.dia], inicio: hhmm(b.inicio), fim: hhmm(b.fim), materia: b.materia, conteudo: b.conteudo, conta_estudo: contaEstudo(b) })
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  // Abre o formulário com o mesmo bloco, para escolher em quais outros dias ele se repete
+  function repetir(b) {
+    setEditandoId(null)
+    setRepetindo(true)
+    setForm({ dias: [], inicio: hhmm(b.inicio), fim: hhmm(b.fim), materia: b.materia, conteudo: b.conteudo, conta_estudo: contaEstudo(b) })
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   function cancelarEdicao() {
     setEditandoId(null)
+    setRepetindo(false)
     setForm(BLOCO_VAZIO)
+  }
+
+  function alternarDia(i) {
+    setForm((f) => ({
+      ...f,
+      dias: editandoId ? [i] : f.dias.includes(i) ? f.dias.filter((d) => d !== i) : [...f.dias, i],
+    }))
+  }
+
+  // Mês novo: copia o horário do último mês que tem horário
+  async function copiarDe(origem) {
+    const lista = todos.filter((b) => b.mes === origem)
+    if (!confirm(`Copiar os ${lista.length} blocos de ${nomeDoMes(origem)} para ${nomeDoMes(mes)}? Depois você ajusta o que quiser; ${nomeDoMes(origem)} continua guardado.`)) return
+    setCopiando(true)
+    const { error } = await supabase.from('horarios').insert(
+      lista.map((b) => ({ aluno_id: alunoId, mes, dia: b.dia, inicio: b.inicio, fim: b.fim, materia: b.materia, conteudo: b.conteudo, conta_estudo: b.conta_estudo }))
+    )
+    setCopiando(false)
+    if (error) setErro('Não foi possível copiar: ' + error.message)
+    else carregar()
   }
 
   async function remover(b) {
@@ -203,26 +259,78 @@ export default function Horario({ alunoId, editavel, aluno }) {
     else carregar()
   }
 
+  const blocos = todos.filter((b) => b.mes === mes)
+  const vigenteHoje = horarioVigente(todos, mesAtual).mes
+  const origemCopia = horarioVigente(todos, somarMesISO(mes || mesAtual, -1)).mes
+  // Meses no seletor: os que têm horário, o atual, o próximo e o que está na tela
+  const mesesDaLista = [...new Set([...todos.map((b) => b.mes), mesAtual, somarMesISO(mesAtual, 1), mes].filter(Boolean))].sort().reverse()
   const porDia = DIAS.map((_, i) => blocos.filter((b) => b.dia === i))
   const minutosDoDia = porDia.map((lista) =>
     lista.filter(contaEstudo).reduce((s, b) => s + emMinutos(b.fim) - emMinutos(b.inicio), 0)
   )
   const totalSemana = minutosDoDia.reduce((a, b) => a + b, 0)
 
+  // Trocar de mês cancela a edição que estava aberta
+  useEffect(() => {
+    setEditandoId(null)
+    setRepetindo(false)
+  }, [mes])
+
+  if (!mes) return <p className="suave">Carregando…</p>
+
   return (
     <section className="secao">
+      <div className="horario-mes">
+        <div className="navegar-mes">
+          <button className="botao fantasma" onClick={() => setMes((m) => somarMesISO(m, -1))} aria-label="Mês anterior">‹</button>
+          <select value={mes} onChange={(e) => setMes(e.target.value)} aria-label="Mês do horário">
+            {mesesDaLista.map((m) => (
+              <option key={m} value={m}>
+                {nomeDoMes(m)}{m === mesAtual ? ' (atual)' : ''}{todos.some((b) => b.mes === m) ? '' : ' · sem horário'}
+              </option>
+            ))}
+          </select>
+          <button className="botao fantasma" onClick={() => setMes((m) => somarMesISO(m, 1))} aria-label="Próximo mês">›</button>
+        </div>
+        {mes !== mesAtual && (
+          <button className="link" onClick={() => setMes(editavel || todos.some((b) => b.mes === mesAtual) ? mesAtual : vigenteHoje ?? mesAtual)}>voltar para o mês atual</button>
+        )}
+      </div>
+      {!editavel && mes === vigenteHoje && mes !== mesAtual && (
+        <p className="suave pequeno" style={{ margin: '-6px 0 0' }}>
+          O horário de {nomeDoMes(mesAtual).split(' ')[0].toLowerCase()} ainda não foi montado. Siga este por enquanto.
+        </p>
+      )}
+
       {editavel && (
         <form className="cartao form-bloco" onSubmit={salvar}>
-          <h2>{editandoId ? 'Editar bloco' : 'Adicionar bloco ao horário'}</h2>
-          <div className="grade-form">
-            <label>
-              Dia
-              <select value={form.dia} onChange={mudar('dia')}>
-                {DIAS.map((d, i) => (
-                  <option key={d} value={i}>{d}</option>
+          <h2>
+            {editandoId ? 'Editar bloco' : repetindo ? 'Repetir bloco em outros dias' : 'Adicionar bloco ao horário'}
+            <span className="suave pequeno" style={{ fontWeight: 500 }}> · {nomeDoMes(mes)}</span>
+          </h2>
+          <p className="rotulo-campo">{editandoId ? 'Dia' : 'Dias (escolha um ou vários: o bloco é criado em cada dia marcado)'}</p>
+          <div className="dias-escolha" role="group" aria-label="Dias">
+            {DIAS_CURTOS.map((d, i) => (
+              <button
+                type="button"
+                key={d}
+                className={form.dias.includes(i) ? 'dia-op ativo' : 'dia-op'}
+                aria-pressed={form.dias.includes(i)}
+                onClick={() => alternarDia(i)}
+              >
+                {d}
+              </button>
+            ))}
+            {!editandoId && (
+              <span className="dias-atalhos">
+                {ATALHOS_DIAS.map(([nome, dias]) => (
+                  <button type="button" key={nome} className="link" onClick={() => setForm((f) => ({ ...f, dias }))}>{nome}</button>
                 ))}
-              </select>
-            </label>
+                {form.dias.length > 0 && <button type="button" className="link" onClick={() => setForm((f) => ({ ...f, dias: [] }))}>limpar</button>}
+              </span>
+            )}
+          </div>
+          <div className="grade-form">
             <label>
               Início
               <input type="time" value={form.inicio} onChange={mudar('inicio')} required />
@@ -304,11 +412,17 @@ export default function Horario({ alunoId, editavel, aluno }) {
             </div>
           )}
           <div className="linha-botoes">
-            {editandoId && (
+            {(editandoId || repetindo) && (
               <button type="button" className="botao fantasma" onClick={cancelarEdicao}>Cancelar</button>
             )}
             <button className="botao primario" disabled={salvando}>
-              {salvando ? 'Salvando…' : editandoId ? 'Salvar alterações' : 'Adicionar'}
+              {salvando
+                ? 'Salvando…'
+                : editandoId
+                  ? 'Salvar alterações'
+                  : form.dias.length > 1
+                    ? `Adicionar em ${form.dias.length} dias`
+                    : 'Adicionar'}
             </button>
           </div>
         </form>
@@ -317,7 +431,7 @@ export default function Horario({ alunoId, editavel, aluno }) {
       {erro && <p className="erro">{erro}</p>}
 
       <div className="resumo-semana">
-        <h2>Horário da semana</h2>
+        <h2>Horário da semana · {nomeDoMes(mes).split(' ')[0]}</h2>
         {blocos.length > 0 && (
           <span className="etiqueta">{formatarDuracao(totalSemana)} de estudo por semana</span>
         )}
@@ -328,10 +442,10 @@ export default function Horario({ alunoId, editavel, aluno }) {
         )}
       </div>
       {exportando && (
-        <ExportarHorario nome={aluno?.nome || aluno?.email || 'Aluno'} blocos={blocos} corDe={corDe} contaEstudo={contaEstudo} onFechar={() => setExportando(false)} />
+        <ExportarHorario nome={aluno?.nome || aluno?.email || 'Aluno'} blocos={blocos} corDe={corDe} contaEstudo={contaEstudo} mesNome={nomeDoMes(mes)} observacoes={observacoes} onFechar={() => setExportando(false)} />
       )}
 
-      {blocos.length > 0 && (() => {
+      {blocos.length > 0 && mes === vigenteHoje && (() => {
         const sem7 = resumoAdesao(blocos, checkins, somarDias(hojeData, -6), hojeData)
         const seq = sequenciaDeDias(blocos, checkins)
         return (
@@ -360,9 +474,18 @@ export default function Horario({ alunoId, editavel, aluno }) {
         <div className="cartao vazio">
           <p>
             {editavel
-              ? 'Este aluno ainda não tem horário. Adicione o primeiro bloco acima.'
-              : 'Seu horário ainda está sendo montado pelo seu mentor. Volte em breve!'}
+              ? `${nomeDoMes(mes)} ainda não tem horário. Adicione o primeiro bloco acima${origemCopia ? ' ou comece copiando outro mês' : ''}.`
+              : mes > mesAtual
+                ? `O horário de ${nomeDoMes(mes).split(' ')[0].toLowerCase()} ainda não foi montado.`
+                : todos.length
+                  ? `Não houve horário em ${nomeDoMes(mes).split(' ')[0].toLowerCase()}.`
+                  : 'Seu horário ainda está sendo montado pelo seu mentor. Volte em breve!'}
           </p>
+          {editavel && origemCopia && (
+            <button className="botao primario" onClick={() => copiarDe(origemCopia)} disabled={copiando}>
+              {copiando ? 'Copiando…' : `Copiar o horário de ${nomeDoMes(origemCopia)}`}
+            </button>
+          )}
         </div>
       ) : (
         (() => {
@@ -406,7 +529,7 @@ export default function Horario({ alunoId, editavel, aluno }) {
                         {lista.map((b) => {
                           const dataBloco = datasDaSemana[i]
                           const status = mapaCheckins(checkins)[`${b.id}|${dataBloco}`]
-                          const podeMarcar = !editavel && dataBloco <= hojeData && contaEstudo(b)
+                          const podeMarcar = !editavel && dataBloco <= hojeData && contaEstudo(b) && horarioVigente(todos, mesDe(dataBloco)).mes === mes
                           const dur = Math.max(emMinutos(b.fim) - emMinutos(b.inicio), 15)
                           const altura = dur * PX_MIN
                           const tamanho = altura < 46 ? 'mini' : altura < 84 ? 'curto' : ''
@@ -440,6 +563,7 @@ export default function Horario({ alunoId, editavel, aluno }) {
                                 {editavel && (
                                   <span className="bloco-acoes">
                                     <button className="link" onClick={() => editar(b)}>editar</button>
+                                    <button className="link" onClick={() => repetir(b)} title="Criar este mesmo bloco em outros dias">repetir</button>
                                     <button className="link perigo" onClick={() => remover(b)}>remover</button>
                                   </span>
                                 )}
@@ -456,6 +580,73 @@ export default function Horario({ alunoId, editavel, aluno }) {
           )
         })()
       )}
+
+      {!carregando && <Observacoes key={`${alunoId}|${mes}`} alunoId={alunoId} mes={mes} editavel={editavel} onCarregar={setObservacoes} />}
     </section>
+  )
+}
+
+// Observações do horário do mês: o mentor escreve, o aluno lê
+function Observacoes({ alunoId, mes, editavel, onCarregar }) {
+  const [texto, setTexto] = useState('')
+  const [salvo, setSalvo] = useState('')
+  const [estado, setEstado] = useState('carregando') // carregando | pronto | salvando | ok | erro | faltaSql
+
+  useEffect(() => {
+    supabase
+      .from('horario_observacoes')
+      .select('texto')
+      .eq('aluno_id', alunoId)
+      .eq('mes', mes)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        const t = data?.texto ?? ''
+        setTexto(t)
+        setSalvo(t)
+        onCarregar(t)
+        setEstado(error ? 'faltaSql' : 'pronto')
+      })
+  }, [alunoId, mes, onCarregar])
+
+  async function salvar() {
+    setEstado('salvando')
+    const { error } = await supabase
+      .from('horario_observacoes')
+      .upsert({ aluno_id: alunoId, mes, texto: texto.trim(), atualizado_em: new Date().toISOString() })
+    if (error) return setEstado('erro')
+    setSalvo(texto.trim())
+    onCarregar(texto.trim())
+    setEstado('ok')
+  }
+
+  if (estado === 'carregando') return null
+  if (!editavel && !salvo) return null
+
+  return (
+    <div className="cartao observacoes-horario">
+      <h2>📝 Observações</h2>
+      {editavel ? (
+        <>
+          <textarea
+            rows="4"
+            maxLength={4000}
+            value={texto}
+            onChange={(e) => { setTexto(e.target.value); if (estado === 'ok') setEstado('pronto') }}
+            placeholder="Ex.: Nas sextas, revisar o caderno de erros antes do simulado. Academia pode trocar de horário se precisar."
+            disabled={estado === 'faltaSql'}
+          />
+          <div className="linha-botoes" style={{ alignItems: 'center' }}>
+            {estado === 'faltaSql' && <span className="erro pequeno">Falta rodar o arquivo horario_meses.sql no Supabase.</span>}
+            {estado === 'erro' && <span className="erro pequeno">Não foi possível salvar.</span>}
+            {estado === 'ok' && <span className="suave pequeno">✓ salvo · o aluno já vê</span>}
+            <button className="botao primario pequeno" onClick={salvar} disabled={estado === 'salvando' || estado === 'faltaSql' || texto.trim() === salvo}>
+              {estado === 'salvando' ? 'Salvando…' : 'Salvar observações'}
+            </button>
+          </div>
+        </>
+      ) : (
+        <p className="post-texto" style={{ margin: 0 }}>{salvo}</p>
+      )}
+    </div>
   )
 }

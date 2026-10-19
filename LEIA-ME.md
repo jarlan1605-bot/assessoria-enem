@@ -34,7 +34,8 @@ Rode, **nesta ordem**, os arquivos que ainda não rodou. Cada um só acrescenta 
 8. `cobrancas.sql`
 9. `cobranca_auto.sql`
 10. `videoaulas.sql`
-11. `acesso.sql` ← o novo (suspender acesso de aluno)
+11. `acesso.sql`
+12. `horario_meses.sql` ← o novo (horário por mês e observações)
 
 ### 2) GitHub → enviar os arquivos
 **Add file → Upload files**, selecione todos os arquivos soltos desta pasta e clique em **Commit changes**. Os arquivos com o mesmo nome são substituídos.
@@ -64,6 +65,9 @@ Depois de mexer nas variáveis, faça **Redeploy**.
 
 ## Como algumas coisas funcionam
 
+- **Horário por mês**: no topo da aba Horário há um seletor de mês (‹ Outubro de 2026 ›). Cada mês tem o seu horário: montar o de novembro não apaga o de outubro, e dá para voltar a qualquer mês para ver como era. Num mês ainda vazio aparece o botão **Copiar o horário de (mês anterior)**, para não começar do zero. Enquanto o mês atual não tiver horário, o aluno continua vendo o do último mês montado.
+- **Repetir blocos**: ao adicionar um bloco, marque vários dias de uma vez (ou use os atalhos *Seg a Sex*, *Seg a Sáb*, *Todos*). O bloco é criado em cada dia marcado. Em um bloco que já existe, o botão **repetir** abre o formulário com ele preenchido para você só escolher os outros dias.
+- **Observações do horário**: abaixo da grade, um campo de observações para cada mês. O mentor escreve e salva; o aluno lê, e elas também vão junto no texto de "Enviar pelo WhatsApp".
 - **Horário proporcional**: cada bloco tem a altura da sua duração (1 hora = 66 px), com uma régua de horas ao lado no computador. Blocos curtos mostram só horário e matéria; passe o mouse (ou toque) para ver tudo, marcar o check-in, editar ou remover.
 - **Enviar horário pelo WhatsApp**: botão verde na aba Horário. Gera o texto formatado com o nome do aluno (copiar ou abrir direto no WhatsApp) e uma imagem do horário (baixar ou, no celular, compartilhar).
 - **Simulador do ENEM**: aba em Estudos. Igual à sala de prova: sem relógio, só o quadro do aplicador com os horários de 30 em 30 minutos (e o de 15 minutos finais) e quanto falta. Quando um horário passa, ele é riscado. Os horários da última hora ficam rosa e o último, vermelho. O "aplicador" fala os avisos (início, 2 horas, 30 e 15 minutos finais, término). Tem 1º dia (5h30), 2º dia (5h) e treino com tempo livre, pausa, tela cheia (bom para TV) e resumo no final. Cada prova (1º dia, 2º dia e treino) fica guardada separadamente: o aluno pode pausar, fazer a outra e voltar depois, até em outro dia. Se fechar a página no meio, a prova fica pausada até ele voltar (no mesmo aparelho).

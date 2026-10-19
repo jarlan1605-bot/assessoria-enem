@@ -16,8 +16,8 @@ const duracao = (min) => {
 const primeiroNome = (nome) => (nome || '').trim().split(/\s+/)[0] || ''
 
 // Texto pronto para colar no WhatsApp (*negrito* e _itálico_ do próprio WhatsApp)
-export function textoDoHorario({ nome, blocos, contaEstudo }) {
-  const linhas = [`🗓️ *HORÁRIO DE ESTUDOS*`, `👤 *${(nome || 'Aluno').trim()}*`, '']
+export function textoDoHorario({ nome, blocos, contaEstudo, mesNome = '', observacoes = '' }) {
+  const linhas = [`🗓️ *HORÁRIO DE ESTUDOS${mesNome ? ` — ${mesNome.toUpperCase()}` : ''}*`, `👤 *${(nome || 'Aluno').trim()}*`, '']
   const livres = []
   let total = 0
   DIAS.forEach((_, i) => {
@@ -37,6 +37,7 @@ export function textoDoHorario({ nome, blocos, contaEstudo }) {
   })
   if (livres.length) linhas.push(`🌿 *Livre:* ${livres.join(', ')}`, '')
   if (total) linhas.push(`⏱️ *Total:* ${duracao(total)} de estudo na semana`)
+  if (observacoes.trim()) linhas.push('', '📝 *Observações:*', observacoes.trim(), '')
   linhas.push(`✅ Marque o check-in de cada bloco no site: ${window.location.origin}`)
   linhas.push('', `_${NOME_SITE}_`)
   return linhas.join('\n')
@@ -86,7 +87,7 @@ function escurecer(hex, f = 0.72) {
   return `rgb(${c((n >> 16) & 255)}, ${c((n >> 8) & 255)}, ${c(n & 255)})`
 }
 
-export async function imagemDoHorario({ nome, blocos, corDe, contaEstudo }) {
+export async function imagemDoHorario({ nome, blocos, corDe, contaEstudo, mesNome = '' }) {
   try { await document.fonts?.ready } catch { /* sem fontes */ }
   const L = 1080
   const M = 56 // margem
@@ -136,7 +137,7 @@ export async function imagemDoHorario({ nome, blocos, corDe, contaEstudo }) {
   ctx.fill()
   ctx.fillStyle = 'rgba(255,255,255,0.75)'
   ctx.font = `700 26px ${FONTE}`
-  ctx.fillText('HORÁRIO DE ESTUDOS', M + 40, 98)
+  ctx.fillText(`HORÁRIO DE ESTUDOS${mesNome ? ` · ${mesNome.toUpperCase()}` : ''}`, M + 40, 98)
   ctx.fillStyle = '#ffffff'
   ctx.font = `800 54px ${FONTE}`
   const nomeLinhas = quebrar(ctx, (nome || 'Aluno').trim(), W - 80).slice(0, 2)
@@ -209,8 +210,8 @@ export async function imagemDoHorario({ nome, blocos, corDe, contaEstudo }) {
 }
 
 // ---------- Janela de exportação ----------
-export default function ExportarHorario({ nome, blocos, corDe, contaEstudo, onFechar }) {
-  const texto = useMemo(() => textoDoHorario({ nome, blocos, contaEstudo }), [nome, blocos, contaEstudo])
+export default function ExportarHorario({ nome, blocos, corDe, contaEstudo, mesNome = '', observacoes = '', onFechar }) {
+  const texto = useMemo(() => textoDoHorario({ nome, blocos, contaEstudo, mesNome, observacoes }), [nome, blocos, contaEstudo, mesNome, observacoes])
   const [copiado, setCopiado] = useState(false)
   const [imagem, setImagem] = useState(null) // { blob, url }
   const [aviso, setAviso] = useState('')
@@ -218,11 +219,11 @@ export default function ExportarHorario({ nome, blocos, corDe, contaEstudo, onFe
 
   useEffect(() => {
     ativo.current = true
-    imagemDoHorario({ nome, blocos, corDe, contaEstudo }).then((blob) => {
+    imagemDoHorario({ nome, blocos, corDe, contaEstudo, mesNome }).then((blob) => {
       if (ativo.current && blob) setImagem({ blob, url: URL.createObjectURL(blob) })
     })
     return () => { ativo.current = false }
-  }, [nome, blocos, corDe, contaEstudo])
+  }, [nome, blocos, corDe, contaEstudo, mesNome])
 
   useEffect(() => () => imagem && URL.revokeObjectURL(imagem.url), [imagem])
 

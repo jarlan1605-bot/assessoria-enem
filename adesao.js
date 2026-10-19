@@ -10,6 +10,16 @@ export const diaDaSemana = (iso) => {
   const [a, m, d] = iso.split('-').map(Number)
   return (new Date(a, m - 1, d).getDay() + 6) % 7 // 0 = segunda
 }
+// Mês de uma data ISO, como '2026-10-01' (é assim que o horário guarda o mês)
+export const mesDe = (iso) => `${iso.slice(0, 7)}-01`
+
+// Horário que vale num mês: o daquele mês ou, se ainda não foi montado, o do último mês anterior que tem horário
+export function horarioVigente(blocos, mes) {
+  let alvo = null
+  for (const b of blocos) if (b.mes <= mes && (!alvo || b.mes > alvo)) alvo = b.mes
+  return { mes: alvo, blocos: blocos.filter((b) => b.mes === alvo) }
+}
+
 export const mapaCheckins = (checkins) => {
   const m = {}
   for (const c of checkins) m[`${c.horario_id}|${c.dia}`] = c.status
@@ -21,7 +31,7 @@ export function pontuacaoDoDia(iso, blocos, mapa) {
   const hoje = hojeISO()
   const agora = new Date()
   const minAgora = agora.getHours() * 60 + agora.getMinutes()
-  const doDia = blocos.filter((b) => b.dia === diaDaSemana(iso) && b.materia !== 'Descanso' && b.conta_estudo !== false)
+  const doDia = horarioVigente(blocos, mesDe(iso)).blocos.filter((b) => b.dia === diaDaSemana(iso) && b.materia !== 'Descanso' && b.conta_estudo !== false)
   let total = 0
   let pontos = 0
   let marcados = 0

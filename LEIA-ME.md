@@ -7,7 +7,7 @@
 
 **Para o aluno**
 - Comunidade · **Aulas e mentorias** (vídeos) · Marcar aula (com botão para adicionar ao Google Agenda) · Relatório mensal
-- **Onde estão seus pontos** · Evolução (com metas) · Horário (com check-in diário) · Simulados · **Banco de questões** · Caderno de erros · Redação
+- **Minha Trilha** · **Onde estão seus pontos** · Evolução (com metas) · Horário (com check-in diário) · Simulados · **Banco de questões** · Caderno de erros · Redação
 - Contagem regressiva do ENEM, que cada aluno pode **ocultar** ou mostrar quando quiser (pelo botão "Ocultar" ou em *Meu perfil*).
 
 **Para o mentor**
@@ -35,7 +35,8 @@ Rode, **nesta ordem**, os arquivos que ainda não rodou. Cada um só acrescenta 
 9. `cobranca_auto.sql`
 10. `videoaulas.sql`
 11. `acesso.sql`
-12. `horario_meses.sql` ← o novo (horário por mês e observações)
+12. `horario_meses.sql`
+13. `trilha.sql` ← o novo (Minha Trilha)
 
 ### 2) GitHub → enviar os arquivos
 **Add file → Upload files**, selecione todos os arquivos soltos desta pasta e clique em **Commit changes**. Os arquivos com o mesmo nome são substituídos.
@@ -65,6 +66,7 @@ Depois de mexer nas variáveis, faça **Redeploy**.
 
 ## Como algumas coisas funcionam
 
+- **Minha Trilha**: aba em Estudos com o checklist de todos os conteúdos do roteiro Bernoulli (Biologia, Química, Física, Matemática, História, Geografia e Português; os módulos divididos em partes viraram um conteúdo só). Para cada conteúdo, o aluno arrasta o andamento de 0 a 100% (ou toca no círculo para marcar como concluído) e, tocando no nome, abre os detalhes: quando viu, como se sentiu (😫 a 🤩), questões certas / total (com os botões "+1 acertei" e "+1 errei") e anotações. Os anéis de cada matéria e da trilha toda se atualizam na hora, com níveis (🌱 Começando → 🏆 Dominado). O quadro **"Onde o rendimento está mais baixo"** mostra sozinho os conteúdos com menos de 70% de acerto (a partir de 5 questões). Os conteúdos que mais caem no ENEM (Raio X SAS) aparecem com o nome em destaque e o selo **👁️ Cai muito**. Conteúdos vistos há mais de 30 dias e ainda não dominados ganham o aviso **⏰ revisar**. O botão **📸 Compartilhar progresso** gera uma imagem no formato do Instagram. O mentor vê e pode ajustar a trilha de cada aluno. A lista de conteúdos fica no arquivo `conteudos.js`.
 - **Horário por mês**: no topo da aba Horário há um seletor de mês (‹ Outubro de 2026 ›). Cada mês tem o seu horário: montar o de novembro não apaga o de outubro, e dá para voltar a qualquer mês para ver como era. Num mês ainda vazio aparece o botão **Copiar o horário de (mês anterior)**, para não começar do zero. Enquanto o mês atual não tiver horário, o aluno continua vendo o do último mês montado.
 - **Repetir blocos**: ao adicionar um bloco, marque vários dias de uma vez (ou use os atalhos *Seg a Sex*, *Seg a Sáb*, *Todos*). O bloco é criado em cada dia marcado. Em um bloco que já existe, o botão **repetir** abre o formulário com ele preenchido para você só escolher os outros dias.
 - **Observações do horário**: abaixo da grade, um campo de observações para cada mês. O mentor escreve e salva; o aluno lê, e elas também vão junto no texto de "Enviar pelo WhatsApp".

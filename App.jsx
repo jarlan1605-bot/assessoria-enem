@@ -10,6 +10,7 @@ import Agenda from './Agenda'
 import Aulas from './Aulas'
 import Videoaulas from './Videoaulas'
 import Pontos from './Pontos'
+import Trilha from './Trilha'
 import Perfil from './Perfil'
 import Comunidade from './Comunidade'
 import Evolucao from './Evolucao'
@@ -57,7 +58,7 @@ export default function App() {
 }
 
 // Abas que mostram os dados de um aluno (o mentor escolhe o aluno no seletor)
-const POR_ALUNO = ['pontos', 'evolucao', 'horario', 'simulados', 'erros', 'redacao', 'relatorio']
+const POR_ALUNO = ['trilha', 'pontos', 'evolucao', 'horario', 'simulados', 'erros', 'redacao', 'relatorio']
 
 function Painel({ usuario }) {
   const [perfil, setPerfil] = useState(null)
@@ -182,6 +183,7 @@ function Painel({ usuario }) {
     {
       titulo: 'Estudos',
       itens: [
+        ['trilha', '🧭', ehMentor ? 'Trilha de estudos' : 'Minha Trilha'],
         ['pontos', '🎯', 'Onde estão seus pontos'],
         ['evolucao', '📈', 'Evolução'],
         ['horario', '🗓️', 'Horário'],
@@ -258,6 +260,7 @@ function Painel({ usuario }) {
       horario: <Horario key={k} alunoId={k} editavel={ehMentor} aluno={alunoAtual} />,
       erros: <CadernoErros key={k} alunoId={k} ehMentor={ehMentor} />,
       redacao: <Redacao key={k} alunoId={k} ehMentor={ehMentor} alunos={alunos} />,
+      trilha: <Trilha key={k} alunoId={k} aluno={alunoAtual} ehMentor={ehMentor} />,
       pontos: <Pontos key={k} alunoId={k} aluno={alunoAtual} ehMentor={ehMentor} onIrCaderno={() => setAba('erros')} />,
       relatorio: <Relatorio key={k} aluno={alunoAtual} ehMentor={ehMentor} equipe={equipe} />,
     }[abaAtual]

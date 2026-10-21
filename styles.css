@@ -1,33 +1,41 @@
 :root {
-  --fundo: #f6f4ef;
-  --superficie: #ffffff;
-  --superficie-2: #f1eee7;
-  --texto: #1d1b18;
-  --suave: #6b665e;
-  --borda: #e3ded3;
+  --fundo: #f7f2e8;
+  --superficie: #fffdf8;
+  --superficie-2: #f2ecdf;
+  --texto: #14231d;
+  --suave: #5d6a63;
+  --borda: #e6dece;
   --primaria: #1f5f4a;
   --primaria-texto: #ffffff;
-  --primaria-clara: #e3efe9;
+  --primaria-clara: #e1efe7;
   --destaque: #f2b134;
   --perigo: #c92a2a;
-  --sombra: 0 1px 2px rgba(29, 27, 24, 0.05), 0 4px 16px rgba(29, 27, 24, 0.05);
-  --raio: 14px;
+  --tinta: #14231d;
+  --lima: #d6f36b;
+  --rosa: #f7c6b7;
+  --verde-escuro: #0f3a2c;
+  --sombra: 0 1px 0 rgba(20, 35, 29, 0.04), 0 12px 32px -20px rgba(20, 35, 29, 0.28);
+  --raio: 20px;
+  --fonte-titulo: 'Bricolage Grotesque', 'Plus Jakarta Sans', system-ui, sans-serif;
+  --fonte-italico: 'Instrument Serif', Georgia, serif;
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --fundo: #151513;
-    --superficie: #1e1e1b;
-    --superficie-2: #272723;
-    --texto: #eeebe4;
-    --suave: #a29d93;
-    --borda: #34332e;
-    --primaria: #5cbf98;
-    --primaria-texto: #0d1f18;
-    --primaria-clara: #1d3129;
+    --fundo: #0e1a15;
+    --superficie: #15241e;
+    --superficie-2: #1c2e27;
+    --texto: #f2efe6;
+    --suave: #a9b6af;
+    --borda: #2a3c35;
+    --primaria: #6fd3a8;
+    --primaria-texto: #0b1f17;
+    --primaria-clara: #1a3329;
     --perigo: #ff8787;
-    --sombra: none;
+    --tinta: #f2efe6;
+    --verde-escuro: #0a2a1f;
+    --sombra: 0 12px 32px -22px rgba(0, 0, 0, 0.6);
     color-scheme: dark;
   }
 }
@@ -1585,4 +1593,110 @@ span.q-bolinha { cursor: default; }
 }
 @media (prefers-reduced-motion: reduce) {
   .anel-valor, .conteudo.feito .conteudo-check, .trilha-festa, .conteudo-detalhes { transition: none; animation: none; }
+}
+
+/* =====================================================================
+   VISUAL DA ÁREA DO ALUNO (mesmo estilo da página de apresentação)
+   ===================================================================== */
+h1, h2, h3 { font-family: var(--fonte-titulo); letter-spacing: -0.02em; }
+h1 { font-size: 30px; letter-spacing: -0.035em; }
+h2 { font-size: 20px; font-weight: 700; }
+h3 { font-weight: 700; }
+
+/* cartões */
+.cartao { border: 1.5px solid var(--borda); border-radius: var(--raio); padding: 22px; box-shadow: var(--sombra); }
+.cartao > h2:first-child, .cartao > h3:first-child { margin-bottom: 14px; }
+
+/* botões em pílula */
+.botao { border-radius: 999px; padding: 10px 18px; border-width: 1.5px; transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s; }
+.botao:hover:not(:disabled) { border-color: var(--tinta); }
+.botao.primario { background: var(--tinta); border-color: var(--tinta); color: var(--fundo); }
+.botao.primario:hover:not(:disabled) { filter: none; transform: translate(-2px, -2px); box-shadow: 3px 3px 0 var(--primaria); }
+.botao.fantasma { border-color: transparent; }
+.botao.fantasma:hover:not(:disabled) { border-color: transparent; }
+.botao.pequeno { padding: 6px 12px; }
+.botao.grande { padding: 13px 24px; font-size: 15px; }
+
+/* campos */
+input, select, textarea { border-radius: 12px; background: var(--superficie); padding: 10px 12px; }
+input:focus, select:focus, textarea:focus { border-color: var(--tinta); box-shadow: 0 0 0 4px color-mix(in srgb, var(--lima) 55%, transparent); }
+label { color: var(--suave); }
+
+/* topo */
+.topo { padding: 10px clamp(12px, 3vw, 28px); background: color-mix(in srgb, var(--fundo) 84%, transparent); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+.topo-marca strong { font-family: var(--fonte-titulo); font-size: 19px; letter-spacing: -0.02em; }
+.botao-perfil { border-radius: 999px !important; }
+
+/* menu lateral */
+.menu { padding-top: 22px; gap: 20px; }
+.menu-titulo { font-size: 11px; letter-spacing: 0.14em; color: var(--primaria); }
+.menu-item { border-radius: 999px; padding: 9px 14px; font-weight: 600; transition: background 0.15s, transform 0.15s; }
+.menu-item:hover { background: var(--superficie-2); }
+.menu-item.ativo { background: var(--tinta); color: var(--fundo); font-weight: 700; box-shadow: 3px 3px 0 var(--primaria); }
+@media (max-width: 900px) {
+  .menu-item { background: var(--superficie); border: 1.5px solid var(--borda); }
+  .menu-item.ativo { background: var(--tinta); color: var(--fundo); border-color: var(--tinta); box-shadow: none; }
+}
+
+/* título de cada página */
+.pagina-titulo { display: flex; align-items: center; gap: 16px; margin: 6px 0 2px; }
+.pagina-icone {
+  flex-shrink: 0; width: 58px; height: 58px; display: grid; place-items: center; font-size: 30px;
+  background: var(--lima); border: 2px solid #14231d; border-radius: 18px; transform: rotate(-4deg); box-shadow: 3px 3px 0 #14231d;
+}
+.pagina-kicker { display: block; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.14em; color: var(--primaria); margin-bottom: 2px; }
+.pagina-titulo h1 { margin: 0; font-size: clamp(30px, 4.2vw, 46px); line-height: 1; letter-spacing: -0.04em; font-weight: 800; }
+
+/* contagem do ENEM em faixa verde */
+.contagem { background: var(--verde-escuro); border: 0; border-radius: var(--raio); color: #f2efe6; padding: 16px 20px; gap: 18px; }
+.contagem-numero { font-family: var(--fonte-titulo); font-size: 44px; color: var(--lima); letter-spacing: -0.04em; }
+.contagem strong { font-family: var(--fonte-titulo); font-size: 18px; letter-spacing: -0.01em; }
+.contagem .suave { color: #b9c9c1; }
+.contagem .botao.fantasma { color: #d7e2dc; }
+.contagem .botao.fantasma:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+
+/* abas internas */
+.abas { border-radius: 999px; padding: 5px; }
+.aba { border-radius: 999px; }
+.aba.ativa { background: var(--tinta); color: var(--fundo); box-shadow: none; }
+
+/* números de destaque */
+.mini-numero { font-family: var(--fonte-titulo); letter-spacing: -0.03em; }
+.mini { border-radius: 16px; }
+
+/* selos e chips */
+.selo, .chip, .etiqueta { border-radius: 999px; }
+.selo-novo { background: var(--lima); color: #14231d; }
+
+/* tabelas */
+.tabela th { text-transform: uppercase; letter-spacing: 0.06em; font-size: 11px; }
+.tabela tbody tr:hover td { background: color-mix(in srgb, var(--lima) 12%, transparent); }
+
+/* janelas */
+.fundo-modal { background: rgba(14, 26, 21, 0.45); backdrop-filter: blur(4px); }
+.modal { border-radius: 24px; }
+
+/* login no mesmo estilo */
+.login-tela { background: var(--fundo); }
+.login-moldura { border: 2px solid var(--tinta); border-radius: 28px; box-shadow: 10px 10px 0 var(--tinta); }
+.login-topo h1 { font-size: 34px; letter-spacing: -0.04em; }
+.login-retrato-texto p { font-family: var(--fonte-titulo); font-size: 22px; letter-spacing: -0.02em; }
+.selo-mentor { background: var(--lima); color: #14231d; }
+
+@media (max-width: 600px) {
+  .pagina-icone { width: 48px; height: 48px; font-size: 24px; border-radius: 14px; }
+  .cartao { padding: 18px; }
+}
+
+/* a área principal (a Trilha também usa a classe "conteudo" nos itens) */
+main.conteudo { padding: 22px clamp(16px, 3vw, 32px) 56px; border-bottom: 0; gap: 18px; }
+@media print { main.conteudo { padding: 0; } }
+.layout .menu { padding-right: 14px; }
+@media (prefers-color-scheme: dark) {
+  .contagem { background: #173d30; border: 1.5px solid #2c5a49; }
+}
+@media (max-width: 600px) {
+  .contagem { padding: 12px 14px; gap: 12px; }
+  .contagem-numero { font-size: 34px; min-width: 40px; }
+  .contagem strong { font-size: 16px; }
 }

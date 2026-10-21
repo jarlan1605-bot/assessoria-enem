@@ -213,6 +213,8 @@ function Painel({ usuario }) {
       ? 'Painel do mentor'
       : `Olá, ${primeiroNome}!${meuMentor ? ` · Mentor: ${(meuMentor.nome || '').split(' ')[0]}` : ''}`
   const porAluno = POR_ALUNO.includes(abaAtual)
+  const grupoAtual = grupos.find((g) => g.itens.some((i) => i[0] === abaAtual))
+  const itemAtual = grupoAtual?.itens.find((i) => i[0] === abaAtual)
 
   let conteudo
   if (abaAtual === 'comunidade') {
@@ -314,6 +316,16 @@ function Painel({ usuario }) {
               </button>
             )}
           </div>
+
+          {itemAtual && (
+            <header className="pagina-titulo nao-imprimir">
+              <span className="pagina-icone" aria-hidden="true">{itemAtual[1]}</span>
+              <div>
+                <span className="pagina-kicker">{grupoAtual.titulo}</span>
+                <h1>{itemAtual[2]}</h1>
+              </div>
+            </header>
+          )}
 
           {ehMentor && porAluno && (
             <div className="nao-imprimir">

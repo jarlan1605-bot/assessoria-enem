@@ -24,6 +24,7 @@ import Relatorio from './Relatorio'
 import Financeiro from './Financeiro'
 import SiteEditor from './SiteEditor'
 import BancoQuestoes from './BancoQuestoes'
+import Materiais from './Materiais'
 import SimuladorProva from './SimuladorProva'
 import { precisaVoce } from './cobranca'
 
@@ -189,6 +190,7 @@ function Painel({ usuario }) {
         ['horario', '🗓️', 'Horário'],
         ['simulados', '📝', 'Simulados'],
         ['questoes', '🧠', 'Banco de questões'],
+        ['materiais', '📚', 'Simulados e provas'],
         ['cronometro', '⏱️', 'Simulador do ENEM'],
         ['erros', '📕', 'Caderno de erros'],
         ['redacao', '✍️', 'Redação'],
@@ -223,6 +225,8 @@ function Painel({ usuario }) {
     conteudo = <Videoaulas ehMentor={ehMentor} ehCeo={ehCeo} meuId={perfil.id} equipe={equipe} />
   } else if (abaAtual === 'cronometro') {
     conteudo = <SimuladorProva />
+  } else if (abaAtual === 'materiais') {
+    conteudo = <Materiais ehCeo={ehCeo} />
   } else if (abaAtual === 'questoes') {
     conteudo = <BancoQuestoes perfil={perfil} ehMentor={ehMentor} alunos={alunos} />
   } else if (abaAtual === 'equipe') {

@@ -47,6 +47,7 @@ export default function Landing({ onEntrar }) {
   const [cfg, setCfg] = useState(PADRAO)
   const [depoimentos, setDepoimentos] = useState([])
   const [fotoMentor, setFotoMentor] = useState(null)
+  const [mentores, setMentores] = useState([])
 
   useEffect(() => {
     supabase.from('site_config').select('*').eq('id', 1).maybeSingle().then(({ data }) => {
@@ -54,6 +55,7 @@ export default function Landing({ onEntrar }) {
     })
     supabase.from('depoimentos').select('*').eq('publicado', true).order('ordem').order('criado_em').then(({ data }) => setDepoimentos(data ?? []))
     supabase.rpc('foto_do_mentor').then(({ data }) => setFotoMentor(data || null))
+    supabase.rpc('mentores_publicos').then(({ data }) => setMentores(data ?? []))
   }, [])
 
   const wpp = linkWhatsApp(cfg.whatsapp, `Olá! Vi o site da ${NOME_SITE} e quero saber mais sobre a mentoria.`)
@@ -76,7 +78,10 @@ export default function Landing({ onEntrar }) {
           <Avatar src={fotoMentor} nome={NOME_MENTOR} tamanho={36} />
           <strong>{NOME_SITE}</strong>
         </div>
-        <button className="lp-botao lp-botao-pequeno" onClick={onEntrar}>Área do aluno</button>
+        <div className="lp-topo-acoes">
+          {mentores.length > 0 && <a className="lp-link lp-topo-link" href="#mentores">Mentores</a>}
+          <button className="lp-botao lp-botao-pequeno" onClick={onEntrar}>Área do aluno</button>
+        </div>
       </header>
 
       <section className="lp-hero">
@@ -131,6 +136,48 @@ export default function Landing({ onEntrar }) {
               <a className="lp-botao lp-botao-contorno" href={perfilInsta} target="_blank" rel="noreferrer">Ver mais no Instagram @{arroba}</a>
             </div>
           )}
+        </section>
+      )}
+
+      {mentores.length > 0 && (
+        <section className="lp-secao" id="mentores">
+          <div className="lp-cabeca">
+            <span className="lp-kicker">Quem vai te acompanhar</span>
+            <h2>Conheça os <em>mentores</em></h2>
+            <p>Gente que já passou pelo ENEM e sabe o caminho. Escolha com quem você quer estudar.</p>
+          </div>
+          <div className="lp-mentores">
+            {mentores.map((m) => {
+              const primeiro = (m.nome || '').split(' ')[0]
+              const link = linkWhatsApp(cfg.whatsapp, `Olá! Vi o site da ${NOME_SITE} e quero saber sobre a mentoria com ${primeiro}.`)
+              return (
+                <article key={m.id} className="lp-mentor">
+                  <div className="lp-mentor-foto">
+                    {m.foto_url ? <img src={m.foto_url} alt={m.nome} loading="lazy" /> : <span className="lp-mentor-inicial" aria-hidden="true">{primeiro.slice(0, 1)}</span>}
+                    <span className={m.disponivel ? 'lp-vaga aberta' : 'lp-vaga'}>{m.disponivel ? '● Vagas abertas' : 'Agenda cheia'}</span>
+                  </div>
+                  <div className="lp-mentor-corpo">
+                    <h3>{m.nome}</h3>
+                    {(m.idade || m.naturalidade) && (
+                      <p className="lp-mentor-dados">{[m.idade && `${m.idade} anos`, m.naturalidade].filter(Boolean).join(' · ')}</p>
+                    )}
+                    {m.caracteristicas?.length > 0 && (
+                      <ul className="lp-mentor-tags">{m.caracteristicas.map((c) => <li key={c}>{c}</li>)}</ul>
+                    )}
+                    {m.legenda && (
+                      <blockquote className="lp-mentor-legenda">
+                        “{m.legenda}”
+                        <cite>— {primeiro}</cite>
+                      </blockquote>
+                    )}
+                    {m.disponivel && (link || insta) && (
+                      <a className="lp-botao lp-botao-cheio lp-mentor-cta" href={link || insta} target="_blank" rel="noreferrer">Quero estudar com {primeiro}</a>
+                    )}
+                  </div>
+                </article>
+              )
+            })}
+          </div>
         </section>
       )}
 

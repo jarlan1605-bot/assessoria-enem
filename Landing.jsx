@@ -117,6 +117,8 @@ export default function Landing({ onEntrar }) {
         </div>
       </div>
 
+      <Feedbacks depoimentos={depoimentos} />
+
       {FOTOS_AULAS.length > 0 && (
         <section className="lp-secao">
           <div className="lp-cabeca">
@@ -237,27 +239,6 @@ export default function Landing({ onEntrar }) {
         </section>
       )}
 
-      {depoimentos.length > 0 && (
-        <section className="lp-secao">
-          <div className="lp-cabeca">
-            <span className="lp-kicker">Depoimentos</span>
-            <h2>Quem já passou <em>por aqui</em></h2>
-          </div>
-          <div className="lp-depoimentos">
-            {depoimentos.map((d) => (
-              <figure key={d.id} className="lp-depoimento">
-                <span className="lp-aspas" aria-hidden="true">“</span>
-                <blockquote>{d.texto}</blockquote>
-                <figcaption>
-                  <Avatar src={d.foto_url} nome={d.nome} tamanho={42} />
-                  <span><strong>{d.nome}</strong>{d.resultado && <small>{d.resultado}</small>}</span>
-                </figcaption>
-              </figure>
-            ))}
-          </div>
-        </section>
-      )}
-
       <section className="lp-final">
         <h2>Bora montar o <em>seu plano?</em></h2>
         <p>Me chama e eu te explico como funciona a mentoria.</p>
@@ -269,5 +250,78 @@ export default function Landing({ onEntrar }) {
         <button className="lp-link" onClick={onEntrar}>Área do aluno</button>
       </footer>
     </div>
+  )
+}
+
+// "de 25 para 37" -> { de: 25, para: 37 }
+function evolucao(resultado) {
+  const m = (resultado || '').match(/de\s*(\d+)\s*para\s*(\d+)/i)
+  return m ? { de: Number(m[1]), para: Number(m[2]) } : null
+}
+
+// Feedbacks dos alunos no estilo de conversa do Instagram: um cartão por aluno com as mensagens dele
+function Feedbacks({ depoimentos }) {
+  if (!depoimentos.length) return null
+  const porAluno = []
+  for (const d of depoimentos) {
+    let g = porAluno.find((x) => x.nome === d.nome)
+    if (!g) porAluno.push((g = { nome: d.nome, foto: d.foto_url, mensagens: [] }))
+    if (!g.foto && d.foto_url) g.foto = d.foto_url
+    g.mensagens.push(d)
+  }
+  const destaques = depoimentos.map((d) => ({ d, ev: evolucao(d.resultado) })).filter((x) => x.ev && x.ev.para > x.ev.de)
+  const resultados = depoimentos.filter((d) => d.resultado && !evolucao(d.resultado) && /acert|quest|nota|pontos/i.test(d.resultado))
+
+  return (
+    <section className="lp-secao lp-feedbacks" id="feedbacks">
+      <div className="lp-cabeca">
+        <span className="lp-kicker">Feedbacks reais</span>
+        <h2>O que os alunos <em>estão dizendo</em></h2>
+        <p>Mensagens que chegaram no direct e no WhatsApp, com autorização de quem mandou.</p>
+      </div>
+
+      {destaques.length > 0 && (
+        <div className="lp-subidas">
+          {destaques.map(({ d, ev }) => (
+            <div key={d.id} className="lp-subida">
+              <span className="lp-subida-num">+{ev.para - ev.de}</span>
+              <span className="lp-subida-de">{ev.de} → {ev.para}</span>
+              <span className="lp-subida-legenda">{d.resultado.split(':')[0]} · {d.nome}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="lp-conversas">
+        {porAluno.map((g, i) => (
+          <article key={g.nome} className={`lp-conversa lp-conversa-${i % 4}`}>
+            <header className="lp-conversa-topo">
+              <span className="lp-conversa-avatar"><Avatar src={g.foto} nome={g.nome} tamanho={40} /></span>
+              <span>
+                <strong>{g.nome}</strong>
+                <small>Aluno(a) da mentoria</small>
+              </span>
+              <span className="lp-conversa-icones" aria-hidden="true">📞 ⓘ</span>
+            </header>
+            <div className="lp-conversa-corpo">
+              {g.mensagens.map((d) => (
+                <div key={d.id} className="lp-msg">
+                  <p className="lp-balao">{d.texto}<span className="lp-coracao" aria-hidden="true">❤️</span></p>
+                  {d.resultado && <span className="lp-msg-resultado">🏆 {d.resultado}</span>}
+                </div>
+              ))}
+            </div>
+          </article>
+        ))}
+      </div>
+
+      {resultados.length > 0 && (
+        <div className="lp-faixa lp-faixa-resultados" aria-hidden="true">
+          <div className="lp-faixa-trilho">
+            {[...resultados, ...resultados, ...resultados, ...resultados].map((d, i) => <span key={i}>{d.resultado}<i>✦</i></span>)}
+          </div>
+        </div>
+      )}
+    </section>
   )
 }

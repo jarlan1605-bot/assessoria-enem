@@ -1797,3 +1797,30 @@ main.conteudo { padding: 22px clamp(16px, 3vw, 32px) 56px; border-bottom: 0; gap
 .vitrine-form p { margin: 2px 0 0; }
 .vitrine-duas { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 @media (max-width: 420px) { .vitrine-duas { grid-template-columns: 1fr; } }
+
+/* ---------- Pix da mensalidade (aluno) ---------- */
+.pix-aviso {
+  width: 100%; display: flex; align-items: center; gap: 14px; text-align: left; font: inherit; cursor: pointer;
+  margin-top: 12px; padding: 14px 18px; border-radius: var(--raio); border: 2px solid var(--tinta);
+  background: color-mix(in srgb, var(--lima) 55%, var(--superficie)); color: #14231d; box-shadow: 4px 4px 0 var(--tinta);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.pix-aviso:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--tinta); }
+.pix-aviso.atrasado { background: color-mix(in srgb, var(--rosa) 70%, var(--superficie)); }
+.pix-aviso-icone { font-size: 28px; }
+.pix-aviso-texto { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.pix-aviso-texto strong { font-family: var(--fonte-titulo); font-size: 17px; }
+.pix-aviso-texto span { font-size: 13px; opacity: 0.8; }
+.pix-aviso-botao { font-weight: 800; white-space: nowrap; background: #14231d; color: #f7f2e8; padding: 9px 16px; border-radius: 999px; font-size: 14px; }
+.pix-modal { max-width: 420px; max-height: 94vh; overflow-y: auto; }
+.pix-valor { font-family: var(--fonte-titulo); font-size: 30px; font-weight: 800; letter-spacing: -0.03em; margin: 0 0 10px; }
+.pix-valor .suave { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px; font-weight: 600; letter-spacing: 0; }
+.pix-qr { display: block; width: 220px; max-width: 70vw; margin: 0 auto; border-radius: 14px; border: 1.5px solid var(--borda); background: #fff; padding: 8px; }
+.pix-codigo { background: var(--superficie-2); border-radius: 12px; padding: 10px 12px; max-height: 84px; overflow-y: auto; word-break: break-all; }
+.pix-codigo code { background: none; padding: 0; font-size: 12px; }
+.pix-ok { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 10px 0; }
+.pix-ok > span { font-size: 54px; }
+@media (max-width: 520px) {
+  .pix-aviso { flex-wrap: wrap; }
+  .pix-aviso-botao { width: 100%; text-align: center; }
+}

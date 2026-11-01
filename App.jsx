@@ -25,6 +25,7 @@ import Financeiro from './Financeiro'
 import SiteEditor from './SiteEditor'
 import BancoQuestoes from './BancoQuestoes'
 import Materiais from './Materiais'
+import PagarMensalidade from './PagarMensalidade'
 import SimuladorProva from './SimuladorProva'
 import { precisaVoce } from './cobranca'
 
@@ -314,6 +315,7 @@ function Painel({ usuario }) {
         <main className="conteudo">
           <div className="nao-imprimir">
             <Contagem config={config} visivel={perfil.mostrar_contagem !== false} onAlterar={alterarContagem} />
+            {perfil.papel === 'aluno' && <PagarMensalidade />}
             {ehCeo && aCobrar > 0 && abaAtual !== 'financeiro' && (
               <button className="aviso-cobranca" onClick={() => setAba('financeiro')}>
                 💰 <b>{aCobrar} {aCobrar === 1 ? 'aluno para você cobrar' : 'alunos para você cobrar'} hoje.</b> <span>Abrir o financeiro →</span>

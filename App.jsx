@@ -33,7 +33,9 @@ import { precisaVoce } from './cobranca'
 export default function App() {
   const [sessao, setSessao] = useState(undefined) // undefined = ainda verificando
   const [verLogin, setVerLogin] = useState(() => window.location.hash === '#entrar')
-  const forcarSite = new URLSearchParams(window.location.search).has('site')
+  const busca = new URLSearchParams(window.location.search)
+  // ?site mostra a página de apresentação; ?vagas abre direto no formulário de 2027 (link do Instagram)
+  const forcarSite = busca.has('site') || busca.has('vagas')
 
   useEffect(() => {
     if (!configurado) return

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from './supabase'
 import { MESES, inicioDoMes, somarMeses, hojeISO } from './agenda'
 import Avatar from './Avatar'
+import { chamarPix } from './PagarMensalidade'
 import { reais, dataBR, dataCurta, proximoMes, situacao, mensagem, linkWhatsApp, MENSAGENS_PADRAO, diasEntre, precisaVoce } from './cobranca'
 import { pixCopiaECola } from './pix'
 
@@ -220,6 +221,7 @@ export default function Financeiro({ meuId }) {
                     </td>
                     <td className="acoes-tabela">
                       {ct?.proximo_vencimento && s.tipo !== 'inativo' && <button className="link" onClick={() => setModal({ tipo: 'pagar', aluno: a })}>registrar pagamento</button>}
+                      {ct?.proximo_vencimento && s.tipo !== 'inativo' && <BotaoLinkPix alunoId={a.id} />}
                       {ct?.proximo_vencimento && s.tipo !== 'inativo' && (
                         <a className="link" href={linkWhatsApp(ct.telefone, mensagem({ tipo: s.msg || 'lembrete', contrato: ct, aluno: a, config }))} target="_blank" rel="noreferrer" onClick={() => marcarAvisado(a.id)}>cobrar</a>
                       )}
@@ -532,6 +534,9 @@ function Configuracoes({ config, onFechar }) {
         <label className="sp-linha">Dias antes do vencimento para lembrar<input type="number" min="0" max="15" value={c.dias_antes} onChange={mudar('dias_antes')} /></label>
         <p className="suave pequeno">O aluno aparece em <b>Cobrar hoje</b> nesse dia, no dia do vencimento e, se atrasar, de 3 em 3 dias até você registrar o pagamento.</p>
 
+        <h3 className="sp-sub">💳 Pix com baixa automática (Mercado Pago)</h3>
+        <StatusMercadoPago />
+
         <h3 className="sp-sub">🤖 Cobrança automática pelo WhatsApp</h3>
         {!temAuto ? (
           <p className="aviso-info">Para ligar, rode o arquivo <code>cobranca_auto.sql</code> no Supabase e siga o passo a passo do LEIA-ME (WhatsApp oficial da Meta).</p>
@@ -577,5 +582,45 @@ function Configuracoes({ config, onFechar }) {
         </div>
       </form>
     </Modal>
+  )
+}
+
+// Situação da integração com o Mercado Pago (o Access Token fica só no Vercel)
+function StatusMercadoPago() {
+  const [st, setSt] = useState(null)
+  useEffect(() => {
+    chamarPix({ acao: 'situacao' }).then(setSt).catch((e) => setSt({ erro: e.message }))
+  }, [])
+  if (!st) return <p className="suave pequeno">Verificando…</p>
+  if (st.erro) return <p className="aviso-info">Não consegui verificar: {st.erro}</p>
+  return st.configurado ? (
+    <p className="aviso-ok">✓ Mercado Pago conectado. Os alunos veem o botão “Pagar com Pix” perto do vencimento, e o pagamento é registrado sozinho aqui.</p>
+  ) : (
+    <div className="aviso-info">
+      <b>Ainda não conectado.</b> No Vercel, em Settings → Environment Variables, crie <code>MP_ACCESS_TOKEN</code> com o Access Token de produção da sua conta do Mercado Pago e faça um novo deploy.
+      <br />Endereço de notificações (webhook) para colocar no Mercado Pago: <code>{st.webhook}</code>
+    </div>
+  )
+}
+
+// Gera o Pix do aluno no Mercado Pago e copia o link de pagamento (para mandar no WhatsApp)
+function BotaoLinkPix({ alunoId }) {
+  const [estado, setEstado] = useState('')
+  async function gerar() {
+    setEstado('gerando')
+    try {
+      const { pix } = await chamarPix({ acao: 'gerar', aluno_id: alunoId })
+      const texto = pix.link || pix.copia_cola
+      try { await navigator.clipboard.writeText(texto); setEstado('copiado') } catch { prompt('Copie o link do Pix:', texto); setEstado('') }
+      setTimeout(() => setEstado(''), 3000)
+    } catch (e) {
+      alert(e.message)
+      setEstado('')
+    }
+  }
+  return (
+    <button className="link" onClick={gerar} disabled={estado === 'gerando'} title="Gera um Pix que dá baixa sozinho quando pago e copia o link para você mandar">
+      {estado === 'gerando' ? 'gerando…' : estado === 'copiado' ? '✓ link copiado' : 'link do Pix'}
+    </button>
   )
 }

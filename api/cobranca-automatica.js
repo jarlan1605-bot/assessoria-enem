@@ -6,6 +6,7 @@
 // Variáveis no Vercel: SUPABASE_SERVICE_ROLE_KEY, WHATSAPP_TOKEN, WHATSAPP_PHONE_ID, CRON_SECRET.
 import { createClient } from '@supabase/supabase-js'
 import { pixCopiaECola } from '../pix.js'
+import { mpConfigurado, pixDaMensalidade, conferirPagamento, urlDoSite } from './_mercadopago.js'
 
 const URL_SUPABASE = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
 const CHAVE_SECRETA = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -56,9 +57,11 @@ async function enviarModelo({ para, modelo, idioma, variaveis }) {
   return corpo?.messages?.[0]?.id || ''
 }
 
-function variaveisDe({ contrato, aluno, config }) {
+function variaveisDe({ contrato, aluno, config, pixDinamico }) {
   const nome = contrato.responsavel?.trim() ? primeiroNome(contrato.responsavel) : primeiroNome(aluno?.nome) || 'tudo bem'
-  const pix = config.pix_chave
+  const pix = pixDinamico
+    ? pixDinamico
+    : config.pix_chave
     ? pixCopiaECola({
         chave: config.pix_chave, tipo: config.pix_tipo, nome: config.pix_nome || NOME_MENTORIA, cidade: config.pix_cidade,
         valor: contrato.valor_mensal, txid: (primeiroNome(aluno?.nome) + contrato.proximo_vencimento.slice(5, 7) + contrato.proximo_vencimento.slice(2, 4)).toUpperCase(),
@@ -80,12 +83,12 @@ function tipoDeHoje(contrato, config, hoje, jaEnviados) {
   return null
 }
 
-async function rodar(admin, { apenasSimular = false } = {}) {
+async function rodar(admin, { apenasSimular = false, urlSite = '' } = {}) {
   const hoje = hojeBrasil()
   const [{ data: config }, { data: contratos }, { data: alunos }] = await Promise.all([
     admin.from('financeiro_config').select('*').eq('id', 1).maybeSingle(),
     admin.from('contratos').select('*').eq('ativo', true).not('proximo_vencimento', 'is', null),
-    admin.from('perfis').select('id, nome').eq('papel', 'aluno'),
+    admin.from('perfis').select('id, nome, email').eq('papel', 'aluno'),
   ])
   if (!config?.auto_ativo && !apenasSimular) return { hoje, ativo: false, enviados: [], erros: [], pulados: [] }
   const nomes = Object.fromEntries((alunos ?? []).map((a) => [a.id, a]))
@@ -120,7 +123,12 @@ async function rodar(admin, { apenasSimular = false } = {}) {
     }
     try {
       const modelo = config[`tpl_${tipo}`]
-      const wamid = await enviarModelo({ para, modelo, idioma: config.tpl_idioma, variaveis: variaveisDe({ contrato: ct, aluno, config }) })
+      // com o Mercado Pago ligado, a mensagem leva um Pix só desta mensalidade (dá baixa sozinho quando pago)
+      let pixDinamico = ''
+      if (mpConfigurado()) {
+        try { pixDinamico = (await pixDaMensalidade(admin, { contrato: ct, aluno, urlSite })).copia_cola } catch { pixDinamico = '' }
+      }
+      const wamid = await enviarModelo({ para, modelo, idioma: config.tpl_idioma, variaveis: variaveisDe({ contrato: ct, aluno, config, pixDinamico }) })
       await admin.from('envios_whatsapp').update({ status: 'enviado', wamid }).eq('id', reg.id)
       await admin.from('contratos').update({ ultimo_aviso: hoje }).eq('aluno_id', ct.aluno_id)
       resultado.enviados.push({ aluno: aluno?.nome, tipo })
@@ -132,6 +140,18 @@ async function rodar(admin, { apenasSimular = false } = {}) {
   return resultado
 }
 
+// Confere os Pix em aberto dos últimos dias (caso algum aviso do Mercado Pago tenha se perdido)
+async function conferirPendentes(admin) {
+  if (!mpConfigurado()) return { conferidos: 0 }
+  const desde = new Date(Date.now() - 10 * 86400000).toISOString()
+  const { data } = await admin.from('cobrancas_pix').select('mp_id').eq('status', 'pendente').gte('criado_em', desde)
+  let pagos = 0
+  for (const c of data ?? []) {
+    try { if ((await conferirPagamento(admin, c.mp_id)).registrado) pagos++ } catch { /* tenta de novo amanhã */ }
+  }
+  return { conferidos: data?.length ?? 0, pagos }
+}
+
 export default async function handler(req, res) {
   if (!URL_SUPABASE || !CHAVE_SECRETA) return responder(res, 500, { erro: 'Falta a variável SUPABASE_SERVICE_ROLE_KEY no Vercel.' })
   const admin = createClient(URL_SUPABASE, CHAVE_SECRETA, { auth: { persistSession: false, autoRefreshToken: false } })
@@ -140,9 +160,10 @@ export default async function handler(req, res) {
   // 1) Chamada diária do Vercel (cron)
   if (req.method === 'GET') {
     if (!process.env.CRON_SECRET || token !== process.env.CRON_SECRET) return responder(res, 401, { erro: 'Não autorizado.' })
-    if (!WA_TOKEN || !WA_PHONE_ID) return responder(res, 500, { erro: 'Faltam WHATSAPP_TOKEN e WHATSAPP_PHONE_ID no Vercel.' })
-    const r = await rodar(admin)
-    return responder(res, 200, r)
+    const pix = await conferirPendentes(admin)
+    if (!WA_TOKEN || !WA_PHONE_ID) return responder(res, 200, { pix, whatsapp: 'não configurado' })
+    const r = await rodar(admin, { urlSite: urlDoSite(req) })
+    return responder(res, 200, { pix, ...r })
   }
 
   // 2) Botões do site (só o CEO): testar, simular e rodar agora
@@ -169,7 +190,7 @@ export default async function handler(req, res) {
       const wamid = await enviarModelo({ para, modelo: config?.[`tpl_${tipo}`], idioma: config?.tpl_idioma, variaveis: variaveisDe({ contrato, aluno: { nome: 'Teste' }, config: config || {} }) })
       return responder(res, 200, { ok: true, wamid })
     }
-    if (corpo.acao === 'rodar') return responder(res, 200, await rodar(admin))
+    if (corpo.acao === 'rodar') return responder(res, 200, await rodar(admin, { urlSite: urlDoSite(req) }))
     return responder(res, 400, { erro: 'Ação desconhecida.' })
   } catch (e) {
     return responder(res, 500, { erro: e.message })

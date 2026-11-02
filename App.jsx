@@ -25,6 +25,8 @@ import Financeiro from './Financeiro'
 import SiteEditor from './SiteEditor'
 import BancoQuestoes from './BancoQuestoes'
 import Materiais from './Materiais'
+import Interessados from './Interessados'
+import PagarMensalidade from './PagarMensalidade'
 import SimuladorProva from './SimuladorProva'
 import { precisaVoce } from './cobranca'
 
@@ -197,7 +199,7 @@ function Painel({ usuario }) {
       ],
     },
     ...(ehCeo
-      ? [{ titulo: 'Gestão', itens: [['equipe', '🏢', 'Equipe'], ['financeiro', '💰', 'Financeiro'], ['site', '🌐', 'Página de vendas']] }]
+      ? [{ titulo: 'Gestão', itens: [['equipe', '🏢', 'Equipe'], ['financeiro', '💰', 'Financeiro'], ['site', '🌐', 'Página de vendas'], ['interessados', '📝', 'Interessados 2027']] }]
       : ehMentor
         ? [{ titulo: 'Gestão', itens: [['equipe', '👥', 'Meus alunos']] }]
         : []),
@@ -225,6 +227,8 @@ function Painel({ usuario }) {
     conteudo = <Videoaulas ehMentor={ehMentor} ehCeo={ehCeo} meuId={perfil.id} equipe={equipe} />
   } else if (abaAtual === 'cronometro') {
     conteudo = <SimuladorProva />
+  } else if (abaAtual === 'interessados') {
+    conteudo = <Interessados />
   } else if (abaAtual === 'materiais') {
     conteudo = <Materiais ehCeo={ehCeo} />
   } else if (abaAtual === 'questoes') {
@@ -314,6 +318,7 @@ function Painel({ usuario }) {
         <main className="conteudo">
           <div className="nao-imprimir">
             <Contagem config={config} visivel={perfil.mostrar_contagem !== false} onAlterar={alterarContagem} />
+            {perfil.papel === 'aluno' && <PagarMensalidade />}
             {ehCeo && aCobrar > 0 && abaAtual !== 'financeiro' && (
               <button className="aviso-cobranca" onClick={() => setAba('financeiro')}>
                 💰 <b>{aCobrar} {aCobrar === 1 ? 'aluno para você cobrar' : 'alunos para você cobrar'} hoje.</b> <span>Abrir o financeiro →</span>

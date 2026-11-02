@@ -121,10 +121,13 @@ export default function Landing({ onEntrar }) {
 
       {/* 2. Números */}
       {cfg.numeros?.length > 0 && (
-        <section className="lp-numeros-faixa" aria-label="Números da mentoria">
+        <section className="lp-numeros-bloco" aria-label="Números da mentoria">
+          <p className="lp-numeros-titulo">A mentoria em números · resultados dos alunos</p>
+          <div className="lp-numeros-faixa">
           {cfg.numeros.map((n, i) => (
             <div key={i}><strong>{n.valor}</strong><span>{n.rotulo}</span></div>
           ))}
+          </div>
         </section>
       )}
 
@@ -315,41 +318,67 @@ export default function Landing({ onEntrar }) {
   )
 }
 
-// Cada evolução "Área: de X para Y" vira uma linha de antes × depois
-function evolucoes(depoimentos) {
-  const linhas = []
+// Junta, por aluno, cada evolução "Área: de X para Y" e a fala dele
+function evolucoesPorAluno(depoimentos) {
+  const alunos = []
   for (const d of depoimentos) {
+    const areas = []
     for (const parte of String(d.resultado || '').split('·')) {
       const m = parte.match(/^\s*([^:]+):\s*de\s*(\d+)\s*para\s*(\d+)/i)
-      if (m && Number(m[3]) > Number(m[2])) linhas.push({ id: d.id + parte, nome: d.nome, area: m[1].trim(), de: Number(m[2]), para: Number(m[3]) })
+      if (m && Number(m[3]) > Number(m[2])) areas.push({ area: m[1].trim(), de: Number(m[2]), para: Number(m[3]) })
     }
+    if (!areas.length) continue
+    let a = alunos.find((x) => x.nome === d.nome)
+    if (!a) alunos.push((a = { nome: d.nome, foto: d.foto_url, areas: [], fala: '' }))
+    a.areas.push(...areas)
+    if (!a.fala) a.fala = d.texto
   }
-  return linhas
+  return alunos
 }
 
+const pct = (n) => Math.round((n / 45) * 100)
+
 function AntesDepois({ depoimentos }) {
-  const linhas = evolucoes(depoimentos)
-  if (!linhas.length) return null
+  const alunos = evolucoesPorAluno(depoimentos)
+  if (!alunos.length) return null
   return (
     <section className="lp-secao">
       <div className="lp-cabeca">
-        <span className="lp-kicker">Antes × depois</span>
-        <h2>Evolução de <em>alunos reais</em></h2>
-        <p>Acertos em simulados, de 0 a 45, antes e depois de começar a mentoria.</p>
+        <span className="lp-kicker">Evolução dos alunos</span>
+        <h2>Resultados de <em>alunos reais</em></h2>
+        <p>Quanto esses alunos subiram nos simulados. Cada área do ENEM tem 45 questões.</p>
       </div>
-      <div className="lp-ad">
-        {linhas.map((l) => (
-          <div key={l.id} className="lp-ad-linha">
-            <div className="lp-ad-rotulo"><strong>{l.nome}</strong><span>{l.area}</span></div>
-            <div className="lp-ad-barras">
-              <div className="lp-ad-barra antes" style={{ width: `${(l.de / 45) * 100}%` }}><span>{l.de}</span></div>
-              <div className="lp-ad-barra depois" style={{ width: `${(l.para / 45) * 100}%` }}><span>{l.para}</span></div>
-            </div>
-            <span className="lp-ad-ganho">+{l.para - l.de}</span>
-          </div>
+      <div className="lp-evo">
+        {alunos.map((a) => (
+          <article key={a.nome} className="lp-evo-cartao">
+            <header>
+              <Avatar src={a.foto} nome={a.nome} tamanho={44} />
+              <div>
+                <strong>{a.nome}</strong>
+                <span>Aluno(a) da mentoria</span>
+              </div>
+            </header>
+            {a.areas.map((x) => (
+              <div key={x.area} className="lp-evo-area">
+                <div className="lp-evo-topo">
+                  <span>{x.area}</span>
+                  <b>+{x.para - x.de} acertos</b>
+                </div>
+                <div className="lp-evo-numeros">
+                  <div><small>No começo</small><em>{x.de}</em><small>{pct(x.de)}% de acerto</small></div>
+                  <span className="lp-evo-seta" aria-hidden="true">→</span>
+                  <div className="agora"><small>Agora</small><em>{x.para}</em><small>{pct(x.para)}% de acerto</small></div>
+                </div>
+                <div className="lp-evo-trilho" aria-hidden="true">
+                  <i className="antes" style={{ width: `${pct(x.de)}%` }} />
+                  <i className="depois" style={{ left: `${pct(x.de)}%`, width: `${pct(x.para) - pct(x.de)}%` }} />
+                </div>
+              </div>
+            ))}
+            {a.fala && <p className="lp-evo-fala">“{a.fala}”</p>}
+          </article>
         ))}
       </div>
-      <p className="lp-ad-legenda"><i className="antes" /> antes <i className="depois" /> depois</p>
     </section>
   )
 }

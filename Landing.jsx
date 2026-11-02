@@ -59,6 +59,13 @@ export default function Landing({ onEntrar }) {
     supabase.rpc('mentores_publicos').then(({ data }) => setMentores(data ?? []))
   }, [])
 
+  // Link do Instagram (?vagas ou #interesse): rola direto até o formulário de 2027
+  useEffect(() => {
+    if (!new URLSearchParams(window.location.search).has('vagas') && window.location.hash !== '#interesse') return
+    const t = setTimeout(() => document.getElementById('interesse')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 400)
+    return () => clearTimeout(t)
+  }, [])
+
   const wpp = linkWhatsApp(cfg.whatsapp, `Olá! Vi o site da ${NOME_SITE} e quero saber mais sobre a mentoria.`)
   const arroba = cfg.instagram ? cfg.instagram.replace('@', '') : ''
   const insta = arroba ? `https://ig.me/m/${arroba}` : null

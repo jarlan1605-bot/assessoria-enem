@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from './supabase'
 import { NOME_SITE, NOME_MENTOR, INSTAGRAM, FOTO_PERFIL, FOTOS_AULAS } from './constants'
 import Avatar from './Avatar'
+import FormInteresse from './Interesse'
 
 const PADRAO = {
   titulo: 'Sua aprovação com um plano feito para você',
@@ -80,6 +81,7 @@ export default function Landing({ onEntrar }) {
         </div>
         <div className="lp-topo-acoes">
           {mentores.length > 0 && <a className="lp-link lp-topo-link" href="#mentores">Mentores</a>}
+          <a className="lp-link lp-topo-link" href="#interesse">Vagas 2027</a>
           <button className="lp-botao lp-botao-pequeno" onClick={onEntrar}>Área do aluno</button>
         </div>
       </header>
@@ -238,6 +240,8 @@ export default function Landing({ onEntrar }) {
           </div>
         </section>
       )}
+
+      <FormInteresse />
 
       <section className="lp-final">
         <h2>Bora montar o <em>seu plano?</em></h2>

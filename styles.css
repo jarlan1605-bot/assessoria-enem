@@ -1824,3 +1824,64 @@ main.conteudo { padding: 22px clamp(16px, 3vw, 32px) 56px; border-bottom: 0; gap
   .pix-aviso { flex-wrap: wrap; }
   .pix-aviso-botao { width: 100%; text-align: center; }
 }
+
+/* ---------- Lista de interesse 2027 (página de apresentação) ---------- */
+.lp-interesse-caixa {
+  display: grid; grid-template-columns: 0.85fr 1.15fr; gap: clamp(24px, 4vw, 56px); align-items: start;
+  background: var(--lp-verde-escuro); color: #f2efe6; border: 3px solid #14231d; border-radius: 40px;
+  padding: clamp(28px, 5vw, 64px); box-shadow: 12px 12px 0 var(--lp-lima);
+}
+.lp-interesse-lado { position: sticky; top: 90px; }
+.lp-interesse-lado h2 { color: #f2efe6; font-size: clamp(38px, 5vw, 64px); line-height: 0.98; letter-spacing: -0.045em; margin: 20px 0 16px; }
+.lp-interesse-lado em { color: var(--lp-lima); }
+.lp-interesse-lado p { color: #c9d6cf; font-size: 17px; margin: 0 0 20px; }
+.lp-interesse-lista { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; font-weight: 700; }
+.lp-form { background: var(--lp-papel); color: var(--lp-tinta); border-radius: 28px; border: 2px solid #14231d; padding: clamp(20px, 3vw, 32px); display: flex; flex-direction: column; gap: 16px; }
+.lp-form label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 800; color: var(--lp-tinta); }
+.lp-form input, .lp-form textarea {
+  font: inherit; font-size: 16px; font-weight: 500; color: var(--lp-tinta); background: var(--lp-fundo);
+  border: 2px solid color-mix(in srgb, var(--lp-tinta) 18%, transparent); border-radius: 16px; padding: 12px 14px; width: 100%;
+}
+.lp-form input:focus, .lp-form textarea:focus { outline: none; border-color: var(--lp-tinta); box-shadow: 0 0 0 4px color-mix(in srgb, var(--lp-lima) 60%, transparent); }
+.lp-form-duas { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.lp-chips-campo { border: 0; margin: 0; padding: 0; }
+.lp-chips-campo legend { font-size: 13px; font-weight: 800; margin-bottom: 8px; padding: 0; }
+.lp-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.lp-chip {
+  font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; padding: 9px 15px; border-radius: 999px;
+  border: 2px solid color-mix(in srgb, var(--lp-tinta) 22%, transparent); background: transparent; color: var(--lp-tinta);
+  transition: transform 0.12s, background 0.12s;
+}
+.lp-chip:hover { border-color: var(--lp-tinta); }
+.lp-chip.ativo { background: var(--lp-lima); border-color: #14231d; color: #14231d; transform: rotate(-2deg); box-shadow: 2px 2px 0 #14231d; }
+.lp-escondido { position: absolute !important; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.lp-form-erro { margin: 0; color: #c92a2a; font-weight: 700; }
+.lp-form-enviar { width: 100%; font-size: 17px; padding: 17px 24px; }
+.lp-form-nota { margin: 0; font-size: 12px; color: var(--lp-suave); text-align: center; }
+.lp-interesse-ok { background: var(--lp-papel); color: var(--lp-tinta); border-radius: 28px; border: 2px solid #14231d; padding: 48px 28px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.lp-interesse-ok > span { font-size: 64px; }
+.lp-interesse-ok h3 { margin: 0; font-size: 34px; letter-spacing: -0.03em; }
+.lp-interesse-ok p { margin: 0 0 8px; color: var(--lp-suave); max-width: 380px; }
+@media (max-width: 860px) {
+  .lp-interesse-caixa { grid-template-columns: 1fr; border-radius: 30px; box-shadow: 6px 6px 0 var(--lp-lima); }
+  .lp-interesse-lado { position: static; }
+}
+@media (max-width: 520px) { .lp-form-duas { grid-template-columns: 1fr; } }
+
+/* ---------- Interessados 2027 (CEO) ---------- */
+.int-resumo { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.int-filtros { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center; padding: 14px 18px; }
+.int-busca { display: flex; gap: 8px; flex: 1 1 280px; max-width: 420px; }
+.int-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; align-items: start; }
+.int-cartao { border-top: 5px solid var(--cor); display: flex; flex-direction: column; gap: 10px; }
+.int-cartao header { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+.int-cartao h3 { margin: 0; font-size: 20px; }
+.int-status { width: auto; flex: none; font-weight: 800; color: var(--cor); border-color: color-mix(in srgb, var(--cor) 40%, var(--borda)); border-radius: 999px; padding: 5px 10px; font-size: 13px; }
+.int-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.int-tags span { font-size: 12px; font-weight: 700; background: var(--superficie-2); border-radius: 999px; padding: 3px 10px; }
+.int-msg { margin: 0; font-style: italic; color: var(--suave); font-size: 14px; }
+.int-detalhes { display: flex; flex-direction: column; gap: 6px; border-top: 1px dashed var(--borda); padding-top: 10px; }
+.int-detalhes p { margin: 0; }
+.int-acoes { display: flex; gap: 8px; align-items: center; }
+.int-acoes a { text-decoration: none; }
+@media (max-width: 700px) { .int-resumo { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

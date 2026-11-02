@@ -1,5 +1,6 @@
 import fotoMentor from './foto-mentor.jpg'
 import fotoPerfil from './foto-perfil.jpg'
+import fotoClara from './foto-clara.jpg'
 import aula1 from './aula-1.jpg'
 import aula2 from './aula-2.jpg'
 import aula3 from './aula-3.jpg'
@@ -10,7 +11,7 @@ import aula7 from './aula-7.jpg'
 import aula8 from './aula-8.jpg'
 
 // Troque aqui o nome que aparece no topo do site
-export const NOME_SITE = 'Mentoria ENEM'
+export const NOME_SITE = 'Assessoria J&C'
 export const NOME_MENTOR = 'Jarlan'
 export const INSTAGRAM = 'jarlanamed' // sem o @; deixe '' para esconder
 
@@ -18,6 +19,10 @@ export const INSTAGRAM = 'jarlanamed' // sem o @; deixe '' para esconder
 // Enquanto não houver foto, aparecem as iniciais.
 export const FOTO_MENTOR = fotoMentor
 export const FOTO_PERFIL = fotoPerfil
+
+// Sócia da assessoria (aparece ao lado do Jarlan na página de apresentação)
+export const NOME_SOCIA = 'Clara Helena'
+export const FOTO_SOCIA = fotoClara
 export const FRASE_LOGIN = 'Seu horário de estudos e seus simulados, tudo num lugar só.'
 
 // Fotos das aulas: aula-1.jpg a aula-8.jpg. Para trocar, substitua os arquivos

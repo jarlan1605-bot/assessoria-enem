@@ -11,7 +11,7 @@ const STATUS = {
 
 const zap = (n, nome) => {
   const d = String(n || '').replace(/\D/g, '')
-  const texto = `Olá, ${(nome || '').split(' ')[0]}! Aqui é da Mentoria ENEM. Vi que você entrou na lista de interesse para 2027 😊`
+  const texto = `Olá, ${(nome || '').split(' ')[0]}! Aqui é da Assessoria J&C. Vi que você entrou na lista de interesse para 2027 😊`
   return `https://wa.me/${d.length <= 11 ? '55' + d : d}?text=${encodeURIComponent(texto)}`
 }
 const telefone = (n) => {

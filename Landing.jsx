@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabase'
-import { NOME_SITE, NOME_MENTOR, INSTAGRAM, FOTO_PERFIL, FOTOS_AULAS } from './constants'
+import { NOME_SITE, NOME_MENTOR, NOME_SOCIA, FOTO_SOCIA, INSTAGRAM, FOTO_PERFIL, FOTOS_AULAS } from './constants'
 import Avatar from './Avatar'
 import FormInteresse from './Interesse'
 
@@ -28,9 +28,9 @@ const PAIS = [
 ]
 
 const FAQ = [
-  ['E se meu filho não se adaptar?', 'Nas primeiras semanas a gente ajusta o plano junto: horário, ritmo e prioridades mudam conforme a rotina dele. Se algo não estiver funcionando, é só conversar comigo.'],
+  ['E se meu filho não se adaptar?', 'Nas primeiras semanas a gente ajusta o plano junto: horário, ritmo e prioridades mudam conforme a rotina dele. Se algo não estiver funcionando, é só conversar com a gente.'],
   ['Funciona para quem está no 2º ano?', 'Funciona. Quanto antes começa, mais tempo para construir base com calma. O plano é montado para o momento de cada aluno.'],
-  ['Preciso pagar cursinho junto?', 'Não é obrigatório. A mentoria organiza o que estudar e como estudar; dá para usar cursinho, plataforma ou materiais gratuitos, e eu ajudo a escolher o que faz sentido.'],
+  ['Preciso pagar cursinho junto?', 'Não é obrigatório. A mentoria organiza o que estudar e como estudar; dá para usar cursinho, plataforma ou materiais gratuitos, e a gente ajuda a escolher o que faz sentido.'],
   ['Como são os atendimentos?', 'Online e ao vivo, marcados pela própria plataforma, com suporte pelo WhatsApp entre um encontro e outro.'],
 ]
 
@@ -53,7 +53,6 @@ function partesTitulo(titulo) {
 export default function Landing({ onEntrar }) {
   const [cfg, setCfg] = useState(PADRAO)
   const [depoimentos, setDepoimentos] = useState([])
-  const [fotoMentor, setFotoMentor] = useState(null)
   const [mentores, setMentores] = useState([])
 
   useEffect(() => {
@@ -61,7 +60,6 @@ export default function Landing({ onEntrar }) {
       if (data) setCfg({ ...PADRAO, ...Object.fromEntries(Object.entries(data).filter(([, v]) => v !== '' && v !== null)) })
     })
     supabase.from('depoimentos').select('*').eq('publicado', true).order('ordem').order('criado_em').then(({ data }) => setDepoimentos(data ?? []))
-    supabase.rpc('foto_do_mentor').then(({ data }) => setFotoMentor(data || null))
     supabase.rpc('mentores_publicos').then(({ data }) => setMentores(data ?? []))
   }, [])
 
@@ -77,7 +75,7 @@ export default function Landing({ onEntrar }) {
   const perfilInsta = arroba ? `https://instagram.com/${arroba}` : null
   const [inicio, destaque] = partesTitulo(cfg.titulo)
 
-  const msgWpp = `Oi, ${NOME_MENTOR}! Quero saber mais sobre a mentoria 2027`
+  const msgWpp = `Oi! Quero saber mais sobre a ${NOME_SITE} para 2027`
   const wpp2027 = linkWhatsApp(cfg.whatsapp, msgWpp)
   const contato = wpp2027 || insta
 
@@ -85,7 +83,10 @@ export default function Landing({ onEntrar }) {
     <div className="lp">
       <header className="lp-topo">
         <div className="lp-marca">
-          <Avatar src={fotoMentor} nome={NOME_MENTOR} tamanho={36} />
+          <span className="lp-marca-duo" aria-hidden="true">
+            <img src={FOTO_PERFIL} alt="" />
+            <img src={FOTO_SOCIA} alt="" />
+          </span>
           <strong>{NOME_SITE}</strong>
         </div>
         <div className="lp-topo-acoes">
@@ -110,11 +111,16 @@ export default function Landing({ onEntrar }) {
           <button className="lp-link" onClick={onEntrar}>Já sou aluno · entrar →</button>
         </div>
         <div className="lp-hero-foto">
-          <div className="lp-arco">
-            <img src={FOTO_PERFIL} alt={`${NOME_MENTOR}, mentor`} />
+          <div className="lp-duo">
+            <div className="lp-arco lp-arco-1">
+              <img src={FOTO_PERFIL} alt={`${NOME_MENTOR}, mentor`} />
+            </div>
+            <div className="lp-arco lp-arco-2">
+              <img src={FOTO_SOCIA} alt={`${NOME_SOCIA}, mentora`} />
+            </div>
           </div>
-          <span className="lp-adesivo lp-adesivo-1">🩺 Medicina · UFRN</span>
-          <span className="lp-adesivo lp-adesivo-2">🎯 Plano feito pra rotina dele</span>
+          <span className="lp-adesivo lp-adesivo-1">🩺 {NOME_MENTOR} · Medicina UFRN</span>
+          <span className="lp-adesivo lp-adesivo-2">✨ {NOME_SOCIA.split(' ')[0]} · Medicina UFRN</span>
           {arroba && <span className="lp-adesivo lp-adesivo-3">@{arroba}</span>}
         </div>
       </section>
@@ -156,18 +162,33 @@ export default function Landing({ onEntrar }) {
 
       {/* 6. Autoridade */}
       <section className="lp-secao">
-        <div className="lp-autor">
-          <div className="lp-autor-foto"><img src={FOTO_PERFIL} alt={NOME_MENTOR} loading="lazy" /></div>
-          <div className="lp-autor-texto">
-            <span className="lp-kicker">Quem vai acompanhar</span>
-            <h2>Eu sei o caminho, <em>porque fiz ele</em></h2>
-            <p>Sou {NOME_MENTOR}, aprovado em Medicina na UFRN. Passei pelas mesmas dúvidas, pela mesma rotina puxada e pela mesma ansiedade. Hoje uso o que funcionou para montar o plano de cada aluno, um por um.</p>
-            <ul className="lp-mentor-tags">
-              <li>Medicina · UFRN</li>
-              <li>Mentoria individual</li>
-              <li>Acompanhamento de perto</li>
-            </ul>
-          </div>
+        <div className="lp-cabeca">
+          <span className="lp-kicker">Quem vai acompanhar</span>
+          <h2>A gente sabe o caminho, <em>porque fez ele</em></h2>
+          <p>Dois aprovados em Medicina na UFRN, que passaram pelas mesmas dúvidas, pela mesma rotina puxada e pela mesma ansiedade. Hoje usamos o que funcionou para montar o plano de cada aluno, um por um.</p>
+        </div>
+        <div className="lp-dupla">
+          <article className="lp-socio">
+            <div className="lp-socio-foto"><img src={FOTO_PERFIL} alt={NOME_MENTOR} loading="lazy" /></div>
+            <div className="lp-socio-texto">
+              <h3>{NOME_MENTOR}</h3>
+              <ul className="lp-mentor-tags">
+                <li>Medicina · UFRN</li>
+                <li>Plano de estudos sob medida</li>
+              </ul>
+            </div>
+          </article>
+          <article className="lp-socio">
+            <div className="lp-socio-foto"><img src={FOTO_SOCIA} alt={NOME_SOCIA} loading="lazy" /></div>
+            <div className="lp-socio-texto">
+              <h3>{NOME_SOCIA}</h3>
+              <ul className="lp-mentor-tags">
+                <li>Medicina · UFRN</li>
+                <li>Aprovada direto do 3º ano</li>
+                <li>Destaque em Linguagens</li>
+              </ul>
+            </div>
+          </article>
         </div>
       </section>
 
@@ -275,7 +296,7 @@ export default function Landing({ onEntrar }) {
 
       {/* 9. Escassez verdadeira + lista */}
       <div className="lp-escassez">
-        <strong>Atendo poucos alunos para manter a qualidade.</strong> As vagas para 2027 são limitadas. Entre na lista para saber primeiro quando abrirem.
+        <strong>Atendemos poucos alunos para manter a qualidade.</strong> As vagas para 2027 são limitadas. Entre na lista para saber primeiro quando abrirem.
       </div>
       <FormInteresse />
 
@@ -298,14 +319,14 @@ export default function Landing({ onEntrar }) {
       {/* 11. Chamada final */}
       <section className="lp-final">
         <h2>O próximo resultado pode ser <em>o do seu filho</em></h2>
-        <p>Me chama no WhatsApp e eu explico como funciona a mentoria de 2027.</p>
+        <p>Chama a gente no WhatsApp que explicamos como funciona a mentoria de 2027.</p>
         <div className="lp-ctas lp-ctas-centro">
-          {contato && <a className="lp-botao lp-botao-cheio" href={contato} target="_blank" rel="noreferrer">💬 Falar comigo no WhatsApp</a>}
+          {contato && <a className="lp-botao lp-botao-cheio" href={contato} target="_blank" rel="noreferrer">💬 Falar com a gente no WhatsApp</a>}
         </div>
       </section>
 
       <footer className="lp-rodape">
-        <span>{NOME_SITE} · {NOME_MENTOR}</span>
+        <span>{NOME_SITE} · {NOME_MENTOR} & {NOME_SOCIA}</span>
         <button className="lp-link" onClick={onEntrar}>Área do aluno</button>
       </footer>
 

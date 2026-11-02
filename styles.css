@@ -1992,3 +1992,6 @@ main.conteudo { padding: 22px clamp(16px, 3vw, 32px) 56px; border-bottom: 0; gap
   .lp-arco-2 { transform: rotate(2deg) translateY(-14px); }
 }
 @media (max-width: 600px) { .lp-dupla { grid-template-columns: 1fr; } }
+.lp-socio-links { display: flex; flex-wrap: wrap; gap: 8px; }
+.lp-socio-insta { align-self: flex-start; font-weight: 800; font-size: 14px; color: var(--lp-tinta); text-decoration: none; border: 2px solid var(--lp-tinta); border-radius: 999px; padding: 7px 14px; }
+.lp-socio-insta:hover { background: var(--lp-lima); color: #14231d; }

@@ -22,6 +22,8 @@ export const FOTO_PERFIL = fotoPerfil
 
 // Sócia da assessoria (aparece ao lado do Jarlan na página de apresentação)
 export const NOME_SOCIA = 'Clara Helena'
+export const WHATSAPP_SOCIA = '5584991037536'
+export const INSTAGRAM_SOCIA = 'claraa_hpcs' // sem o @
 export const FOTO_SOCIA = fotoClara
 export const FRASE_LOGIN = 'Seu horário de estudos e seus simulados, tudo num lugar só.'
 

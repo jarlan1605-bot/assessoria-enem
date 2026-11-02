@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabase'
-import { NOME_SITE, NOME_MENTOR, NOME_SOCIA, FOTO_SOCIA, INSTAGRAM, FOTO_PERFIL, FOTOS_AULAS } from './constants'
+import { NOME_SITE, NOME_MENTOR, NOME_SOCIA, FOTO_SOCIA, WHATSAPP_SOCIA, INSTAGRAM_SOCIA, INSTAGRAM, FOTO_PERFIL, FOTOS_AULAS } from './constants'
 import Avatar from './Avatar'
 import FormInteresse from './Interesse'
 
@@ -78,6 +78,7 @@ export default function Landing({ onEntrar }) {
   const msgWpp = `Oi! Quero saber mais sobre a ${NOME_SITE} para 2027`
   const wpp2027 = linkWhatsApp(cfg.whatsapp, msgWpp)
   const contato = wpp2027 || insta
+  const wppClara = linkWhatsApp(WHATSAPP_SOCIA, msgWpp)
 
   return (
     <div className="lp">
@@ -121,7 +122,7 @@ export default function Landing({ onEntrar }) {
           </div>
           <span className="lp-adesivo lp-adesivo-1">🩺 {NOME_MENTOR} · Medicina UFRN</span>
           <span className="lp-adesivo lp-adesivo-2">✨ {NOME_SOCIA.split(' ')[0]} · Medicina UFRN</span>
-          {arroba && <span className="lp-adesivo lp-adesivo-3">@{arroba}</span>}
+          {arroba && <span className="lp-adesivo lp-adesivo-3">@{arroba} · @{INSTAGRAM_SOCIA}</span>}
         </div>
       </section>
 
@@ -176,6 +177,7 @@ export default function Landing({ onEntrar }) {
                 <li>Medicina · UFRN</li>
                 <li>Plano de estudos sob medida</li>
               </ul>
+              {arroba && <a className="lp-socio-insta" href={`https://instagram.com/${arroba}`} target="_blank" rel="noreferrer">📸 @{arroba}</a>}
             </div>
           </article>
           <article className="lp-socio">
@@ -187,6 +189,10 @@ export default function Landing({ onEntrar }) {
                 <li>Aprovada direto do 3º ano</li>
                 <li>Destaque em Linguagens</li>
               </ul>
+              <div className="lp-socio-links">
+                <a className="lp-socio-insta" href={`https://instagram.com/${INSTAGRAM_SOCIA}`} target="_blank" rel="noreferrer">📸 @{INSTAGRAM_SOCIA}</a>
+                {wppClara && <a className="lp-socio-insta" href={wppClara} target="_blank" rel="noreferrer">💬 WhatsApp</a>}
+              </div>
             </div>
           </article>
         </div>
@@ -330,8 +336,8 @@ export default function Landing({ onEntrar }) {
         <button className="lp-link" onClick={onEntrar}>Área do aluno</button>
       </footer>
 
-      {wpp2027 && (
-        <a className="lp-zap-fixo" href={wpp2027} target="_blank" rel="noreferrer" aria-label="Falar no WhatsApp">
+      {wppClara && (
+        <a className="lp-zap-fixo" href={wppClara} target="_blank" rel="noreferrer" aria-label="Falar no WhatsApp">
           <span aria-hidden="true">💬</span><span className="lp-zap-texto">WhatsApp</span>
         </a>
       )}

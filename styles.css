@@ -1968,3 +1968,30 @@ main.conteudo { padding: 22px clamp(16px, 3vw, 32px) 56px; border-bottom: 0; gap
   .lp-escassez { border-radius: 24px; margin-left: 16px; margin-right: 16px; }
 }
 @media (max-width: 520px) { .lp-zap-texto { display: none; } .lp-zap-fixo { padding: 14px; } }
+
+/* ---------- Dupla J&C ---------- */
+.lp-marca-duo { display: inline-flex; }
+.lp-marca-duo img { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; object-position: 50% 15%; border: 2px solid var(--lp-fundo); box-shadow: 0 0 0 1.5px var(--lp-tinta); }
+.lp-marca-duo img + img { margin-left: -10px; }
+.lp-duo { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: end; }
+.lp-duo .lp-arco { box-shadow: 8px 8px 0 var(--lp-tinta); }
+.lp-arco-1 { transform: rotate(-2deg); }
+.lp-arco-2 { transform: rotate(2deg) translateY(-26px); background: #0b0b0b; }
+.lp-arco-2 img { object-position: 50% 12%; }
+.lp-hero-foto .lp-adesivo-1 { top: 4%; left: -6%; }
+.lp-hero-foto .lp-adesivo-2 { bottom: 18%; right: -5%; }
+.lp-dupla { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+.lp-socio { background: var(--lp-papel); border: 2px solid var(--lp-tinta); border-radius: 30px; overflow: hidden; box-shadow: 7px 7px 0 var(--lp-tinta); display: flex; flex-direction: column; }
+.lp-socio:nth-child(2) { box-shadow: 7px 7px 0 var(--lp-lima); border-color: var(--lp-tinta); }
+.lp-socio-foto { aspect-ratio: 4 / 4.2; border-bottom: 2px solid var(--lp-tinta); background: var(--lp-verde); }
+.lp-socio-foto img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 14%; display: block; }
+.lp-socio-texto { padding: 20px 22px 24px; display: flex; flex-direction: column; gap: 10px; }
+.lp-socio-texto h3 { margin: 0; font-size: 30px; letter-spacing: -0.03em; font-weight: 800; }
+@media (max-width: 860px) {
+  .lp-duo { max-width: 460px; margin: 0 auto; }
+  .lp-arco-2 { transform: rotate(2deg) translateY(-14px); }
+}
+@media (max-width: 600px) { .lp-dupla { grid-template-columns: 1fr; } }
+.lp-socio-links { display: flex; flex-wrap: wrap; gap: 8px; }
+.lp-socio-insta { align-self: flex-start; font-weight: 800; font-size: 14px; color: var(--lp-tinta); text-decoration: none; border: 2px solid var(--lp-tinta); border-radius: 999px; padding: 7px 14px; }
+.lp-socio-insta:hover { background: var(--lp-lima); color: #14231d; }

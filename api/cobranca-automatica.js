@@ -12,7 +12,7 @@ const URL_SUPABASE = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
 const CHAVE_SECRETA = process.env.SUPABASE_SERVICE_ROLE_KEY
 const WA_TOKEN = process.env.WHATSAPP_TOKEN
 const WA_PHONE_ID = process.env.WHATSAPP_PHONE_ID
-const NOME_MENTORIA = process.env.NOME_MENTORIA || 'Mentoria ENEM'
+const NOME_MENTORIA = process.env.NOME_MENTORIA || 'Assessoria J&C'
 const VERSAO_API = 'v21.0'
 
 const responder = (res, status, corpo) => res.status(status).json(corpo)

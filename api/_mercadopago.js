@@ -1,7 +1,7 @@
 // Funções do Pix com baixa automática pelo Mercado Pago (usadas pelas funções do Vercel).
 // Variável no Vercel: MP_ACCESS_TOKEN (Access Token de produção da sua conta do Mercado Pago).
 const MP_TOKEN = process.env.MP_ACCESS_TOKEN
-const NOME_MENTORIA = process.env.NOME_MENTORIA || 'Mentoria ENEM'
+const NOME_MENTORIA = process.env.NOME_MENTORIA || 'Assessoria J&C'
 
 export const mpConfigurado = () => Boolean(MP_TOKEN)
 

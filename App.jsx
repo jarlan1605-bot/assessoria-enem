@@ -35,7 +35,7 @@ export default function App() {
   const [verLogin, setVerLogin] = useState(() => window.location.hash === '#entrar')
   const busca = new URLSearchParams(window.location.search)
   // ?site mostra a página de apresentação; ?vagas abre direto no formulário de 2027 (link do Instagram)
-  const forcarSite = busca.has('site') || busca.has('vagas')
+  const forcarSite = busca.has('site') || busca.has('vagas') || busca.has('inscricao')
 
   useEffect(() => {
     if (!configurado) return
@@ -230,7 +230,7 @@ function Painel({ usuario }) {
   } else if (abaAtual === 'cronometro') {
     conteudo = <SimuladorProva />
   } else if (abaAtual === 'interessados') {
-    conteudo = <Interessados />
+    conteudo = <Interessados equipe={equipe} />
   } else if (abaAtual === 'materiais') {
     conteudo = <Materiais ehCeo={ehCeo} />
   } else if (abaAtual === 'questoes') {

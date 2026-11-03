@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { supabase } from './supabase'
 
 export const SITUACOES = ['Estou no 2º ano', 'Estou no 3º ano', 'Já terminei o ensino médio', 'Faço cursinho', 'Outro']
 const CURSOS = ['Medicina', 'Direito', 'Engenharias', 'Odontologia', 'Psicologia', 'Outro curso']
@@ -8,7 +7,7 @@ const CANAIS = ['Instagram', 'Indicação de amigo', 'TikTok', 'Google', 'Outro'
 
 const VAZIO = { nome: '', whatsapp: '', email: '', idade: '', cidade: '', situacao: '', curso: '', dificuldade: [], como_conheceu: '', responsavel: '', mensagem: '', site: '' }
 
-// Formulário da página de apresentação: lista de interesse para a mentoria de 2027
+// Formulário da página de apresentação: inscrição de 2027 com pagamento pelo Mercado Pago
 export default function FormInteresse() {
   const [f, setF] = useState(VAZIO)
   const [estado, setEstado] = useState({ tipo: '', texto: '' })
@@ -17,42 +16,42 @@ export default function FormInteresse() {
 
   async function enviar(e) {
     e.preventDefault()
-    if (f.site) return setEstado({ tipo: 'ok', texto: '' }) // campo escondido: só robôs preenchem
+    if (f.site) return setEstado({ tipo: 'erro', texto: 'Não foi possível enviar.' }) // campo escondido: só robôs preenchem
     const zap = f.whatsapp.replace(/\D/g, '')
     if (f.nome.trim().length < 2) return setEstado({ tipo: 'erro', texto: 'Coloque o seu nome.' })
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email.trim())) return setEstado({ tipo: 'erro', texto: 'Coloque um e-mail válido. É com ele que você vai entrar na plataforma.' })
     if (zap.length < 10 || zap.length > 13) return setEstado({ tipo: 'erro', texto: 'Coloque um WhatsApp com DDD, por exemplo (84) 99999-9999.' })
     if (!f.situacao) return setEstado({ tipo: 'erro', texto: 'Conte em que fase dos estudos você está.' })
     setEstado({ tipo: 'enviando', texto: '' })
-    const { error } = await supabase.from('interessados').insert({
-      nome: f.nome.trim().slice(0, 100),
-      whatsapp: zap,
-      email: f.email.trim().slice(0, 120),
-      idade: Number(f.idade) >= 10 && Number(f.idade) <= 80 ? Number(f.idade) : null,
-      cidade: f.cidade.trim().slice(0, 80),
-      situacao: f.situacao,
-      curso: f.curso.trim().slice(0, 80),
-      dificuldade: f.dificuldade.join(', ').slice(0, 120),
-      como_conheceu: f.como_conheceu,
-      responsavel: f.responsavel.trim().slice(0, 100),
-      mensagem: f.mensagem.trim().slice(0, 600),
-    })
-    if (error) return setEstado({ tipo: 'erro', texto: 'Não foi possível enviar agora. Tente de novo em instantes.' })
-    setEstado({ tipo: 'ok', texto: '' })
-    setF(VAZIO)
+    try {
+      const r = await fetch('/api/inscricao', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ acao: 'criar', ...f, dificuldade: f.dificuldade.join(', ') }),
+      })
+      const j = await r.json().catch(() => ({ erro: 'O servidor não respondeu. Tente de novo em instantes.' }))
+      if (!r.ok || j.erro || !j.link) return setEstado({ tipo: 'erro', texto: j.erro || 'Não foi possível abrir o pagamento.' })
+      try { localStorage.setItem('inscricaoJC', j.id) } catch { /* sem armazenamento */ }
+      setEstado({ tipo: 'indo', texto: '' })
+      window.location.href = j.link // página de pagamento do Mercado Pago
+    } catch {
+      setEstado({ tipo: 'erro', texto: 'Sem conexão. Tente de novo em instantes.' })
+    }
   }
 
   return (
     <section className="lp-secao lp-interesse" id="interesse">
       <div className="lp-interesse-caixa">
         <div className="lp-interesse-lado">
-          <span className="lp-etiqueta">✦ Vagas 2027</span>
+          <span className="lp-etiqueta">✦ Inscrições 2027</span>
           <h2>Garanta seu lugar na mentoria <em>de 2027</em></h2>
-          <p>As vagas são limitadas porque o acompanhamento é de perto. Entre na lista de interesse e seja um dos primeiros a saber quando as inscrições abrirem.</p>
+          <p>As vagas são limitadas porque o acompanhamento é de perto. Preencha, pague com segurança pelo Mercado Pago e, assim que o pagamento for confirmado, escolha o seu assessor e receba o acesso à plataforma.</p>
+          <p className="lp-interesse-preco"><strong>R$ 1.800</strong> <span>pagamento único · Pix, cartão ou boleto</span></p>
           <ul className="lp-interesse-lista">
             <li>🗓️ Horário de estudos sob medida</li>
             <li>📈 Simulados acompanhados</li>
             <li>✍️ Redação corrigida por competência</li>
-            <li>🎯 Prioridade na abertura das vagas</li>
+            <li>🎯 Você escolhe o seu assessor</li>
           </ul>
         </div>
 
@@ -68,7 +67,7 @@ export default function FormInteresse() {
             <div className="lp-form-duas">
               <label>Seu nome*<input value={f.nome} onChange={(e) => muda('nome', e.target.value)} maxLength={100} autoComplete="name" placeholder="Como podemos te chamar?" /></label>
               <label>WhatsApp com DDD*<input value={f.whatsapp} onChange={(e) => muda('whatsapp', e.target.value)} inputMode="tel" autoComplete="tel" placeholder="(84) 99999-9999" /></label>
-              <label>E-mail<input type="email" value={f.email} onChange={(e) => muda('email', e.target.value)} maxLength={120} autoComplete="email" placeholder="voce@email.com" /></label>
+              <label>E-mail* (vai ser o seu login)<input type="email" value={f.email} onChange={(e) => muda('email', e.target.value)} maxLength={120} autoComplete="email" placeholder="voce@email.com" /></label>
               <label>Idade<input type="number" min="10" max="80" value={f.idade} onChange={(e) => muda('idade', e.target.value)} placeholder="17" /></label>
               <label>Cidade<input value={f.cidade} onChange={(e) => muda('cidade', e.target.value)} maxLength={80} placeholder="Caicó (RN)" /></label>
               <label>Curso dos sonhos
@@ -109,10 +108,10 @@ export default function FormInteresse() {
             <label className="lp-escondido" aria-hidden="true">Site<input tabIndex={-1} autoComplete="off" value={f.site} onChange={(e) => muda('site', e.target.value)} /></label>
 
             {estado.tipo === 'erro' && <p className="lp-form-erro" role="alert">{estado.texto}</p>}
-            <button className="lp-botao lp-botao-cheio lp-form-enviar" disabled={estado.tipo === 'enviando'}>
-              {estado.tipo === 'enviando' ? 'Enviando…' : 'Quero entrar na lista de 2027 →'}
+            <button className="lp-botao lp-botao-cheio lp-form-enviar" disabled={estado.tipo === 'enviando' || estado.tipo === 'indo'}>
+              {estado.tipo === 'enviando' ? 'Preparando o pagamento…' : estado.tipo === 'indo' ? 'Abrindo o Mercado Pago…' : 'Inscrever e pagar R$ 1.800 →'}
             </button>
-            <p className="lp-form-nota">Seus dados ficam só com a equipe da mentoria e servem apenas para entrarmos em contato.</p>
+            <p className="lp-form-nota">🔒 O pagamento é feito no site do Mercado Pago. Seus dados ficam só com a equipe da assessoria.</p>
           </form>
         )}
       </div>

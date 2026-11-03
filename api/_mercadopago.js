@@ -78,6 +78,7 @@ export async function pixDaMensalidade(admin, { contrato, aluno, urlSite }) {
 // Consulta um pagamento no Mercado Pago e, se aprovado, dá baixa na mensalidade
 export async function conferirPagamento(admin, mpId) {
   const p = await mp(`/v1/payments/${encodeURIComponent(mpId)}`)
+  if (await avisoDeInscricao(admin, p)) return { status: p.status, inscricao: true }
   const [alunoId, venc] = String(p.external_reference || '').split('|')
   if (!alunoId || !/^\d{4}-\d{2}-\d{2}$/.test(venc || '')) return { ignorado: true }
 
@@ -112,4 +113,54 @@ export function urlDoSite(req) {
   if (process.env.SITE_URL) return process.env.SITE_URL.replace(/\/$/, '')
   const host = req.headers['x-forwarded-host'] || req.headers.host
   return host ? `https://${host}` : ''
+}
+
+// ---------- Inscrição com pagamento único (Checkout Pro) ----------
+export const VALOR_INSCRICAO = Number(process.env.VALOR_INSCRICAO || 1800)
+
+// Cria a página de pagamento do Mercado Pago só desta inscrição
+export async function criarPagamentoInscricao({ inscricao, urlSite }) {
+  const volta = `${urlSite}/?inscricao=${inscricao.id}`
+  const pref = await mp('/checkout/preferences', {
+    metodo: 'POST',
+    corpo: {
+      items: [{ id: 'inscricao-2027', title: `${NOME_MENTORIA} 2027 - inscrição`, quantity: 1, unit_price: VALOR_INSCRICAO, currency_id: 'BRL' }],
+      payer: { name: inscricao.nome, email: inscricao.email || undefined },
+      external_reference: `insc|${inscricao.id}`,
+      back_urls: { success: volta, pending: volta, failure: volta },
+      auto_return: 'approved',
+      notification_url: urlSite ? `${urlSite}/api/mercadopago` : undefined,
+      statement_descriptor: 'ASSESSORIA JC',
+    },
+  })
+  return { preferencia: pref.id, link: pref.init_point }
+}
+
+// Procura no Mercado Pago um pagamento aprovado desta inscrição e marca como paga
+export async function conferirInscricao(admin, inscricaoId) {
+  const { data: ins } = await admin.from('interessados').select('id, pago').eq('id', inscricaoId).maybeSingle()
+  if (!ins) return { existe: false }
+  if (ins.pago) return { existe: true, pago: true }
+  const r = await mp(`/v1/payments/search?external_reference=${encodeURIComponent(`insc|${inscricaoId}`)}&sort=date_created&criteria=desc`)
+  const aprovado = (r.results || []).find((p) => p.status === 'approved')
+  if (!aprovado) {
+    const pendente = (r.results || []).some((p) => ['pending', 'in_process', 'authorized'].includes(p.status))
+    return { existe: true, pago: false, pendente }
+  }
+  await marcarInscricaoPaga(admin, inscricaoId, aprovado)
+  return { existe: true, pago: true }
+}
+
+async function marcarInscricaoPaga(admin, inscricaoId, p) {
+  await admin.from('interessados').update({
+    pago: true, pago_em: p.date_approved || new Date().toISOString(), mp_pagamento: String(p.id), valor: p.transaction_amount,
+  }).eq('id', inscricaoId).eq('pago', false)
+}
+
+// Usado pelo aviso do Mercado Pago: se o pagamento for de uma inscrição, dá baixa nela
+export async function avisoDeInscricao(admin, pagamento) {
+  const ref = String(pagamento.external_reference || '')
+  if (!ref.startsWith('insc|')) return false
+  if (pagamento.status === 'approved') await marcarInscricaoPaga(admin, ref.slice(5), pagamento)
+  return true
 }

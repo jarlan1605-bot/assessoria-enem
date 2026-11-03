@@ -3,6 +3,7 @@ import { supabase } from './supabase'
 import { NOME_SITE, NOME_MENTOR, NOME_SOCIA, FOTO_SOCIA, WHATSAPP_SOCIA, INSTAGRAM_SOCIA, INSTAGRAM, FOTO_PERFIL, FOTOS_AULAS } from './constants'
 import Avatar from './Avatar'
 import FormInteresse from './Interesse'
+import InscricaoRetorno from './InscricaoRetorno'
 
 const PADRAO = {
   titulo: 'Sua aprovação com um plano feito para você',
@@ -54,6 +55,8 @@ export default function Landing({ onEntrar }) {
   const [cfg, setCfg] = useState(PADRAO)
   const [depoimentos, setDepoimentos] = useState([])
   const [mentores, setMentores] = useState([])
+  // volta do Mercado Pago: ?inscricao=<id>
+  const [inscricao, setInscricao] = useState(() => new URLSearchParams(window.location.search).get('inscricao'))
 
   useEffect(() => {
     supabase.from('site_config').select('*').eq('id', 1).maybeSingle().then(({ data }) => {
@@ -335,6 +338,14 @@ export default function Landing({ onEntrar }) {
         <span>{NOME_SITE} · {NOME_MENTOR} & {NOME_SOCIA}</span>
         <button className="lp-link" onClick={onEntrar}>Área do aluno</button>
       </footer>
+
+      {inscricao && (
+        <InscricaoRetorno
+          id={inscricao}
+          onEntrar={() => { window.location.href = '/#entrar' }}
+          onFechar={() => { setInscricao(null); window.history.replaceState(null, '', window.location.pathname) }}
+        />
+      )}
 
       {wppClara && (
         <a className="lp-zap-fixo" href={wppClara} target="_blank" rel="noreferrer" aria-label="Falar no WhatsApp">

@@ -42,7 +42,7 @@ const RESUMO = [
   'Resumo mensal de progresso para os pais',
 ]
 
-const FAQ = [
+export const FAQ_ASSESSORIA = [
   ['Serve para quem está no 3º ano ou já terminou o ensino médio?', 'Sim, para os dois.'],
   ['Já faço cursinho. A assessoria serve pra mim?', 'Serve, e muito. A assessoria não é cursinho e não substitui suas aulas. Ela te dá um rumo: organiza seu estudo, mostra onde focar e corrige a rota. Tem muita gente que passa anos no cursinho sem entender por que não passa; a assessoria existe para encurtar esse caminho.'],
   ['Como funciona o pagamento?', 'Via Pix ou cartão de crédito, com parcelamento. Chama no direct que eu te explico os detalhes.'],
@@ -89,6 +89,43 @@ export default function Assessoria2027() {
         </div>
       </section>
 
+      <SecoesAssessoria />
+
+      {/* 9. FAQ */}
+      <section className="as-secao">
+        <div className="as-cabeca">
+          <span className="as-kicker">Dúvidas</span>
+          <h2>Perguntas <em>frequentes</em></h2>
+        </div>
+        <div className="as-faq">
+          {FAQ_ASSESSORIA.map(([p, r]) => (
+            <details key={p}>
+              <summary>{p}</summary>
+              <p>{r}</p>
+            </details>
+          ))}
+        </div>
+      </section>
+
+      {/* 10. CTA final */}
+      <section className="as-final">
+        <h2>As vagas são limitadas, porque cada aluno tem <em>acompanhamento de verdade.</em></h2>
+        <Direct>Me chama no direct</Direct>
+      </section>
+
+      <footer className="as-rodape">
+        <span>{NOME_SITE} · @jarlanamed</span>
+        <a href="/">Voltar ao início</a>
+      </footer>
+    </div>
+  )
+}
+
+// Seções 2 a 8 (rumo, linha do tempo, plataforma, mentor, chamadas, extras e resumo).
+// Usadas aqui e também dentro da página inicial.
+export function SecoesAssessoria() {
+  return (
+    <>
       {/* 2. Não é cursinho */}
       <section className="as-secao">
         <div className="as-rumo">
@@ -204,33 +241,6 @@ export default function Assessoria2027() {
           <p className="as-resumo-marca">{NOME_SITE} · Mentoria ENEM 2027 · @jarlanamed</p>
         </div>
       </section>
-
-      {/* 9. FAQ */}
-      <section className="as-secao">
-        <div className="as-cabeca">
-          <span className="as-kicker">Dúvidas</span>
-          <h2>Perguntas <em>frequentes</em></h2>
-        </div>
-        <div className="as-faq">
-          {FAQ.map(([p, r]) => (
-            <details key={p}>
-              <summary>{p}</summary>
-              <p>{r}</p>
-            </details>
-          ))}
-        </div>
-      </section>
-
-      {/* 10. CTA final */}
-      <section className="as-final">
-        <h2>As vagas são limitadas, porque cada aluno tem <em>acompanhamento de verdade.</em></h2>
-        <Direct>Me chama no direct</Direct>
-      </section>
-
-      <footer className="as-rodape">
-        <span>{NOME_SITE} · @jarlanamed</span>
-        <a href="/">Voltar ao início</a>
-      </footer>
-    </div>
+    </>
   )
 }

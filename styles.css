@@ -2218,3 +2218,6 @@ main.conteudo { padding: 22px clamp(16px, 3vw, 32px) 56px; border-bottom: 0; gap
 .as-final { border: 3px solid #14231d; }
 .as-final .as-botao { background: var(--as-lima); color: #14231d; border-color: var(--as-lima); }
 .as-final .as-botao:hover { box-shadow: 4px 4px 0 var(--as-sol); }
+
+/* "O que você recebe" dentro da página inicial: mesmas seções da página /assessoria */
+.as-embutido { min-height: 0; background: transparent; padding-bottom: 8px; }

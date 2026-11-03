@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from './supabase'
-import { dataBR } from './cobranca'
+import { dataBR, reais } from './cobranca'
 
 const STATUS = {
   novo: { nome: 'Novo', cor: '#e8590c' },
@@ -20,7 +20,7 @@ const telefone = (n) => {
 }
 
 // CEO: quem preencheu o formulário de interesse da página de apresentação
-export default function Interessados() {
+export default function Interessados({ equipe = [] }) {
   const [lista, setLista] = useState([])
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState('')
@@ -114,6 +114,15 @@ export default function Interessados() {
                     {Object.entries(STATUS).map(([k, st]) => <option key={k} value={k}>{st.nome}</option>)}
                   </select>
                 </header>
+                {i.pago !== undefined && (
+                  <div className="int-pagamento">
+                    {i.pago
+                      ? <span className="int-pago">✓ Pago {i.valor ? reais(i.valor) : ''}{i.pago_em ? ` · ${dataBR(i.pago_em)}` : ''}</span>
+                      : i.link_pagamento ? <span className="int-aguardando">⏳ Aguardando pagamento</span> : null}
+                    {i.mentor_id && <span className="int-assessor">Assessor: {(equipe.find((m) => m.id === i.mentor_id)?.nome || '—').split(' ')[0]}</span>}
+                    {i.aluno_id && <span className="int-assessor">Conta criada ✓</span>}
+                  </div>
+                )}
                 <div className="int-tags">
                   {i.situacao && <span>{i.situacao}</span>}
                   {i.curso && <span>🎯 {i.curso}</span>}

@@ -35,7 +35,7 @@ export default function App() {
   const [verLogin, setVerLogin] = useState(() => window.location.hash === '#entrar')
   const busca = new URLSearchParams(window.location.search)
   // ?site mostra a página de apresentação; ?vagas abre direto no formulário de 2027 (link do Instagram)
-  const forcarSite = busca.has('site') || busca.has('vagas')
+  const forcarSite = busca.has('site') || busca.has('vagas') || busca.has('inscricao')
 
   useEffect(() => {
     if (!configurado) return
@@ -79,6 +79,7 @@ function Painel({ usuario }) {
   const [equipe, setEquipe] = useState([]) // mentores e CEO (nome e foto)
   const [config, setConfig] = useState(null) // data do ENEM etc.
   const [aCobrar, setACobrar] = useState(0) // CEO: cobranças para fazer hoje
+  const [novosInteressados, setNovosInteressados] = useState(0) // CEO: inscrições ainda sem contato
 
   const ehCeo = perfil?.papel === 'ceo'
   const ehMentor = perfil?.papel === 'mentor' || ehCeo
@@ -93,6 +94,16 @@ function Painel({ usuario }) {
       if (c.error || cfg.error) return
       setACobrar((c.data ?? []).filter((x) => precisaVoce({ ativo: true, ...x }, cfg.data || { dias_antes: 3 })).length)
     })
+  }, [ehCeo, aba])
+
+  // CEO: inscrições novas (status "novo") — aparecem no menu e num aviso no topo; atualiza a cada minuto
+  useEffect(() => {
+    if (!ehCeo) return
+    const contar = () => supabase.from('interessados').select('id', { count: 'exact', head: true }).eq('status', 'novo')
+      .then(({ count, error }) => { if (!error) setNovosInteressados(count ?? 0) })
+    contar()
+    const t = setInterval(contar, 60000)
+    return () => clearInterval(t)
   }, [ehCeo, aba])
 
   function setAba(id) {
@@ -230,7 +241,7 @@ function Painel({ usuario }) {
   } else if (abaAtual === 'cronometro') {
     conteudo = <SimuladorProva />
   } else if (abaAtual === 'interessados') {
-    conteudo = <Interessados />
+    conteudo = <Interessados equipe={equipe} />
   } else if (abaAtual === 'materiais') {
     conteudo = <Materiais ehCeo={ehCeo} />
   } else if (abaAtual === 'questoes') {
@@ -311,6 +322,7 @@ function Painel({ usuario }) {
                 >
                   <span aria-hidden="true">{icone}</span> {nome}
                   {id === 'financeiro' && aCobrar > 0 && <span className="menu-badge" aria-label={`${aCobrar} para cobrar`}>{aCobrar}</span>}
+                  {id === 'interessados' && novosInteressados > 0 && <span className="menu-badge" aria-label={`${novosInteressados} novos`}>{novosInteressados}</span>}
                 </button>
               ))}
             </div>
@@ -321,6 +333,11 @@ function Painel({ usuario }) {
           <div className="nao-imprimir">
             <Contagem config={config} visivel={perfil.mostrar_contagem !== false} onAlterar={alterarContagem} />
             {perfil.papel === 'aluno' && <PagarMensalidade />}
+            {ehCeo && novosInteressados > 0 && abaAtual !== 'interessados' && (
+              <button className="aviso-cobranca aviso-interessados" onClick={() => setAba('interessados')}>
+                📝 <b>{novosInteressados === 1 ? '1 nova pessoa interessada' : `${novosInteressados} novas pessoas interessadas`} na assessoria!</b> <span>Ver e chamar no WhatsApp →</span>
+              </button>
+            )}
             {ehCeo && aCobrar > 0 && abaAtual !== 'financeiro' && (
               <button className="aviso-cobranca" onClick={() => setAba('financeiro')}>
                 💰 <b>{aCobrar} {aCobrar === 1 ? 'aluno para você cobrar' : 'alunos para você cobrar'} hoje.</b> <span>Abrir o financeiro →</span>

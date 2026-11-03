@@ -18,7 +18,7 @@ const PADRAO = {
 const PASSOS = [
   ['Conversa e diagnóstico', 'Entendo a rotina, a meta de curso e onde o aluno está hoje, com base nos simulados.'],
   ['Horário personalizado', 'Monto um horário de estudos que cabe na rotina real, com metas para cada área.'],
-  ['Atendimentos e correções', 'Encontros ao vivo, correção de simulados e de redação, com ajustes sempre que precisar.'],
+  ['Atendimentos e correções', 'Encontros ao vivo e correção de simulados, com ajustes sempre que precisar.'],
   ['Evolução registrada', 'Cada simulado e cada meta ficam na plataforma, e a família também pode acompanhar.'],
 ]
 
@@ -35,7 +35,7 @@ const FAQ = [
   ['Como são os atendimentos?', 'Online e ao vivo, marcados pela própria plataforma, com suporte pelo WhatsApp entre um encontro e outro.'],
 ]
 
-const FAIXA = ['Horário sob medida', 'Simulados', 'Redação nota 1000', 'Aulas ao vivo', 'Caderno de erros', 'Metas por área']
+const FAIXA = ['Horário sob medida', 'Simulados', 'Mentor individual', 'Aulas ao vivo', 'Caderno de erros', 'Metas por área']
 
 export function linkWhatsApp(numero, texto) {
   const n = (numero || '').replace(/\D/g, '')
@@ -94,7 +94,7 @@ export default function Landing({ onEntrar }) {
           <strong>{NOME_SITE}</strong>
         </div>
         <div className="lp-topo-acoes">
-          <a className="lp-link lp-topo-link" href="#como-funciona">Como funciona</a>
+          <a className="lp-link lp-topo-link" href="/assessoria">O que você recebe</a>
           <a className="lp-link lp-topo-link" href="#interesse">Vagas 2027</a>
           <button className="lp-botao lp-botao-pequeno" onClick={onEntrar}>Área do aluno</button>
         </div>

@@ -50,7 +50,7 @@ export default function FormInteresse() {
           <ul className="lp-interesse-lista">
             <li>🗓️ Horário de estudos sob medida</li>
             <li>📈 Simulados acompanhados</li>
-            <li>✍️ Redação corrigida por competência</li>
+            <li>🤝 Mentor individual até o ENEM</li>
             <li>🎯 Você escolhe o seu assessor</li>
           </ul>
         </div>

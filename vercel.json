@@ -1,5 +1,14 @@
 {
   "crons": [
-    { "path": "/api/cobranca-automatica", "schedule": "0 15 * * *" }
+    {
+      "path": "/api/cobranca-automatica",
+      "schedule": "0 15 * * *"
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/assessoria",
+      "destination": "/index.html"
+    }
   ]
 }

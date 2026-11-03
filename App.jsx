@@ -17,6 +17,7 @@ import Evolucao from './Evolucao'
 import Equipe from './Equipe'
 import { gruposPorMentor } from './grupos'
 import Landing from './Landing'
+import Assessoria2027 from './Assessoria2027'
 import Contagem from './Contagem'
 import CadernoErros from './CadernoErros'
 import Redacao from './Redacao'
@@ -55,6 +56,8 @@ export default function App() {
     else window.location.hash = 'entrar'
   }
 
+  // página pública com tudo o que a assessoria oferece (não depende de login)
+  if (window.location.pathname.replace(/\/$/, '') === '/assessoria') return <Assessoria2027 />
   if (!configurado) return <FaltaConfigurar />
   if (forcarSite) return <Landing onEntrar={irParaLogin} />
   if (sessao === undefined) return <Carregando />

@@ -4,6 +4,7 @@ import { NOME_SITE, NOME_MENTOR, NOME_SOCIA, FOTO_SOCIA, WHATSAPP_SOCIA, INSTAGR
 import Avatar from './Avatar'
 import FormInteresse from './Interesse'
 import InscricaoRetorno from './InscricaoRetorno'
+import { SecoesAssessoria, FAQ_ASSESSORIA } from './Assessoria2027'
 
 const PADRAO = {
   titulo: 'Sua aprovação com um plano feito para você',
@@ -15,12 +16,6 @@ const PADRAO = {
 }
 
 
-const PASSOS = [
-  ['Conversa e diagnóstico', 'Entendo a rotina, a meta de curso e onde o aluno está hoje, com base nos simulados.'],
-  ['Horário personalizado', 'Monto um horário de estudos que cabe na rotina real, com metas para cada área.'],
-  ['Atendimentos e correções', 'Encontros ao vivo e correção de simulados, com ajustes sempre que precisar.'],
-  ['Evolução registrada', 'Cada simulado e cada meta ficam na plataforma, e a família também pode acompanhar.'],
-]
 
 const PAIS = [
   ['📊', 'Você acompanha a evolução', 'Notas dos simulados, metas e horário ficam na plataforma, com relatório mensal em PDF.'],
@@ -28,11 +23,12 @@ const PAIS = [
   ['🧭', 'Rotina e calma', 'Um plano claro diminui a ansiedade: ele sabe o que estudar e por quê.'],
 ]
 
+// Dúvidas: as mesmas da página /assessoria, com o pagamento explicado pela inscrição desta página
 const FAQ = [
-  ['E se meu filho não se adaptar?', 'Nas primeiras semanas a gente ajusta o plano junto: horário, ritmo e prioridades mudam conforme a rotina dele. Se algo não estiver funcionando, é só conversar com a gente.'],
-  ['Funciona para quem está no 2º ano?', 'Funciona. Quanto antes começa, mais tempo para construir base com calma. O plano é montado para o momento de cada aluno.'],
-  ['Preciso pagar cursinho junto?', 'Não é obrigatório. A mentoria organiza o que estudar e como estudar; dá para usar cursinho, plataforma ou materiais gratuitos, e a gente ajuda a escolher o que faz sentido.'],
-  ['Como são os atendimentos?', 'Online e ao vivo, marcados pela própria plataforma, com suporte pelo WhatsApp entre um encontro e outro.'],
+  ...FAQ_ASSESSORIA.map(([p, r]) => (p.startsWith('Como funciona o pagamento')
+    ? [p, 'Pela inscrição aqui na página: Pix, cartão de crédito (com parcelamento) ou boleto, pelo Mercado Pago. Se preferir, chama no direct que a gente explica os detalhes.']
+    : [p, r])),
+  ['Como são os atendimentos?', 'Online e ao vivo, marcados pela própria plataforma, com mensagens todos os dias entre um encontro e outro.'],
 ]
 
 const FAIXA = ['Horário sob medida', 'Simulados', 'Mentor individual', 'Aulas ao vivo', 'Caderno de erros', 'Metas por área']
@@ -94,7 +90,7 @@ export default function Landing({ onEntrar }) {
           <strong>{NOME_SITE}</strong>
         </div>
         <div className="lp-topo-acoes">
-          <a className="lp-link lp-topo-link" href="/assessoria">O que você recebe</a>
+          <a className="lp-link lp-topo-link" href="#o-que-voce-recebe">O que você recebe</a>
           <a className="lp-link lp-topo-link" href="#interesse">Vagas 2027</a>
           <button className="lp-botao lp-botao-pequeno" onClick={onEntrar}>Área do aluno</button>
         </div>
@@ -147,22 +143,10 @@ export default function Landing({ onEntrar }) {
       {/* 4. Depoimentos */}
       <Feedbacks depoimentos={depoimentos} />
 
-      {/* 5. Como funciona */}
-      <section className="lp-secao lp-passos-secao" id="como-funciona">
-        <div className="lp-cabeca">
-          <span className="lp-kicker">Como funciona</span>
-          <h2>Simples, claro e <em>de perto</em></h2>
-        </div>
-        <ol className="lp-passos lp-passos-4">
-          {PASSOS.map(([t, d], i) => (
-            <li key={t}>
-              <span className="lp-passo-num">{i + 1}</span>
-              <strong>{t}</strong>
-              <p>{d}</p>
-            </li>
-          ))}
-        </ol>
-      </section>
+      {/* 5. O que você recebe (o mesmo conteúdo da página /assessoria) */}
+      <div className="as as-embutido" id="o-que-voce-recebe">
+        <SecoesAssessoria />
+      </div>
 
       {/* 6. Autoridade */}
       <section className="lp-secao">

@@ -1,5 +1,7 @@
 // Funções do Pix com baixa automática pelo Mercado Pago (usadas pelas funções do Vercel).
 // Variável no Vercel: MP_ACCESS_TOKEN (Access Token de produção da sua conta do Mercado Pago).
+import { avisarEquipe } from './_email.js'
+
 const MP_TOKEN = process.env.MP_ACCESS_TOKEN
 const NOME_MENTORIA = process.env.NOME_MENTORIA || 'Assessoria J&C'
 
@@ -152,9 +154,18 @@ export async function conferirInscricao(admin, inscricaoId) {
 }
 
 async function marcarInscricaoPaga(admin, inscricaoId, p) {
-  await admin.from('interessados').update({
+  const { data } = await admin.from('interessados').update({
     pago: true, pago_em: p.date_approved || new Date().toISOString(), mp_pagamento: String(p.id), valor: p.transaction_amount,
-  }).eq('id', inscricaoId).eq('pago', false)
+  }).eq('id', inscricaoId).eq('pago', false).select('nome, whatsapp, email')
+  // só avisa na primeira vez que a inscrição vira "paga"
+  if (data?.[0]) {
+    const ins = data[0]
+    await avisarEquipe({
+      assunto: `💰 Pagamento confirmado: ${ins.nome}`,
+      titulo: `${ins.nome} pagou a inscrição!`,
+      linhas: [['Valor', `R$ ${Number(p.transaction_amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`], ['WhatsApp', ins.whatsapp], ['E-mail', ins.email], ['Próximo passo', 'o aluno escolhe o assessor e a conta é criada sozinha']],
+    })
+  }
 }
 
 // Usado pelo aviso do Mercado Pago: se o pagamento for de uma inscrição, dá baixa nela

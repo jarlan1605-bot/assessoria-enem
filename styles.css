@@ -2033,3 +2033,5 @@ main.conteudo { padding: 22px clamp(16px, 3vw, 32px) 56px; border-bottom: 0; gap
 .int-pago { background: color-mix(in srgb, #2f9e44 16%, var(--superficie)); color: #2f9e44; }
 .int-aguardando { background: color-mix(in srgb, var(--destaque) 22%, var(--superficie)); color: var(--texto); }
 .int-assessor { background: var(--primaria-clara); color: var(--primaria); }
+.aviso-interessados { background: color-mix(in srgb, var(--lima) 55%, var(--superficie)) !important; border-color: var(--tinta) !important; color: #14231d !important; animation: pulsa-aviso 2s ease-in-out 3; }
+@keyframes pulsa-aviso { 50% { transform: scale(1.01); box-shadow: 0 0 0 6px color-mix(in srgb, var(--lima) 45%, transparent); } }

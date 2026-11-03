@@ -6,6 +6,7 @@
 // Variáveis no Vercel: SUPABASE_SERVICE_ROLE_KEY e MP_ACCESS_TOKEN (VALOR_INSCRICAO é opcional, padrão 1800).
 import { randomInt } from 'node:crypto'
 import { createClient } from '@supabase/supabase-js'
+import { avisarEquipe } from './_email.js'
 import { mpConfigurado, criarPagamentoInscricao, conferirInscricao, urlDoSite, VALOR_INSCRICAO } from './_mercadopago.js'
 
 const URL_SUPABASE = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
@@ -72,7 +73,15 @@ export default async function handler(req, res) {
       }).select('id, nome, email').single()
       if (error) return responder(res, 500, { erro: 'Não foi possível salvar a inscrição: ' + error.message })
 
-      const { preferencia, link } = await criarPagamentoInscricao({ inscricao: ins, urlSite: urlDoSite(req) })
+      const site = urlDoSite(req)
+      const fone = zap.length >= 12 ? zap : '55' + zap
+      await avisarEquipe({
+        assunto: `📝 Nova inscrição: ${nome}`,
+        titulo: `${nome} quer entrar na assessoria!`,
+        linhas: [['WhatsApp', zap], ['E-mail', email], ['Fase', texto(corpo.situacao, 60)], ['Curso', texto(corpo.curso, 80)], ['Cidade', texto(corpo.cidade, 80)], ['Precisa de ajuda em', texto(corpo.dificuldade, 120)], ['Como conheceu', texto(corpo.como_conheceu, 60)], ['Mensagem', texto(corpo.mensagem, 600)], ['Situação', 'foi para o pagamento (ainda não pagou)']],
+        botao: { texto: 'Chamar no WhatsApp', link: `https://wa.me/${fone}?text=${encodeURIComponent(`Olá, ${nome.split(' ')[0]}! Aqui é da Assessoria J&C 😊`)}` },
+      })
+      const { preferencia, link } = await criarPagamentoInscricao({ inscricao: ins, urlSite: site })
       await admin.from('interessados').update({ mp_preferencia: preferencia, link_pagamento: link }).eq('id', ins.id)
       return responder(res, 200, { id: ins.id, link })
     }

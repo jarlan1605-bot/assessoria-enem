@@ -185,7 +185,7 @@ export default function Landing({ onEntrar }) {
         </div>
       </section>
 
-      {mentores.length > 1 && (
+      {mentores.length > 0 && (
         <section className="lp-secao" id="mentores">
           <div className="lp-cabeca">
             <span className="lp-kicker">Equipe</span>
@@ -205,6 +205,13 @@ export default function Landing({ onEntrar }) {
                     <h3>{m.nome}</h3>
                     {(m.idade || m.naturalidade) && (
                       <p className="lp-mentor-dados">{[m.idade && `${m.idade} anos`, m.naturalidade].filter(Boolean).join(' · ')}</p>
+                    )}
+                    {(m.aprovacao || m.especialidade || m.questoes_feitas > 0) && (
+                      <p className="lp-mentor-feitos">
+                        {m.aprovacao && <span>🎓 {m.aprovacao}</span>}
+                        {m.especialidade && <span>⭐ Forte em {m.especialidade}</span>}
+                        {m.questoes_feitas > 0 && <span>✍️ {Number(m.questoes_feitas).toLocaleString('pt-BR')} questões feitas</span>}
+                      </p>
                     )}
                     {m.caracteristicas?.length > 0 && (
                       <ul className="lp-mentor-tags">{m.caracteristicas.map((c) => <li key={c}>{c}</li>)}</ul>

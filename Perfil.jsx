@@ -1,3 +1,4 @@
+import { FormMentor } from './Mentores'
 import { useRef, useState } from 'react'
 import { supabase } from './supabase'
 import { enviarFoto, removerFoto } from './foto'
@@ -127,66 +128,15 @@ export default function Perfil({ perfil, onAtualizado, onTrocarSenha, onFechar }
   )
 }
 
-// O que aparece na página de apresentação, na seção "Conheça os mentores"
+// O que aparece na página de apresentação e na escolha do assessor
 function VitrineMentor({ perfil, onAtualizado }) {
-  const [f, setF] = useState({
-    vitrine: perfil.vitrine ?? false,
-    disponivel: perfil.disponivel ?? true,
-    nascimento: perfil.nascimento ?? '',
-    naturalidade: perfil.naturalidade ?? '',
-    caracteristicas: (perfil.caracteristicas ?? []).join(', '),
-    legenda: perfil.legenda ?? '',
-  })
-  const [estado, setEstado] = useState({ tipo: '', texto: '' })
-  const muda = (k, v) => { setF((x) => ({ ...x, [k]: v })); setEstado({ tipo: '', texto: '' }) }
-
-  async function salvar(e) {
-    e.preventDefault()
-    const caracteristicas = f.caracteristicas.split(',').map((c) => c.trim()).filter(Boolean).slice(0, 8).map((c) => c.slice(0, 40))
-    const dados = {
-      vitrine: f.vitrine,
-      disponivel: f.disponivel,
-      nascimento: f.nascimento || null,
-      naturalidade: f.naturalidade.trim().slice(0, 80),
-      caracteristicas,
-      legenda: f.legenda.trim().slice(0, 400),
-    }
-    setEstado({ tipo: 'salvando', texto: '' })
-    const { error } = await supabase.from('perfis').update(dados).eq('id', perfil.id)
-    if (error) return setEstado({ tipo: 'erro', texto: 'Não foi possível salvar: ' + error.message })
-    onAtualizado(dados)
-    setEstado({ tipo: 'ok', texto: f.vitrine ? 'Salvo! Você já aparece na página de apresentação.' : 'Salvo! (você está escondido da página)' })
-  }
-
   return (
-    <form className="vitrine-form" onSubmit={salvar}>
+    <div className="vitrine-form">
       <div>
         <h3>Página de mentores</h3>
-        <p className="suave pequeno">O que pais e futuros alunos veem na página de apresentação, junto com a sua foto.</p>
+        <p className="suave pequeno">O que pais e futuros alunos veem na página de apresentação, junto com a sua foto. A página mostra só a sua idade, nunca a data.</p>
       </div>
-      <label className="caixa-marcar">
-        <input type="checkbox" checked={f.vitrine} onChange={(e) => muda('vitrine', e.target.checked)} />
-        <span>Aparecer na página de apresentação</span>
-      </label>
-      <label className="caixa-marcar">
-        <input type="checkbox" checked={f.disponivel} onChange={(e) => muda('disponivel', e.target.checked)} />
-        <span>Estou com vagas para novos alunos</span>
-      </label>
-      <div className="vitrine-duas">
-        <label>Data de nascimento<input type="date" value={f.nascimento} onChange={(e) => muda('nascimento', e.target.value)} /></label>
-        <label>Naturalidade<input value={f.naturalidade} maxLength={80} onChange={(e) => muda('naturalidade', e.target.value)} placeholder="Ex.: Fortaleza (CE)" /></label>
-      </div>
-      <p className="suave pequeno" style={{ margin: '-6px 0 0' }}>A página mostra só a sua idade, nunca a data.</p>
-      <label>Características (separe por vírgula)
-        <input value={f.caracteristicas} onChange={(e) => muda('caracteristicas', e.target.value)} placeholder="Ex.: Medicina na UFC, 940 na redação, Especialista em Exatas" />
-      </label>
-      <label>Sua legenda (escrita por você)
-        <textarea rows={4} maxLength={400} value={f.legenda} onChange={(e) => muda('legenda', e.target.value)} placeholder="Conte quem você é e como você ajuda seus alunos." />
-        <span className="suave pequeno" style={{ alignSelf: 'flex-end' }}>{f.legenda.length}/400</span>
-      </label>
-      {estado.tipo === 'erro' && <p className="erro">{estado.texto}</p>}
-      {estado.tipo === 'ok' && <p className="aviso-ok" role="status">{estado.texto}</p>}
-      <button className="botao primario" disabled={estado.tipo === 'salvando'}>{estado.tipo === 'salvando' ? 'Salvando…' : 'Salvar página de mentores'}</button>
-    </form>
+      <FormMentor mentor={perfil} mostrarNome={false} onSalvo={onAtualizado} />
+    </div>
   )
 }

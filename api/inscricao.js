@@ -29,11 +29,12 @@ function senhaAleatoria() {
 // Assessores que aparecem para o aluno escolher: os da página de mentores com vagas abertas.
 // Se ninguém preencheu a página de mentores ainda, mostra toda a equipe.
 async function assessoresDisponiveis(admin) {
-  const { data } = await admin.from('perfis').select('id, nome, foto_url, papel, vitrine, disponivel, caracteristicas, legenda').in('papel', ['mentor', 'ceo']).order('criado_em')
+  const { data } = await admin.from('perfis').select('*').in('papel', ['mentor', 'ceo']).order('criado_em')
   const equipe = data ?? []
   const vitrine = equipe.filter((m) => m.vitrine && m.disponivel)
   return (vitrine.length ? vitrine : equipe).map((m) => ({
     id: m.id, nome: m.nome, foto_url: m.foto_url, caracteristicas: m.caracteristicas ?? [], legenda: m.legenda ?? '',
+    aprovacao: m.aprovacao ?? '', especialidade: m.especialidade ?? '', questoes_feitas: m.questoes_feitas ?? null,
   }))
 }
 

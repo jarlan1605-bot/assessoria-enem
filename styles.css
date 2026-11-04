@@ -2221,3 +2221,34 @@ main.conteudo { padding: 22px clamp(16px, 3vw, 32px) 56px; border-bottom: 0; gap
 
 /* "O que você recebe" dentro da página inicial: mesmas seções da página /assessoria */
 .as-embutido { min-height: 0; background: transparent; padding-bottom: 8px; }
+
+/* Aba Mentores (CEO) */
+.mentores-lista { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+.mentor-cartao { padding: 0; overflow: hidden; }
+.mentor-resumo { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 14px; width: 100%; padding: 14px 16px; flex-wrap: wrap; }
+.mentor-resumo-texto { flex: 1; min-width: 180px; display: flex; flex-direction: column; gap: 3px; }
+.mentor-resumo-texto strong { display: flex; align-items: center; gap: 8px; }
+.mentor-status { display: flex; gap: 6px; flex-wrap: wrap; }
+.mentor-editar { display: grid; grid-template-columns: 140px 1fr; gap: 20px; padding: 16px; border-top: 1.5px dashed var(--borda); }
+.mentor-foto { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.mentor-form { display: flex; flex-direction: column; gap: 14px; }
+.mentor-form label { display: flex; flex-direction: column; gap: 6px; }
+.mentor-chaves { display: flex; flex-direction: column; gap: 6px; }
+.mentor-grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.mentor-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 8px; }
+.mentor-tag { display: inline-flex; align-items: center; gap: 6px; background: #d6f36b; color: #14231d; font-weight: 700; font-size: 13px; padding: 4px 6px 4px 12px; border-radius: 999px; }
+.mentor-tag button { all: unset; cursor: pointer; font-size: 11px; padding: 2px 6px; border-radius: 999px; }
+.mentor-tag button:hover { background: rgba(20,35,29,.12); }
+.linha-campo { display: flex; gap: 8px; }
+.linha-campo input { flex: 1; }
+.rotulo-campo { font-weight: 600; }
+.mentor-novo { margin-top: 16px; display: flex; flex-direction: column; gap: 12px; }
+.lp-mentor-feitos { display: flex; flex-direction: column; gap: 4px; margin: 6px 0 10px; font-weight: 700; color: #1f5f4a; font-size: 14px; }
+.insc-feitos { font-size: 13px; font-weight: 700; color: #0f3a2c; padding: 0 16px; }
+@media (max-width: 640px) { .mentor-editar { grid-template-columns: 1fr; } }
+.mentor-status .selo { font-size: 11px; padding: 3px 9px; border-radius: 999px; background: #ece6d8; color: #14231d; font-weight: 700; }
+.mentor-status .selo-ativo { background: #1f5f4a; color: #f7f2e8; }
+.mentor-status .selo-novo { background: #d6f36b; }
+.mentor-status .selo-suspenso { background: #f7c6b7; }
+.mentor-form .aviso-info { background: #fbf3dc; border-left: 3px solid #f2b134; padding: 8px 12px; border-radius: 8px; margin: 0; }
+.mentor-form .caixa-marcar { margin-top: 0; }

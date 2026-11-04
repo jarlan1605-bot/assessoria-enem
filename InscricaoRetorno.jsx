@@ -113,6 +113,8 @@ export default function InscricaoRetorno({ id, onEntrar, onFechar }) {
                 {m.foto_url ? <img src={m.foto_url} alt="" /> : <span>{(m.nome || '?').slice(0, 1)}</span>}
               </span>
               <strong>{m.nome}</strong>
+              {(m.aprovacao || m.especialidade) && <span className="insc-feitos">{[m.aprovacao, m.especialidade && `Forte em ${m.especialidade}`].filter(Boolean).join(' · ')}</span>}
+              {m.questoes_feitas > 0 && <span className="insc-feitos">{Number(m.questoes_feitas).toLocaleString('pt-BR')} questões feitas</span>}
               {m.caracteristicas?.length > 0 && <span className="insc-tags">{m.caracteristicas.slice(0, 3).join(' · ')}</span>}
               {m.legenda && <span className="insc-legenda">“{m.legenda}”</span>}
               <span className="lp-botao lp-botao-cheio insc-escolher">{escolhendo === m.id ? 'Criando sua conta…' : `Quero ${m.nome.split(' ')[0]}`}</span>

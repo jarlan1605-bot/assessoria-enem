@@ -15,6 +15,7 @@ import Perfil from './Perfil'
 import Comunidade from './Comunidade'
 import Evolucao from './Evolucao'
 import Equipe from './Equipe'
+import Mentores from './Mentores'
 import { gruposPorMentor } from './grupos'
 import Landing from './Landing'
 import Assessoria2027 from './Assessoria2027'
@@ -215,7 +216,7 @@ function Painel({ usuario }) {
       ],
     },
     ...(ehCeo
-      ? [{ titulo: 'Gestão', itens: [['equipe', '🏢', 'Equipe'], ['financeiro', '💰', 'Financeiro'], ['site', '🌐', 'Página de vendas'], ['interessados', '📝', 'Interessados 2027']] }]
+      ? [{ titulo: 'Gestão', itens: [['equipe', '🏢', 'Equipe'], ['mentores', '🧑‍🏫', 'Mentores'], ['financeiro', '💰', 'Financeiro'], ['site', '🌐', 'Página de vendas'], ['interessados', '📝', 'Interessados 2027']] }]
       : ehMentor
         ? [{ titulo: 'Gestão', itens: [['equipe', '👥', 'Meus alunos']] }]
         : []),
@@ -249,6 +250,8 @@ function Painel({ usuario }) {
     conteudo = <Materiais ehCeo={ehCeo} />
   } else if (abaAtual === 'questoes') {
     conteudo = <BancoQuestoes perfil={perfil} ehMentor={ehMentor} alunos={alunos} />
+  } else if (abaAtual === 'mentores') {
+    conteudo = <Mentores onMudou={carregarEquipe} />
   } else if (abaAtual === 'equipe') {
     conteudo = <Equipe meuId={perfil.id} ehCeo={ehCeo} onMudou={() => { carregarAlunos(); carregarEquipe() }} />
   } else if (abaAtual === 'financeiro') {

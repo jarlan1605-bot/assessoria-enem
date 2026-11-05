@@ -46,7 +46,18 @@ export default function FormInteresse() {
           <span className="lp-etiqueta">✦ Inscrições 2027</span>
           <h2>Garanta seu lugar na mentoria <em>de 2027</em></h2>
           <p>As vagas são limitadas porque o acompanhamento é de perto. Preencha, pague com segurança pelo Mercado Pago e, assim que o pagamento for confirmado, escolha o seu assessor e receba o acesso à plataforma.</p>
-          <p className="lp-interesse-preco"><strong>R$ 1.800</strong> <span>pagamento único · Pix, cartão ou boleto</span></p>
+          <div className="bf-oferta">
+            <span className="bf-selo">🖤 BLACK FRIDAY</span>
+            <div className="bf-de">
+              <span className="bf-antigo">R$ 2.200</span>
+              <svg className="bf-x" viewBox="0 0 100 40" preserveAspectRatio="none" aria-hidden="true">
+                <path d="M4 6 Q50 22 96 34" />
+                <path d="M4 34 Q50 18 96 6" />
+              </svg>
+            </div>
+            <p className="lp-interesse-preco bf-preco"><strong>R$ 1.800</strong> <span>preço de Black Friday · pagamento único · Pix, cartão ou boleto</span></p>
+            <span className="bf-economia">Você economiza R$ 400</span>
+          </div>
           <ul className="lp-interesse-lista">
             <li>🗓️ Horário de estudos sob medida</li>
             <li>📈 Simulados acompanhados</li>
@@ -109,7 +120,7 @@ export default function FormInteresse() {
 
             {estado.tipo === 'erro' && <p className="lp-form-erro" role="alert">{estado.texto}</p>}
             <button className="lp-botao lp-botao-cheio lp-form-enviar" disabled={estado.tipo === 'enviando' || estado.tipo === 'indo'}>
-              {estado.tipo === 'enviando' ? 'Preparando o pagamento…' : estado.tipo === 'indo' ? 'Abrindo o Mercado Pago…' : 'Inscrever e pagar R$ 1.800 →'}
+              {estado.tipo === 'enviando' ? 'Preparando o pagamento…' : estado.tipo === 'indo' ? 'Abrindo o Mercado Pago…' : 'Garantir a vaga por R$ 1.800 →'}
             </button>
             <p className="lp-form-nota">🔒 O pagamento é feito no site do Mercado Pago. Seus dados ficam só com a equipe da assessoria.</p>
           </form>

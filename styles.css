@@ -2252,3 +2252,18 @@ main.conteudo { padding: 22px clamp(16px, 3vw, 32px) 56px; border-bottom: 0; gap
 .mentor-status .selo-suspenso { background: #f7c6b7; }
 .mentor-form .aviso-info { background: #fbf3dc; border-left: 3px solid #f2b134; padding: 8px 12px; border-radius: 8px; margin: 0; }
 .mentor-form .caixa-marcar { margin-top: 0; }
+
+/* Black Friday */
+.bf-oferta { position: relative; margin: 4px 0 22px; padding: 18px 20px 16px; border-radius: 20px; background: #0a0f0c; border: 2px solid #d6f36b; box-shadow: 6px 6px 0 #d6f36b; transform: rotate(-1deg); }
+.bf-selo { display: inline-block; background: #d6f36b; color: #0a0f0c; font-family: var(--lp-display); font-weight: 800; letter-spacing: .12em; font-size: 13px; padding: 6px 12px; border-radius: 999px; animation: bf-pulsa 1.6s ease-in-out infinite; }
+.bf-de { position: relative; display: inline-block; margin: 12px 0 2px; }
+.bf-antigo { font-family: var(--lp-display); font-size: 30px; font-weight: 800; color: #9fb0a7; letter-spacing: -0.02em; }
+.bf-x { position: absolute; inset: -6px -10px; width: calc(100% + 20px); height: calc(100% + 12px); overflow: visible; }
+.bf-x path { fill: none; stroke: #f7c6b7; stroke-width: 5; stroke-linecap: round; stroke-dasharray: 120; stroke-dashoffset: 120; animation: bf-risca .5s ease-out forwards; }
+.bf-x path + path { stroke: #f2b134; animation-delay: .35s; }
+.bf-preco { margin: 0 0 8px !important; }
+.bf-preco strong { font-size: 56px !important; text-shadow: 0 0 24px rgba(214,243,107,.35); }
+.bf-economia { display: inline-block; background: #f2b134; color: #14231d; font-weight: 800; font-size: 13px; padding: 4px 10px; border-radius: 8px; transform: rotate(1.5deg); }
+@keyframes bf-risca { to { stroke-dashoffset: 0; } }
+@keyframes bf-pulsa { 50% { transform: scale(1.06); } }
+@media (prefers-reduced-motion: reduce) { .bf-selo { animation: none; } .bf-x path { animation: none; stroke-dashoffset: 0; } }

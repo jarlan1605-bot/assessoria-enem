@@ -75,14 +75,33 @@ export default async function handler(req, res) {
       if (ja) return responder(res, 400, { erro: 'Já existe uma conta com esse e-mail. Se você já é aluno, entre pela Área do aluno.' })
 
       const idade = Number(corpo.idade)
-      const { data: ins, error } = await admin.from('interessados').insert({
+      const preferido = uuidValido(corpo.mentor_preferido) ? corpo.mentor_preferido : null
+      const dados = {
         nome, email, whatsapp: zap,
         idade: idade >= 10 && idade <= 80 ? idade : null,
         cidade: texto(corpo.cidade, 80), situacao: texto(corpo.situacao, 60), curso: texto(corpo.curso, 80),
         dificuldade: texto(corpo.dificuldade, 120), como_conheceu: texto(corpo.como_conheceu, 60),
         responsavel: texto(corpo.responsavel, 100), mensagem: texto(corpo.mensagem, 600),
-        valor: VALOR_INSCRICAO,
-      }).select('id, nome, email').single()
+        ...(preferido ? { mentor_preferido: preferido } : {}),
+      }
+
+      // Pré-cadastro: se esse e-mail já se inscreveu e não terminou, reaproveita a mesma inscrição
+      const { data: anteriores } = await admin.from('interessados').select('id, pago, aluno_id, link_pagamento, valor').ilike('email', email).order('criado_em', { ascending: false }).limit(5)
+      const aberta = (anteriores ?? []).find((x) => !x.aluno_id)
+      if (aberta) {
+        await admin.from('interessados').update(dados).eq('id', aberta.id)
+        const site = urlDoSite(req)
+        if (aberta.pago) return responder(res, 200, { id: aberta.id, link: `${site}/?inscricao=${aberta.id}`, retomada: true })
+        let link = aberta.link_pagamento
+        if (!link || Number(aberta.valor) !== Number(VALOR_INSCRICAO)) {
+          const novo = await criarPagamentoInscricao({ inscricao: { id: aberta.id, nome, email }, urlSite: site })
+          link = novo.link
+          await admin.from('interessados').update({ mp_preferencia: novo.preferencia, link_pagamento: link, valor: VALOR_INSCRICAO }).eq('id', aberta.id)
+        }
+        return responder(res, 200, { id: aberta.id, link, retomada: true })
+      }
+
+      const { data: ins, error } = await admin.from('interessados').insert({ ...dados, valor: VALOR_INSCRICAO }).select('id, nome, email').single()
       if (error) return responder(res, 500, { erro: 'Não foi possível salvar a inscrição: ' + error.message })
 
       const site = urlDoSite(req)
@@ -103,13 +122,17 @@ export default async function handler(req, res) {
     // ---------- 2) Situação da inscrição ----------
     if (corpo.acao === 'status') {
       const st = mpConfigurado() ? await conferirInscricao(admin, corpo.id) : { existe: true }
-      const { data: ins } = await admin.from('interessados').select('nome, email, pago, link_pagamento, aluno_id, mentor_id').eq('id', corpo.id).maybeSingle()
+      const { data: ins } = await admin.from('interessados').select('nome, email, pago, link_pagamento, aluno_id, mentor_id, mentor_preferido').eq('id', corpo.id).maybeSingle()
       if (!ins) return responder(res, 404, { erro: 'Inscrição não encontrada.' })
       const resposta = {
         nome: ins.nome.split(' ')[0], email: ins.email, pago: ins.pago, pendente: !!st.pendente,
         link: ins.pago ? '' : ins.link_pagamento, contaCriada: !!ins.aluno_id, valor: VALOR_INSCRICAO,
       }
-      if (ins.pago && !ins.aluno_id) resposta.assessores = await assessoresDisponiveis(admin)
+      if (ins.pago && !ins.aluno_id) {
+        resposta.assessores = await assessoresDisponiveis(admin)
+        const pref = resposta.assessores.find((a) => a.id === ins.mentor_preferido && !a.esgotado)
+        if (pref) resposta.preferido = pref.id
+      }
       if (ins.mentor_id) {
         const { data: m } = await admin.from('perfis').select('nome').eq('id', ins.mentor_id).maybeSingle()
         resposta.assessor = m?.nome || ''

@@ -28,18 +28,28 @@ export default function InscricaoRetorno({ id, onEntrar, onFechar }) {
     return () => clearInterval(t)
   }, [info, carregar])
 
-  async function escolher(m) {
-    if (!confirm(`Confirmar ${m.nome.split(' ')[0]} como seu assessor? Essa escolha não pode ser trocada por aqui.`)) return
+  async function escolher(m, automatico = false) {
+    if (!automatico && !confirm(`Confirmar ${m.nome.split(' ')[0]} como seu assessor? Essa escolha não pode ser trocada por aqui.`)) return
     setEscolhendo(m.id)
     setErro('')
     try {
       setConta(await chamar({ acao: 'escolher', id, mentor_id: m.id }))
-      try { localStorage.removeItem('inscricaoJC') } catch { /* sem armazenamento */ }
+      try { ['inscricaoJC', 'inscricaoJC_form', 'inscricaoJC_assessor'].forEach((k) => localStorage.removeItem(k)) } catch { /* sem armazenamento */ }
     } catch (e) {
       setErro(e.message)
     }
     setEscolhendo('')
   }
+
+  // escolheu o assessor antes de pagar ("Quero estudar com..."): cria a conta com ele sem perguntar de novo
+  const [autoFeito, setAutoFeito] = useState(false)
+  useEffect(() => {
+    if (autoFeito || conta || !info?.pago || info.contaCriada || !info.preferido) return
+    const m = (info.assessores ?? []).find((a) => a.id === info.preferido)
+    if (!m) return
+    setAutoFeito(true)
+    escolher(m, true)
+  }, [info, conta, autoFeito]) // eslint-disable-line react-hooks/exhaustive-deps
 
   async function copiar() {
     try {
@@ -98,6 +108,8 @@ export default function InscricaoRetorno({ id, onEntrar, onFechar }) {
         <p className="insc-aviso">Pode fechar e voltar depois por este mesmo link.</p>
       </div>
     )
+  } else if (info.preferido && !erro) {
+    corpo = <p className="insc-carregando">Pagamento confirmado! Criando a sua conta com o seu assessor…</p>
   } else {
     corpo = (
       <div>

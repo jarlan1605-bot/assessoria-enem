@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 export const SITUACOES = ['Estou no 2º ano', 'Estou no 3º ano', 'Já terminei o ensino médio', 'Faço cursinho', 'Outro']
 const CURSOS = ['Medicina', 'Direito', 'Engenharias', 'Odontologia', 'Psicologia', 'Outro curso']
@@ -8,8 +8,17 @@ const CANAIS = ['Instagram', 'Indicação de amigo', 'TikTok', 'Google', 'Outro'
 const VAZIO = { nome: '', whatsapp: '', email: '', idade: '', cidade: '', situacao: '', curso: '', dificuldade: [], como_conheceu: '', responsavel: '', mensagem: '', site: '' }
 
 // Formulário da página de apresentação: inscrição de 2027 com pagamento pelo Mercado Pago
-export default function FormInteresse() {
-  const [f, setF] = useState(VAZIO)
+const RASCUNHO = 'inscricaoJC_form'
+
+export default function FormInteresse({ assessor = null, onTirarAssessor }) {
+  // pré-cadastro: o que a pessoa digitou fica salvo neste aparelho; se sair e voltar, está tudo preenchido
+  const [f, setF] = useState(() => {
+    try { return { ...VAZIO, ...JSON.parse(localStorage.getItem(RASCUNHO) || '{}'), site: '' } } catch { return VAZIO }
+  })
+  useEffect(() => {
+    try { localStorage.setItem(RASCUNHO, JSON.stringify({ ...f, site: '' })) } catch { /* sem armazenamento */ }
+  }, [f])
+  const temRascunho = !!(f.nome && f.email)
   const [estado, setEstado] = useState({ tipo: '', texto: '' })
   const muda = (k, v) => { setF((x) => ({ ...x, [k]: v })); if (estado.tipo === 'erro') setEstado({ tipo: '', texto: '' }) }
   const alterna = (v) => muda('dificuldade', f.dificuldade.includes(v) ? f.dificuldade.filter((x) => x !== v) : [...f.dificuldade, v])
@@ -27,7 +36,7 @@ export default function FormInteresse() {
       const r = await fetch('/api/inscricao', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ acao: 'criar', ...f, dificuldade: f.dificuldade.join(', ') }),
+        body: JSON.stringify({ acao: 'criar', ...f, dificuldade: f.dificuldade.join(', '), mentor_preferido: assessor?.id || null }),
       })
       const j = await r.json().catch(() => ({ erro: 'O servidor não respondeu. Tente de novo em instantes.' }))
       if (!r.ok || j.erro || !j.link) return setEstado({ tipo: 'erro', texto: j.erro || 'Não foi possível abrir o pagamento.' })
@@ -75,6 +84,13 @@ export default function FormInteresse() {
           </div>
         ) : (
           <form className="lp-form" onSubmit={enviar} noValidate>
+            {assessor && (
+              <div className="lp-assessor-escolhido">
+                <span>🎯 Você escolheu ser acompanhado(a) por <b>{assessor.nome}</b>. Depois do pagamento, já entra direto com {assessor.nome.split(' ')[0]}.</span>
+                <button type="button" className="lp-link" onClick={onTirarAssessor}>trocar</button>
+              </div>
+            )}
+            {temRascunho && <p className="lp-form-nota" style={{ marginTop: 0 }}>💾 Seus dados ficam salvos neste aparelho. Se sair antes de pagar, é só voltar e clicar no botão: você vai direto para o pagamento.</p>}
             <div className="lp-form-duas">
               <label>Seu nome*<input value={f.nome} onChange={(e) => muda('nome', e.target.value)} maxLength={100} autoComplete="name" placeholder="Como podemos te chamar?" /></label>
               <label>WhatsApp com DDD*<input value={f.whatsapp} onChange={(e) => muda('whatsapp', e.target.value)} inputMode="tel" autoComplete="tel" placeholder="(84) 99999-9999" /></label>

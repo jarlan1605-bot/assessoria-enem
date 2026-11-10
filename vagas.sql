@@ -33,3 +33,7 @@ language sql stable security definer set search_path = public as $$
 $$;
 revoke execute on function public.mentores_publicos() from public;
 grant execute on function public.mentores_publicos() to anon, authenticated;
+
+-- Assessor escolhido no botão "Quero estudar com..." antes do pagamento (vira a escolha automática depois de pagar)
+alter table public.interessados add column if not exists mentor_preferido uuid references public.perfis (id) on delete set null;
+create index if not exists interessados_email_idx on public.interessados (lower(email));

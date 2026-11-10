@@ -52,6 +52,18 @@ export default function Landing({ onEntrar }) {
   const [cfg, setCfg] = useState(PADRAO)
   const [depoimentos, setDepoimentos] = useState([])
   const [mentores, setMentores] = useState([])
+  // assessor escolhido no botão "Quero estudar com..." (vai junto com a inscrição)
+  const [assessor, setAssessor] = useState(() => { try { return JSON.parse(localStorage.getItem('inscricaoJC_assessor') || 'null') } catch { return null } })
+  function escolherAssessor(m) {
+    const a = { id: m.id, nome: m.nome }
+    setAssessor(a)
+    try { localStorage.setItem('inscricaoJC_assessor', JSON.stringify(a)) } catch { /* sem armazenamento */ }
+    document.getElementById('interesse')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+  function tirarAssessor() {
+    setAssessor(null)
+    try { localStorage.removeItem('inscricaoJC_assessor') } catch { /* sem armazenamento */ }
+  }
   // volta do Mercado Pago: ?inscricao=<id>
   const [inscricao, setInscricao] = useState(() => new URLSearchParams(window.location.search).get('inscricao'))
 
@@ -146,7 +158,6 @@ export default function Landing({ onEntrar }) {
           <div className="lp-mentores">
             {mentores.map((m) => {
               const primeiro = (m.nome || '').split(' ')[0]
-              const link = linkWhatsApp(cfg.whatsapp, `Olá! Vi o site da ${NOME_SITE} e quero saber sobre a mentoria com ${primeiro}.`)
               return (
                 <article key={m.id} className="lp-mentor">
                   <div className="lp-mentor-foto">
@@ -174,8 +185,8 @@ export default function Landing({ onEntrar }) {
                         <cite>— {primeiro}</cite>
                       </blockquote>
                     )}
-                    {!m.esgotado && (link || insta) && (
-                      <a className="lp-botao lp-botao-cheio lp-mentor-cta" href={link || insta} target="_blank" rel="noreferrer">Quero estudar com {primeiro}</a>
+                    {!m.esgotado && (
+                      <button type="button" className="lp-botao lp-botao-cheio lp-mentor-cta" onClick={() => escolherAssessor(m)}>Quero estudar com {primeiro}</button>
                     )}
                   </div>
                 </article>
@@ -250,7 +261,7 @@ export default function Landing({ onEntrar }) {
       <div className="lp-escassez">
         <strong>Atendemos poucos alunos para manter a qualidade.</strong> As vagas para 2027 são limitadas. Entre na lista para saber primeiro quando abrirem.
       </div>
-      <FormInteresse />
+      <FormInteresse assessor={assessor} onTirarAssessor={tirarAssessor} />
 
       {/* 10. Dúvidas */}
       <section className="lp-secao">

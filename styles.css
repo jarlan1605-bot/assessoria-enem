@@ -2343,3 +2343,5 @@ main.conteudo { padding: 22px clamp(16px, 3vw, 32px) 56px; border-bottom: 0; gap
 .insc-vagas.esgotado { background: #2b2b2b; color: #fff; }
 .insc-assessor.esgotado { opacity: 0.55; filter: grayscale(0.8); cursor: not-allowed; }
 .insc-assessor.esgotado .insc-escolher { background: #9a9a9a; border-color: #9a9a9a; }
+.lp-assessor-escolhido { display: flex; gap: 12px; align-items: center; justify-content: space-between; background: #e9f6c8; color: #1d3a10; border: 2px solid var(--lp-tinta, #15231c); border-radius: 16px; padding: 12px 16px; font-size: 15px; }
+.lp-link { background: none; border: 0; color: inherit; text-decoration: underline; font: inherit; font-weight: 700; cursor: pointer; white-space: nowrap; }

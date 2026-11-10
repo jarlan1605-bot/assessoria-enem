@@ -2354,3 +2354,5 @@ main.conteudo { padding: 22px clamp(16px, 3vw, 32px) 56px; border-bottom: 0; gap
 .insc-parceria-pequeno { opacity: 0.8; font-size: 13px !important; }
 .insc-parceria-botao { align-self: flex-start; background: #5b8cff !important; border-color: #5b8cff !important; color: #fff !important; }
 @media (max-width: 520px) { .insc-parceria { flex-direction: column; } .insc-parceria-foto { width: 100%; height: 180px; flex: none; } }
+.insc-parceria .insc-parceria-corpo p, .insc-parceria .insc-parceria-corpo p b { color: #f4f7ff !important; }
+.insc-parceria .insc-parceria-pequeno { color: #c9d6ff !important; opacity: 1; }

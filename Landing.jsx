@@ -137,43 +137,6 @@ export default function Landing({ onEntrar }) {
         <SecoesAssessoria />
       </div>
 
-      {/* 6. Autoridade */}
-      <section className="lp-secao">
-        <div className="lp-cabeca">
-          <span className="lp-kicker">Quem vai acompanhar</span>
-          <h2>A gente sabe o caminho, <em>porque fez ele</em></h2>
-          <p>Dois aprovados em Medicina na UFRN, que passaram pelas mesmas dúvidas, pela mesma rotina puxada e pela mesma ansiedade. Hoje usamos o que funcionou para montar o plano de cada aluno, um por um.</p>
-        </div>
-        <div className="lp-dupla">
-          <article className="lp-socio">
-            <div className="lp-socio-foto"><img src={FOTO_PERFIL} alt={NOME_MENTOR} loading="lazy" /></div>
-            <div className="lp-socio-texto">
-              <h3>{NOME_MENTOR}</h3>
-              <ul className="lp-mentor-tags">
-                <li>Medicina · UFRN</li>
-                <li>Plano de estudos sob medida</li>
-              </ul>
-              {arroba && <a className="lp-socio-insta" href={`https://instagram.com/${arroba}`} target="_blank" rel="noreferrer">📸 @{arroba}</a>}
-            </div>
-          </article>
-          <article className="lp-socio">
-            <div className="lp-socio-foto"><img src={FOTO_SOCIA} alt={NOME_SOCIA} loading="lazy" /></div>
-            <div className="lp-socio-texto">
-              <h3>{NOME_SOCIA}</h3>
-              <ul className="lp-mentor-tags">
-                <li>Medicina · UFRN</li>
-                <li>Aprovada direto do 3º ano</li>
-                <li>Destaque em Linguagens</li>
-              </ul>
-              <div className="lp-socio-links">
-                <a className="lp-socio-insta" href={`https://instagram.com/${INSTAGRAM_SOCIA}`} target="_blank" rel="noreferrer">📸 @{INSTAGRAM_SOCIA}</a>
-                {wppClara && <a className="lp-socio-insta" href={wppClara} target="_blank" rel="noreferrer">💬 WhatsApp</a>}
-              </div>
-            </div>
-          </article>
-        </div>
-      </section>
-
       {mentores.length > 0 && (
         <section className="lp-secao" id="mentores">
           <div className="lp-cabeca">

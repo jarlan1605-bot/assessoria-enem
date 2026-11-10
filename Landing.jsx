@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './supabase'
+import Hero3D from './Hero3D'
 import { NOME_SITE, NOME_MENTOR, NOME_SOCIA, FOTO_SOCIA, WHATSAPP_SOCIA, INSTAGRAM_SOCIA, INSTAGRAM, FOTO_PERFIL, FOTOS_AULAS } from './constants'
 import Avatar from './Avatar'
 import FormInteresse from './Interesse'
@@ -110,19 +111,7 @@ export default function Landing({ onEntrar }) {
           </div>
           <button className="lp-link" onClick={onEntrar}>Já sou aluno · entrar →</button>
         </div>
-        <div className="lp-hero-foto">
-          <div className="lp-duo">
-            <div className="lp-arco lp-arco-1">
-              <img src={FOTO_PERFIL} alt={`${NOME_MENTOR}, mentor`} />
-            </div>
-            <div className="lp-arco lp-arco-2">
-              <img src={FOTO_SOCIA} alt={`${NOME_SOCIA}, mentora`} />
-            </div>
-          </div>
-          <span className="lp-adesivo lp-adesivo-1">🩺 {NOME_MENTOR} · Medicina UFRN</span>
-          <span className="lp-adesivo lp-adesivo-2">✨ {NOME_SOCIA.split(' ')[0]} · Medicina UFRN</span>
-          {arroba && <span className="lp-adesivo lp-adesivo-3">@{arroba} · @{INSTAGRAM_SOCIA}</span>}
-        </div>
+        <Hero3D />
       </section>
 
       {/* 2. Números */}

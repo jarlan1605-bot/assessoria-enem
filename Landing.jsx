@@ -188,7 +188,7 @@ export default function Landing({ onEntrar }) {
                 <article key={m.id} className="lp-mentor">
                   <div className="lp-mentor-foto">
                     {m.foto_url ? <img src={m.foto_url} alt={m.nome} loading="lazy" /> : <span className="lp-mentor-inicial" aria-hidden="true">{primeiro.slice(0, 1)}</span>}
-                    <span className={m.disponivel ? 'lp-vaga aberta' : 'lp-vaga'}>{m.disponivel ? '● Vagas abertas' : 'Agenda cheia'}</span>
+                    <span className={m.esgotado ? 'lp-vaga' : 'lp-vaga aberta'}>{m.esgotado ? 'Esgotado' : m.vagas != null ? (m.vagas - m.ocupadas === 1 ? '● Última vaga' : `● Restam ${m.vagas - m.ocupadas} vagas`) : '● Vagas abertas'}</span>
                   </div>
                   <div className="lp-mentor-corpo">
                     <h3>{m.nome}</h3>
@@ -211,7 +211,7 @@ export default function Landing({ onEntrar }) {
                         <cite>— {primeiro}</cite>
                       </blockquote>
                     )}
-                    {m.disponivel && (link || insta) && (
+                    {!m.esgotado && (link || insta) && (
                       <a className="lp-botao lp-botao-cheio lp-mentor-cta" href={link || insta} target="_blank" rel="noreferrer">Quero estudar com {primeiro}</a>
                     )}
                   </div>

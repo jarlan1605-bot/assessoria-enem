@@ -26,16 +26,27 @@ function senhaAleatoria() {
   return s
 }
 
-// Assessores que aparecem para o aluno escolher: os da página de mentores com vagas abertas.
+// Assessores que aparecem para o aluno escolher: todos os da página de mentores.
+// Quem não tem mais vagas (ou está marcado sem vagas) vem como "esgotado" e não pode ser escolhido.
 // Se ninguém preencheu a página de mentores ainda, mostra toda a equipe.
 async function assessoresDisponiveis(admin) {
   const { data } = await admin.from('perfis').select('*').in('papel', ['mentor', 'ceo']).order('criado_em')
   const equipe = data ?? []
-  const vitrine = equipe.filter((m) => m.vitrine && m.disponivel)
-  return (vitrine.length ? vitrine : equipe).map((m) => ({
-    id: m.id, nome: m.nome, foto_url: m.foto_url, caracteristicas: m.caracteristicas ?? [], legenda: m.legenda ?? '',
-    aprovacao: m.aprovacao ?? '', especialidade: m.especialidade ?? '', questoes_feitas: m.questoes_feitas ?? null,
-  }))
+  const vitrine = equipe.filter((m) => m.vitrine)
+  const lista = vitrine.length ? vitrine : equipe
+  const { data: ocup } = await admin.from('interessados').select('mentor_id').in('mentor_id', lista.map((m) => m.id))
+  const conta = {}
+  for (const o of ocup ?? []) conta[o.mentor_id] = (conta[o.mentor_id] || 0) + 1
+  return lista.map((m) => {
+    const ocupadas = conta[m.id] || 0
+    const vagas = m.vagas ?? null
+    const restam = vagas === null ? null : Math.max(0, vagas - ocupadas)
+    return {
+      id: m.id, nome: m.nome, foto_url: m.foto_url, caracteristicas: m.caracteristicas ?? [], legenda: m.legenda ?? '',
+      aprovacao: m.aprovacao ?? '', especialidade: m.especialidade ?? '', questoes_feitas: m.questoes_feitas ?? null,
+      restam, esgotado: m.disponivel === false || restam === 0,
+    }
+  }).sort((a, b) => Number(a.esgotado) - Number(b.esgotado))
 }
 
 export default async function handler(req, res) {
@@ -119,10 +130,20 @@ export default async function handler(req, res) {
       const assessores = await assessoresDisponiveis(admin)
       const escolhido = assessores.find((a) => a.id === corpo.mentor_id)
       if (!escolhido) return responder(res, 400, { erro: 'Escolha um dos assessores da lista.' })
+      if (escolhido.esgotado) return responder(res, 409, { erro: `As vagas de ${escolhido.nome.split(' ')[0]} esgotaram. Escolha outro assessor.` })
 
       // marca a inscrição antes de criar a conta: se o botão for clicado duas vezes, a segunda para aqui
       const { data: travada } = await admin.from('interessados').update({ mentor_id: escolhido.id }).eq('id', ins.id).is('aluno_id', null).is('mentor_id', null).select('id')
       if (!travada?.length) return responder(res, 409, { erro: 'A escolha já foi feita. Se a conta não apareceu, fale com a gente pelo WhatsApp.' })
+      // confere de novo depois de reservar: se duas pessoas pegaram a última vaga ao mesmo tempo, a segunda volta
+      if (escolhido.restam !== null) {
+        const { data: perf } = await admin.from('perfis').select('vagas').eq('id', escolhido.id).maybeSingle()
+        const { count } = await admin.from('interessados').select('id', { count: 'exact', head: true }).eq('mentor_id', escolhido.id)
+        if (perf?.vagas != null && count > perf.vagas) {
+          await admin.from('interessados').update({ mentor_id: null }).eq('id', ins.id)
+          return responder(res, 409, { erro: `A última vaga de ${escolhido.nome.split(' ')[0]} acabou de ser preenchida. Escolha outro assessor.` })
+        }
+      }
 
       const senha = senhaAleatoria()
       const { data: criado, error } = await admin.auth.admin.createUser({ email: ins.email, password: senha, email_confirm: true, user_metadata: { nome: ins.nome } })

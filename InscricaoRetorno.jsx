@@ -161,7 +161,7 @@ function ParceriaAdilson() {
       <div className="insc-parceria-corpo">
         <span className="insc-parceria-selo">💙 Parceria J&C</span>
         <img className="insc-parceria-logo" src="/parceiros/adilson-logo.png" alt="Adilson Júnior Matemática" />
-        <p><b>Curso on-line de Matemática do Adilson Júnior</b>, turma 2027. O curso dele teve <b>4 aprovações em Medicina em 2026</b>, em federais.</p>
+        <p><b>Curso on-line de Matemática do Adilson Júnior</b>, turma 2027. O curso dele teve <b>4 aprovações em Medicina em 2026</b>.</p>
         <p className="insc-parceria-pequeno">Como aluno(a) da J&C, você tem condição especial para fechar o curso também.</p>
         <a className="lp-botao lp-botao-cheio insc-parceria-botao" href={`https://wa.me/${ZAP_ADILSON}?text=${encodeURIComponent(msg)}`} target="_blank" rel="noreferrer">Falar com o Adilson no WhatsApp →</a>
       </div>

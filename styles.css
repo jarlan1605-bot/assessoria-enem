@@ -2337,3 +2337,9 @@ main.conteudo { padding: 22px clamp(16px, 3vw, 32px) 56px; border-bottom: 0; gap
 @keyframes h3-balanca { 0%, 100% { transform: rotateY(-7deg) rotateX(2deg); } 50% { transform: rotateY(7deg) rotateX(-2deg); } }
 @media (max-width: 1020px) { .h3 { margin-top: 18px; } }
 @media (prefers-reduced-motion: reduce) { .h3 *, .lp-hero-texto > * { animation: none !important; } }
+
+/* vagas por assessor */
+.insc-vagas { align-self: flex-start; margin: 0 16px; font-size: 13px; font-weight: 700; padding: 4px 10px; border-radius: 999px; background: #e9f6c8; color: #2f4a0c; }
+.insc-vagas.esgotado { background: #2b2b2b; color: #fff; }
+.insc-assessor.esgotado { opacity: 0.55; filter: grayscale(0.8); cursor: not-allowed; }
+.insc-assessor.esgotado .insc-escolher { background: #9a9a9a; border-color: #9a9a9a; }

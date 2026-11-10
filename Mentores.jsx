@@ -25,7 +25,7 @@ function senhaAleatoria() {
 }
 
 // Formulário dos dados públicos de um mentor. Usado pelo CEO (aba Mentores) e pelo próprio mentor (Meu perfil).
-export function FormMentor({ mentor, onSalvo, mostrarNome = true }) {
+export function FormMentor({ mentor, onSalvo, mostrarNome = true, ocupadas = null }) {
   const [f, setF] = useState({
     nome: mentor.nome ?? '',
     vitrine: mentor.vitrine ?? false,
@@ -37,6 +37,7 @@ export function FormMentor({ mentor, onSalvo, mostrarNome = true }) {
     especialidade: mentor.especialidade ?? '',
     caracteristicas: mentor.caracteristicas ?? [],
     legenda: mentor.legenda ?? '',
+    vagas: mentor.vagas ?? '',
   })
   const [nova, setNova] = useState('')
   const [estado, setEstado] = useState({ tipo: '', texto: '' })
@@ -62,6 +63,7 @@ export function FormMentor({ mentor, onSalvo, mostrarNome = true }) {
       naturalidade: f.naturalidade.trim().slice(0, 80),
       caracteristicas: f.caracteristicas.slice(0, 8),
       legenda: f.legenda.trim().slice(0, 400),
+      ...(ocupadas !== null && 'vagas' in mentor ? { vagas: f.vagas === '' ? null : Math.max(0, Math.min(500, Math.round(Number(f.vagas) || 0))) } : {}),
       ...(suporta ? { aprovacao: f.aprovacao.trim().slice(0, 120), questoes_feitas: q, especialidade: f.especialidade.trim().slice(0, 80) } : {}),
     }
     setEstado({ tipo: 'salvando', texto: '' })
@@ -84,6 +86,11 @@ export function FormMentor({ mentor, onSalvo, mostrarNome = true }) {
       <div className="mentor-grade">
         <label>Data de nascimento{idade !== null && <small className="suave"> · {idade} anos</small>}<input type="date" value={f.nascimento} onChange={(e) => muda('nascimento', e.target.value)} /></label>
         <label>Naturalidade<input value={f.naturalidade} maxLength={80} onChange={(e) => muda('naturalidade', e.target.value)} placeholder="Ex.: Caicó (RN)" /></label>
+        {ocupadas !== null && 'vagas' in mentor && (
+          <label>Vagas para 2027<small className="suave"> · {ocupadas} ocupada{ocupadas === 1 ? '' : 's'}</small>
+            <input type="number" min="0" max="500" value={f.vagas} onChange={(e) => muda('vagas', e.target.value)} placeholder="Em branco = sem limite" />
+          </label>
+        )}
         {suporta && <label>Aprovação<input value={f.aprovacao} maxLength={120} onChange={(e) => muda('aprovacao', e.target.value)} placeholder="Ex.: Medicina UFRN 2024" /></label>}
         {suporta && <label>Área de especialidade<input value={f.especialidade} maxLength={80} onChange={(e) => muda('especialidade', e.target.value)} placeholder="Ex.: Linguagens" /></label>}
         {suporta && <label>Quantas questões já fez<input type="number" min="0" value={f.questoes_feitas} onChange={(e) => muda('questoes_feitas', e.target.value)} placeholder="Ex.: 12000" /></label>}
@@ -187,7 +194,10 @@ export default function Mentores({ onMudou }) {
 
   const carregar = useCallback(async () => {
     const { data } = await supabase.from('perfis').select('*').in('papel', ['mentor', 'ceo']).order('criado_em')
-    setLista(data ?? [])
+    const { data: ocup } = await supabase.from('interessados').select('mentor_id').not('mentor_id', 'is', null)
+    const conta = {}
+    for (const o of ocup ?? []) conta[o.mentor_id] = (conta[o.mentor_id] || 0) + 1
+    setLista((data ?? []).map((m) => ({ ...m, ocupadas: conta[m.id] || 0 })))
     setCarregando(false)
   }, [])
   useEffect(() => { carregar() }, [carregar])
@@ -197,7 +207,7 @@ export default function Mentores({ onMudou }) {
   return (
     <section className="secao mentores-ceo">
       <div className="comunidade-topo">
-        <p className="suave" style={{ margin: 0 }}>Quem marcar <b>“Aparecer”</b> entra na página de apresentação e na escolha do assessor depois do pagamento. Quem estiver sem vagas não aparece na escolha.</p>
+        <p className="suave" style={{ margin: 0 }}>Quem marcar <b>“Aparecer”</b> entra na página de apresentação e na escolha do assessor depois do pagamento. Defina as <b>vagas para 2027</b> de cada um: quando elas acabam, o assessor aparece como <b>Esgotado</b> e não pode mais ser escolhido.</p>
         {!novo && <button className="botao primario" onClick={() => setNovo(true)}>+ Adicionar mentor</button>}
       </div>
 
@@ -217,13 +227,16 @@ export default function Mentores({ onMudou }) {
                   </span>
                   <span className="mentor-status">
                     <span className={m.vitrine ? 'selo selo-ativo' : 'selo'}>{m.vitrine ? 'Aparece' : 'Escondido'}</span>
-                    {m.vitrine && <span className={m.disponivel ? 'selo selo-novo' : 'selo selo-suspenso'}>{m.disponivel ? 'Com vagas' : 'Sem vagas'}</span>}
+                    {m.vitrine && (() => {
+                      const esg = !m.disponivel || (m.vagas != null && m.ocupadas >= m.vagas)
+                      return <span className={esg ? 'selo selo-suspenso' : 'selo selo-novo'}>{esg ? 'Esgotado' : m.vagas != null ? `${m.ocupadas}/${m.vagas} vagas` : 'Com vagas'}</span>
+                    })()}
                   </span>
                 </button>
                 {aberto === m.id && (
                   <div className="mentor-editar">
                     <FotoMentor mentor={m} onTrocou={(url) => atualizar(m.id, { foto_url: url })} />
-                    <FormMentor key={m.id + (m.aprovacao ?? '')} mentor={m} onSalvo={(dados) => atualizar(m.id, dados)} />
+                    <FormMentor key={m.id + (m.aprovacao ?? '')} mentor={m} ocupadas={m.ocupadas} onSalvo={(dados) => atualizar(m.id, dados)} />
                   </div>
                 )}
               </article>

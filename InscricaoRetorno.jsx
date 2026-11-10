@@ -71,6 +71,7 @@ export default function InscricaoRetorno({ id, onEntrar, onFechar }) {
           <div><small>Senha</small><strong className="insc-senha">{conta.senha}</strong></div>
         </div>
         <p className="insc-aviso">📸 Tire um print desta tela. Depois de entrar, você pode trocar a senha em <b>Meu perfil → Trocar senha</b>.</p>
+        <ParceriaAdilson />
         <div className="insc-botoes">
           <button className="lp-botao lp-botao-contorno" onClick={copiar}>{copiado ? '✓ Copiado' : 'Copiar login e senha'}</button>
           <button className="lp-botao lp-botao-cheio" onClick={onEntrar}>Entrar na plataforma →</button>
@@ -87,6 +88,7 @@ export default function InscricaoRetorno({ id, onEntrar, onFechar }) {
         <span className="insc-emoji" aria-hidden="true">✅</span>
         <h2>Sua inscrição já está <em>completa</em></h2>
         <p>{info.assessor ? <>Seu assessor é <b>{info.assessor}</b>. </> : null}Entre na plataforma com o e-mail <b>{info.email}</b>.</p>
+        <ParceriaAdilson />
         <p className="insc-aviso">Esqueceu a senha? Fale com a gente pelo WhatsApp que a gente redefine.</p>
         <div className="insc-botoes"><button className="lp-botao lp-botao-cheio" onClick={onEntrar}>Entrar na plataforma →</button></div>
       </div>
@@ -144,6 +146,24 @@ export default function InscricaoRetorno({ id, onEntrar, onFechar }) {
         {!conta && <button className="insc-fechar" onClick={onFechar} aria-label="Fechar">✕</button>}
         {corpo}
         {erro && info && <p className="lp-form-erro" role="alert">{erro}</p>}
+      </div>
+    </div>
+  )
+}
+
+// Parceria: curso de Matemática do Adilson Júnior (aparece depois que o aluno escolhe o assessor)
+const ZAP_ADILSON = '558496226306'
+function ParceriaAdilson() {
+  const msg = 'Olá, Adilson! Acabei de entrar na Assessoria J&C e quero saber da condição especial do seu curso de Matemática para alunos da assessoria.'
+  return (
+    <div className="insc-parceria">
+      <img className="insc-parceria-foto" src="/parceiros/adilson.jpg" alt="Professor Adilson Júnior" />
+      <div className="insc-parceria-corpo">
+        <span className="insc-parceria-selo">💙 Parceria J&C</span>
+        <img className="insc-parceria-logo" src="/parceiros/adilson-logo.png" alt="Adilson Júnior Matemática" />
+        <p><b>Curso on-line de Matemática do Adilson Júnior</b>, turma 2027. O curso dele teve <b>4 aprovações em Medicina em 2026</b>, em federais.</p>
+        <p className="insc-parceria-pequeno">Como aluno(a) da J&C, você tem condição especial para fechar o curso também.</p>
+        <a className="lp-botao lp-botao-cheio insc-parceria-botao" href={`https://wa.me/${ZAP_ADILSON}?text=${encodeURIComponent(msg)}`} target="_blank" rel="noreferrer">Falar com o Adilson no WhatsApp →</a>
       </div>
     </div>
   )

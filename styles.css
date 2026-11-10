@@ -2345,3 +2345,12 @@ main.conteudo { padding: 22px clamp(16px, 3vw, 32px) 56px; border-bottom: 0; gap
 .insc-assessor.esgotado .insc-escolher { background: #9a9a9a; border-color: #9a9a9a; }
 .lp-assessor-escolhido { display: flex; gap: 12px; align-items: center; justify-content: space-between; background: #e9f6c8; color: #1d3a10; border: 2px solid var(--lp-tinta, #15231c); border-radius: 16px; padding: 12px 16px; font-size: 15px; }
 .lp-link { background: none; border: 0; color: inherit; text-decoration: underline; font: inherit; font-weight: 700; cursor: pointer; white-space: nowrap; }
+.insc-parceria { display: flex; gap: 16px; margin: 18px 0; padding: 14px; border-radius: 22px; background: radial-gradient(circle at 80% 10%, #1d4bc8, #0b1f5e 55%, #050b22); color: #f4f7ff; text-align: left; align-items: stretch; }
+.insc-parceria-foto { width: 120px; min-height: 150px; object-fit: cover; object-position: 50% 20%; border-radius: 16px; border: 2px solid #5b8cff; flex: 0 0 120px; }
+.insc-parceria-corpo { display: flex; flex-direction: column; gap: 8px; }
+.insc-parceria-corpo p { margin: 0; font-size: 14px; line-height: 1.4; }
+.insc-parceria-selo { align-self: flex-start; font-size: 12px; font-weight: 800; background: #d7f26b; color: #0b120e; padding: 3px 10px; border-radius: 999px; }
+.insc-parceria-logo { height: 44px; width: auto; align-self: flex-start; }
+.insc-parceria-pequeno { opacity: 0.8; font-size: 13px !important; }
+.insc-parceria-botao { align-self: flex-start; background: #5b8cff !important; border-color: #5b8cff !important; color: #fff !important; }
+@media (max-width: 520px) { .insc-parceria { flex-direction: column; } .insc-parceria-foto { width: 100%; height: 180px; flex: none; } }

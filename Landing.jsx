@@ -263,6 +263,9 @@ export default function Landing({ onEntrar }) {
       </div>
       <FormInteresse assessor={assessor} onTirarAssessor={tirarAssessor} />
 
+      {/* Parceria: curso do Adilson Júnior */}
+      <ParceiroAdilson />
+
       {/* 10. Dúvidas */}
       <section className="lp-secao">
         <div className="lp-cabeca">
@@ -431,6 +434,46 @@ function Feedbacks({ depoimentos }) {
           </div>
         </div>
       )}
+    </section>
+  )
+}
+
+const ZAP_ADILSON = '558496226306'
+function ParceiroAdilson() {
+  const msg = 'Olá, Adilson! Vi no site da Assessoria J&C e quero saber da condição especial para fechar o seu curso de Matemática junto com a assessoria.'
+  const link = `https://wa.me/${ZAP_ADILSON}?text=${encodeURIComponent(msg)}`
+  return (
+    <section className="lp-adilson" id="adilson">
+      <div className="lp-adilson-topo">
+        <span className="lp-adilson-selo">💙 Curso isolado · Parceiro da Assessoria J&C</span>
+      </div>
+      <div className="lp-adilson-grade">
+        <div className="lp-adilson-foto">
+          <img src="/parceiros/adilson.jpg" alt="Professor Adilson Júnior" loading="lazy" />
+          <span>@adilsonjunior.prof</span>
+        </div>
+        <div className="lp-adilson-corpo">
+          <img className="lp-adilson-logo" src="/parceiros/adilson-logo.png" alt="Adilson Júnior Matemática" loading="lazy" />
+          <h2>J&C <b>+</b> Adilson Júnior <em>Matemática</em></h2>
+          <p className="lp-adilson-lead">Ele ensina a Matemática. A gente organiza o resto do seu estudo.</p>
+          <div className="lp-adilson-num">
+            <strong>4</strong>
+            <div><b>aprovações em Medicina</b><span>em 2026, em universidades públicas, com o curso do Adilson 🩺</span></div>
+          </div>
+          <ul className="lp-adilson-lista">
+            <li>📐 Curso on-line de Matemática, turma 2027</li>
+            <li>🎯 Matemática do ENEM com quem já levou aluno para Medicina</li>
+            <li>🤝 Junto com um assessor J&C, você tem aula e acompanhamento</li>
+          </ul>
+        </div>
+      </div>
+      <div className="lp-adilson-cta">
+        <div>
+          <h3>Quer fechar os dois?</h3>
+          <p>Assessoria J&C + curso do Adilson têm <b>condição especial</b>. Fala direto com ele.</p>
+        </div>
+        <a className="lp-botao lp-adilson-botao" href={link} target="_blank" rel="noreferrer">💬 Falar com o Adilson no WhatsApp</a>
+      </div>
     </section>
   )
 }

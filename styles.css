@@ -2381,3 +2381,87 @@ main.conteudo { padding: 22px clamp(16px, 3vw, 32px) 56px; border-bottom: 0; gap
 .lp-adilson-cta p { margin: 4px 0 0; font-size: 16px; color: #0b120e; }
 .lp-adilson-botao { background: #1238b8 !important; color: #fff !important; border-color: #0b120e !important; }
 @media (max-width: 720px) { .lp-adilson-grade { grid-template-columns: 1fr; } .lp-adilson-foto { aspect-ratio: 1 / 1; } .lp-adilson-cta { flex-direction: column; align-items: stretch; text-align: center; } }
+
+/* =====================================================================
+   SITE VIVO (interativo.js): movimento em todo o site, sem mudar comandos
+   ===================================================================== */
+.vivo-barra { position: fixed; inset: 0 0 auto 0; height: 5px; z-index: 9999; transform-origin: 0 50%; transform: scaleX(0); background: linear-gradient(90deg, #1f5f4a, #d6f36b 60%, #f2b134); pointer-events: none; transition: opacity .3s; }
+.vivo-luz { position: fixed; left: -210px; top: -210px; width: 420px; height: 420px; border-radius: 50%; z-index: 9998; pointer-events: none; opacity: 0; background: radial-gradient(closest-side, rgba(214,243,107,.34), rgba(214,243,107,0)); mix-blend-mode: multiply; transition: opacity .4s; will-change: transform; }
+
+/* surgir ao rolar (usa translate/scale, que somam com o transform de cada peça) */
+.vivo .rv { opacity: 0; translate: 0 46px; scale: .92; filter: blur(6px); transition: opacity .8s ease var(--rv-atraso, 0ms), translate .9s cubic-bezier(.16,1,.3,1) var(--rv-atraso, 0ms), scale .9s cubic-bezier(.16,1,.3,1) var(--rv-atraso, 0ms), filter .7s ease var(--rv-atraso, 0ms), transform .25s ease, box-shadow .25s ease; }
+.vivo .rv:nth-child(odd) { translate: -26px 46px; }
+.vivo .rv:nth-child(even) { translate: 26px 46px; }
+.vivo .rv.lp-cabeca, .vivo .rv.as-cabeca { translate: 0 34px; scale: 1; }
+.vivo .rv.rv-in { opacity: 1; translate: 0 0; scale: 1; filter: none; }
+@media print { .vivo .rv { opacity: 1; translate: none; scale: 1; filter: none; } .vivo-barra, .vivo-luz { display: none; } }
+
+/* inclinação 3D seguindo o mouse */
+.vivo .tilt.tilt { transform: perspective(900px) rotateX(calc(var(--ty, 0) * 1deg)) rotateY(calc(var(--tx, 0) * 1deg)) translateZ(14px); transition: transform .12s ease-out, box-shadow .2s ease; z-index: 2; }
+.vivo .lp .tilt.tilt, .vivo .as .tilt.tilt, .vivo .insc-assessor.tilt { box-shadow: calc(var(--tx, 0) * -1.3px + 6px) calc(var(--ty, 0) * 1.3px + 10px) 0 var(--lp-tinta, #14231d); }
+.vivo .mini-numero, .vivo .resumo-cartoes > *, .vivo .login-moldura { transition: transform .3s ease, box-shadow .3s ease; }
+.vivo .mini-numero.tilt, .vivo .resumo-cartoes > .tilt { box-shadow: 0 14px 30px -12px color-mix(in srgb, var(--primaria) 45%, transparent); }
+
+/* botões */
+.vivo .lp-botao, .vivo .as-botao, .vivo .lp-zap-fixo { transition: transform .2s ease, box-shadow .2s ease, translate .25s cubic-bezier(.2,.9,.3,1.4), background .2s, border-color .2s; }
+.vivo .lp-botao:active, .vivo .as-botao:active { scale: .95; }
+.vivo .lp-botao-cheio, .vivo .as-botao:not(.as-botao-contorno) { background-image: linear-gradient(110deg, transparent 35%, rgba(255,255,255,.28) 50%, transparent 65%); background-size: 250% 100%; background-position: 120% 0; background-repeat: no-repeat; animation: vivo-brilho 3.6s ease-in-out infinite; }
+@keyframes vivo-brilho { 0%, 55% { background-position: 120% 0; } 100% { background-position: -60% 0; } }
+.vivo .lp-zap-fixo { animation: vivo-pulso 2.4s ease-out infinite; }
+@keyframes vivo-pulso { 0% { outline: 0 solid rgba(37,211,102,.55); outline-offset: 0; } 100% { outline: 14px solid rgba(37,211,102,0); outline-offset: 2px; } }
+.vivo .lp-chip { transition: transform .18s cubic-bezier(.3,1.6,.5,1), background .15s, color .15s; }
+.vivo .lp-chip:hover { transform: translateY(-3px) rotate(-2deg); }
+.vivo .lp-chip.ativo { animation: vivo-pop .35s cubic-bezier(.3,1.8,.5,1); }
+@keyframes vivo-pop { 0% { scale: .85; } 60% { scale: 1.1; } }
+.vivo .lp-faq details, .vivo .as-faq details { transition: transform .2s ease, box-shadow .2s ease; }
+.vivo .lp-faq details:hover, .vivo .as-faq details:hover { transform: translateX(6px); }
+.vivo .lp-faq details[open] > :not(summary), .vivo .as-faq details[open] > :not(summary) { animation: vivo-abre .45s cubic-bezier(.2,.9,.2,1); transform-origin: 50% 0; }
+@keyframes vivo-abre { from { opacity: 0; transform: perspective(700px) rotateX(-50deg); } }
+.vivo .lp-topo { backdrop-filter: blur(12px); }
+.vivo .lp-marca-duo img, .vivo .as-marca-duo img { transition: transform .3s cubic-bezier(.3,1.6,.5,1); }
+.vivo .lp-marca:hover .lp-marca-duo img:first-child, .vivo .as-marca:hover .as-marca-duo img:first-child { transform: rotate(-12deg) scale(1.15); }
+.vivo .lp-marca:hover .lp-marca-duo img + img, .vivo .as-marca:hover .as-marca-duo img + img { transform: rotate(12deg) scale(1.15); }
+.vivo .as-tempo-ponto { animation: vivo-ponto 2.6s ease-in-out infinite; }
+.vivo .as-tempo li:nth-child(2) .as-tempo-ponto { animation-delay: .5s; }
+.vivo .as-tempo li:nth-child(3) .as-tempo-ponto { animation-delay: 1s; }
+@keyframes vivo-ponto { 0%, 100% { scale: 1; } 50% { scale: 1.18; } }
+.vivo .as-icone { display: inline-block; transition: transform .35s cubic-bezier(.3,1.8,.5,1); }
+.vivo .as-card:hover .as-icone { transform: translateZ(40px) scale(1.25) rotate(-8deg); }
+.vivo .as-card, .vivo .lp-socio, .vivo .lp-mentor { transform-style: preserve-3d; }
+
+/* ---------- Área interna ---------- */
+.vivo .conteudo > *, .vivo .conteudo .cartao, .vivo .login-moldura { animation: vivo-chega .55s cubic-bezier(.16,1,.3,1) backwards; }
+.vivo .conteudo .cartao:nth-child(2) { animation-delay: .06s; }
+.vivo .conteudo .cartao:nth-child(3) { animation-delay: .12s; }
+.vivo .conteudo .cartao:nth-child(4) { animation-delay: .18s; }
+.vivo .conteudo .cartao:nth-child(5) { animation-delay: .24s; }
+.vivo .conteudo .cartao:nth-child(n+6) { animation-delay: .3s; }
+@keyframes vivo-chega { from { opacity: 0; translate: 0 22px; scale: .97; } }
+.vivo .cartao { transition: box-shadow .25s ease, border-color .25s ease; }
+.vivo .cartao:hover { border-color: color-mix(in srgb, var(--primaria) 45%, var(--borda)); box-shadow: 0 18px 36px -20px color-mix(in srgb, var(--primaria) 55%, transparent), var(--sombra); }
+.vivo .botao { transition: transform .15s cubic-bezier(.3,1.6,.5,1), box-shadow .2s ease, filter .15s, background .15s, color .15s, border-color .15s; }
+.vivo .botao:hover:not(:disabled) { transform: translateY(-2px); }
+.vivo .botao.primario:hover:not(:disabled) { box-shadow: 0 10px 20px -10px var(--primaria); }
+.vivo .botao:active:not(:disabled) { transform: translateY(1px) scale(.96); }
+.vivo .menu-item { position: relative; transition: transform .2s cubic-bezier(.3,1.6,.5,1), background .2s, color .2s; }
+.vivo .menu-item:hover { transform: translateX(5px); }
+.vivo .menu-item > span:first-child { display: inline-block; transition: transform .3s cubic-bezier(.3,1.8,.5,1); }
+.vivo .menu-item:hover > span:first-child { transform: scale(1.35) rotate(-10deg); }
+.vivo .menu-item.ativo > span:first-child { animation: vivo-pop .45s cubic-bezier(.3,1.8,.5,1); }
+.vivo .menu-item.ativo { box-shadow: inset 4px 0 0 var(--primaria); }
+.vivo .menu-badge { animation: vivo-ponto 1.6s ease-in-out infinite; }
+.vivo .topo-marca .avatar, .vivo .botao-perfil .avatar { transition: transform .35s cubic-bezier(.3,1.8,.5,1); }
+.vivo .topo-marca:hover .avatar { transform: rotate(-10deg) scale(1.12); }
+.vivo .botao-perfil:hover .avatar { transform: scale(1.15); }
+.vivo .topo { animation: vivo-desce .6s cubic-bezier(.16,1,.3,1) backwards; }
+@keyframes vivo-desce { from { translate: 0 -100%; } }
+.vivo .menu-grupo { animation: vivo-lado .5s cubic-bezier(.16,1,.3,1) backwards; }
+.vivo .menu-grupo:nth-child(2) { animation-delay: .07s; }
+.vivo .menu-grupo:nth-child(3) { animation-delay: .14s; }
+.vivo .menu-grupo:nth-child(n+4) { animation-delay: .21s; }
+@keyframes vivo-lado { from { opacity: 0; translate: -18px 0; } }
+.vivo .aviso-cobranca { transition: transform .2s cubic-bezier(.3,1.6,.5,1); }
+.vivo .aviso-cobranca:hover { transform: translateY(-2px) scale(1.01); }
+.vivo .login-retrato img { animation: vivo-zoom 14s ease-in-out infinite alternate; }
+@keyframes vivo-zoom { to { scale: 1.08; } }
+.vivo input:focus-visible, .vivo textarea:focus-visible, .vivo select:focus-visible { transition: box-shadow .2s ease; box-shadow: 0 0 0 4px color-mix(in srgb, var(--primaria, #1f5f4a) 22%, transparent); }

@@ -457,8 +457,8 @@ function ParceiroAdilson() {
           <h2>J&C <b>+</b> Adilson Júnior <em>Matemática</em></h2>
           <p className="lp-adilson-lead">Ele ensina a Matemática. A gente organiza o resto do seu estudo.</p>
           <div className="lp-adilson-num">
-            <strong>4</strong>
-            <div><b>aprovações em Medicina</b><span>em 2026, em universidades públicas, com o curso do Adilson 🩺</span></div>
+            <strong>🩺</strong>
+            <div><b>Aprovações em Medicina</b><span>em 2026, em universidades públicas, com o curso do Adilson</span></div>
           </div>
           <ul className="lp-adilson-lista">
             <li>📐 Curso on-line de Matemática, turma 2027</li>

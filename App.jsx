@@ -33,6 +33,7 @@ import SimuladorProva from './SimuladorProva'
 import SimuladoEnem from './SimuladoEnem'
 import Ranking from './Ranking'
 import PainelAluno from './Painel'
+import VisaoGeral from './VisaoGeral'
 import XpNotificacoes from './XpNotificacoes'
 import { precisaVoce } from './cobranca'
 
@@ -217,6 +218,7 @@ function Painel({ usuario }) {
     {
       titulo: 'Estudos',
       itens: [
+        ...(ehMentor ? [['visao-geral', '👀', 'Todos os alunos']] : []),
         ['painel', '📊', ehMentor ? 'Painel do aluno' : 'Meu painel'],
         ['trilha', '🧭', ehMentor ? 'Trilha de estudos' : 'Minha Trilha'],
         ['ranking', '🏆', 'Ranking'],
@@ -273,6 +275,8 @@ function Painel({ usuario }) {
     conteudo = <BancoQuestoes perfil={perfil} ehMentor={ehMentor} alunos={alunos} />
   } else if (abaAtual === 'mentores') {
     conteudo = <Mentores onMudou={carregarEquipe} />
+  } else if (abaAtual === 'visao-geral') {
+    conteudo = <VisaoGeral equipe={equipe} onAbrir={(id, a) => { escolherAluno(id); setAba(a) }} />
   } else if (abaAtual === 'equipe') {
     conteudo = <Equipe meuId={perfil.id} ehCeo={ehCeo} onMudou={() => { carregarAlunos(); carregarEquipe() }} />
   } else if (abaAtual === 'financeiro') {

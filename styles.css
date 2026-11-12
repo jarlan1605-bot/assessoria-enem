@@ -2660,3 +2660,45 @@ div.q-alt { cursor: default; }
 .pn-sims { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .pn-sims li { display: flex; align-items: center; gap: 10px; }
 .pn-sims li span:first-child { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---------- Visão geral dos alunos (VisaoGeral.jsx) e histórico ---------- */
+.vg { gap: 14px; }
+.vg-alerta { border-color: #f2b134; background: color-mix(in srgb, #f2b134 10%, var(--superficie)); line-height: 1.8; }
+.vg-alerta .link { font-size: 14px; color: var(--texto); }
+.vg-barra { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.vg-barra input[type="search"] { flex: 1 1 200px; min-width: 0; }
+.vg-periodos { display: inline-flex; background: var(--superficie-2); border-radius: 999px; padding: 3px; gap: 2px; flex-wrap: wrap; }
+.vg-periodos button { border: 0; background: none; font: inherit; font-size: 13px; font-weight: 700; padding: 6px 12px; border-radius: 999px; cursor: pointer; color: var(--suave); }
+.vg-periodos button.ativo { background: #14231d; color: #d6f36b; }
+.vg-check { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; color: var(--suave); }
+.vg-tabela-caixa { overflow-x: auto; padding: 0; }
+.vg-tabela { width: 100%; border-collapse: collapse; font-size: 14px; }
+.vg-tabela th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .03em; color: var(--suave); padding: 12px 10px; border-bottom: 1px solid var(--borda); white-space: nowrap; cursor: pointer; user-select: none; position: sticky; top: 0; background: var(--superficie); }
+.vg-tabela th.vg-ord { color: var(--texto); }
+.vg-tabela td { padding: 10px; border-bottom: 1px solid var(--borda); vertical-align: top; white-space: nowrap; }
+.vg-tabela td small { display: block; font-size: 11px; }
+.vg-tabela td strong { display: block; max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
+.vg-tabela tbody tr { cursor: pointer; transition: background .12s; }
+.vg-tabela tbody tr:hover { background: color-mix(in srgb, var(--primaria) 6%, transparent); }
+.vg-tabela tr.vg-suspenso { opacity: .55; }
+.vg-parado { color: var(--perigo); font-weight: 700; }
+.vg-trilha { width: 80px; height: 6px; border-radius: 999px; background: var(--superficie-2); overflow: hidden; margin: 6px 0 3px; }
+.vg-trilha i { display: block; height: 100%; background: var(--primaria); border-radius: inherit; }
+.pn-sim { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px; border-radius: 10px; cursor: pointer; }
+.pn-sim:hover:not(:disabled) { background: var(--superficie-2); }
+.pn-sim:disabled { cursor: default; }
+.pn-sim span:first-child { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pn-filtro { margin: 8px 0 12px; }
+.pn-hist tbody tr { cursor: default; }
+.pn-hist tr.pn-errada td:nth-child(5) { color: var(--perigo); font-weight: 700; }
+.pn-pag { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; }
+.vg .pn-grade { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.vg, .pn { min-width: 0; max-width: 100%; }
+.vg-tabela-caixa { max-width: calc(100vw - 32px); }
+@media (min-width: 900px) { .vg-tabela-caixa { max-width: 100%; } }
+@media (max-width: 899px) { .pn .vg-tabela-caixa { max-width: calc(100vw - 76px); } }
+.pn-barras { grid-template-columns: repeat(14, minmax(0, 1fr)); }
+@media (max-width: 520px) { .pn-barras { gap: 3px; } .pn-barra-n { font-size: 9px; } }
+.pn > *, .pn-sims li, .pn-sim { min-width: 0; }
+.pn-sim span:nth-child(2) { white-space: nowrap; }
+@media (max-width: 520px) { .pn-sim { flex-wrap: wrap; } .pn-sim span:first-child { flex-basis: 100%; } }

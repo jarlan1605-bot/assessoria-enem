@@ -190,7 +190,7 @@ function Marcar({ g, onSair }) {
 }
 
 // ---------------------------------------------------------------------------------
-function Correcao({ respostaId, onVoltar }) {
+export function Correcao({ respostaId, onVoltar }) {
   const [r, setR] = useState(null)
   useEffect(() => {
     supabase.from('gabarito_respostas').select('*').eq('id', respostaId).single().then(({ data }) => setR(data))

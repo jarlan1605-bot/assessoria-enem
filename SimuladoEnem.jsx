@@ -539,7 +539,7 @@ function PorArea({ por }) {
 }
 
 // ---------------------------------------------------------------------------------
-function VerResultado({ tentativaId, resumo, onVoltar }) {
+export function VerResultado({ tentativaId, resumo, onVoltar }) {
   const [t, setT] = useState(null)
   const [qs, setQs] = useState([])
   const [aberta, setAberta] = useState(null)

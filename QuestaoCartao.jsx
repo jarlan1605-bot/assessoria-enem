@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { TIPOS_ERRO } from './constants'
-import { LETRAS, DIFICULDADES, nomeArea, corArea, partesDoTexto, imagensCitadas } from './questoes-util'
+import { LETRAS, DIFICULDADES, nomeArea, corArea, partesDoTexto, imagensCitadas, estilosDoTexto } from './questoes-util'
 
 const dataBR = (iso) => (iso ? iso.slice(0, 10).split('-').reverse().slice(0, 2).join('/') : '')
 
@@ -12,7 +12,7 @@ export function TextoQuestao({ texto, imagens = [], className = 'q-texto' }) {
         p.img !== undefined ? (
           imagens[p.img] ? <img key={i} className="q-img" src={imagens[p.img]} alt={`Figura ${p.img + 1}`} loading="lazy" /> : null
         ) : (
-          <span key={i}>{p.t}</span>
+          <span key={i}>{estilosDoTexto(p.t).map((e, j) => (e.i || e.b ? <span key={j} style={{ fontStyle: e.i ? 'italic' : undefined, fontWeight: e.b ? 700 : undefined }}>{e.t}</span> : e.t))}</span>
         )
       )}
     </div>
@@ -87,6 +87,9 @@ export default function QuestaoCartao({
   }
 
   const podeEscolher = !ehMentor && !anulada && !respondida
+  // alternativas que estão dentro da imagem da questão (PDF): o botão mostra só a letra
+  const letrasDaQuestao = LETRAS.filter((L) => q.alternativas?.[L] !== undefined && q.alternativas?.[L] !== '')
+  const soLetras = letrasDaQuestao.length > 0 && letrasDaQuestao.every((L) => q.alternativas[L] === '{{alt}}')
 
   return (
     <article className={compacto ? 'cartao questao compacta' : 'cartao questao'} style={{ '--cor': corArea(q.area) }}>
@@ -107,7 +110,7 @@ export default function QuestaoCartao({
       <TextoQuestao texto={q.enunciado} imagens={q.imagens} />
       {soltas.map((src) => <img key={src} className="q-img" src={src} alt="Figura da questão" loading="lazy" />)}
 
-      <div className="q-alts" role={podeEscolher ? 'radiogroup' : undefined} aria-label="Alternativas">
+      <div className={soLetras ? 'q-alts q-alts-letras' : 'q-alts'} role={podeEscolher ? 'radiogroup' : undefined} aria-label="Alternativas">
         {LETRAS.filter((L) => q.alternativas?.[L] !== undefined && q.alternativas?.[L] !== '').map((L) => (
           <button
             key={L}
@@ -119,7 +122,7 @@ export default function QuestaoCartao({
             onClick={() => setEscolha(L)}
           >
             <span className="q-letra">{L}</span>
-            <TextoQuestao texto={q.alternativas[L]} imagens={q.imagens} className="q-alt-texto" />
+            {q.alternativas[L] === '{{alt}}' ? null : <TextoQuestao texto={q.alternativas[L]} imagens={q.imagens} className="q-alt-texto" />}
             {ehMentor && estat?.marcadas?.[L] > 0 && <span className="q-alt-pct">{Math.round((estat.marcadas[L] / estat.n) * 100)}%</span>}
           </button>
         ))}

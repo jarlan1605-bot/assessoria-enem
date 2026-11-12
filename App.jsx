@@ -30,6 +30,7 @@ import Materiais from './Materiais'
 import Interessados from './Interessados'
 import PagarMensalidade from './PagarMensalidade'
 import SimuladorProva from './SimuladorProva'
+import SimuladoEnem from './SimuladoEnem'
 import { precisaVoce } from './cobranca'
 
 export default function App() {
@@ -209,6 +210,7 @@ function Painel({ usuario }) {
         ['horario', '🗓️', 'Horário'],
         ['simulados', '📝', 'Simulados'],
         ['questoes', '🧠', 'Banco de questões'],
+        ['simulado-enem', '🏁', 'Simulado ENEM'],
         ['materiais', '📚', 'Simulados e provas'],
         ['cronometro', '⏱️', 'Simulador do ENEM'],
         ['erros', '📕', 'Caderno de erros'],
@@ -244,6 +246,8 @@ function Painel({ usuario }) {
     conteudo = <Videoaulas ehMentor={ehMentor} ehCeo={ehCeo} meuId={perfil.id} equipe={equipe} />
   } else if (abaAtual === 'cronometro') {
     conteudo = <SimuladorProva />
+  } else if (abaAtual === 'simulado-enem') {
+    conteudo = <SimuladoEnem perfil={perfil} ehMentor={ehMentor} />
   } else if (abaAtual === 'interessados') {
     conteudo = <Interessados equipe={equipe} />
   } else if (abaAtual === 'materiais') {

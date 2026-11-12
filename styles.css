@@ -2471,3 +2471,52 @@ main.conteudo { padding: 22px clamp(16px, 3vw, 32px) 56px; border-bottom: 0; gap
 .q-alts-letras::before { content: 'Marque:'; font-size: 13px; font-weight: 700; color: var(--suave); margin-right: 2px; }
 .q-alts-letras .q-alt { width: auto; padding: 8px 12px; gap: 8px; align-items: center; }
 .q-alts-letras .q-alt-pct { margin-left: 2px; }
+
+/* ---------- Simulado ENEM (SimuladoEnem.jsx) ---------- */
+.se { gap: 14px; }
+.se-bloco h3 { margin: 0 0 8px; }
+.se-cabeca { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.se-lista { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+.se-item { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border: 1.5px solid var(--borda); border-radius: 14px; background: var(--superficie); }
+.se-item > div:first-child { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1 1 260px; }
+.se-item.ao-vivo { border-color: var(--primaria); box-shadow: 0 0 0 4px color-mix(in srgb, var(--primaria) 15%, transparent); }
+.se-contagem { font-variant-numeric: tabular-nums; }
+.se-atraso { color: #c92a2a; font-weight: 700; }
+.se-pulsa { animation: se-pulsa 1.6s ease-in-out infinite; }
+@keyframes se-pulsa { 50% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--primaria) 18%, transparent); } }
+.se-aviso { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; justify-content: space-between; border-color: var(--primaria); }
+.se-form { display: flex; flex-direction: column; gap: 12px; }
+.se-form label { display: flex; flex-direction: column; gap: 6px; font-weight: 600; }
+.se-escolha { display: flex; flex-direction: column; gap: 6px; }
+.se-escolha select { width: 100%; padding: 6px; border-radius: 10px; }
+.se-chips { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.se-tempo input { max-width: 160px; }
+.se-duas { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.se-novo { margin: 10px 0 14px; padding: 14px; border: 1.5px dashed var(--borda); border-radius: 14px; }
+.se-prova { gap: 12px; }
+.se-barra { position: sticky; top: 62px; z-index: 4; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 10px 14px; border-radius: 14px; background: var(--superficie); border: 1.5px solid var(--borda); box-shadow: var(--sombra); }
+.se-titulo { flex: 1 1 200px; min-width: 0; }
+.se-relogio { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.se-barra.urgente { border-color: #c92a2a; }
+.se-barra.urgente .se-relogio { color: #c92a2a; animation: se-pisca 1s steps(2) infinite; }
+@keyframes se-pisca { 50% { opacity: 0.45; } }
+.se-grade { display: flex; flex-wrap: wrap; gap: 6px; }
+.se-num { width: 36px; height: 34px; border-radius: 9px; border: 1.5px solid var(--borda); background: var(--superficie); color: var(--texto); font: inherit; font-weight: 700; font-size: 13px; cursor: pointer; box-shadow: inset 0 -3px 0 var(--cor, transparent); }
+.se-num.feita { background: color-mix(in srgb, var(--primaria) 18%, var(--superficie)); border-color: var(--primaria); }
+.se-num.atual { outline: 3px solid var(--primaria); outline-offset: 1px; }
+.se-num.certa { background: #2f9e44; border-color: #2f9e44; color: #fff; }
+.se-num.errada { background: #e03131; border-color: #e03131; color: #fff; }
+.se-num.anulada { background: #adb5bd; border-color: #adb5bd; color: #fff; }
+.se-questao .linha-botoes { justify-content: space-between; margin-top: 10px; }
+.se-final { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.se-emoji { font-size: 44px; }
+.se-nota { font-size: 20px; margin: 0; }
+.se-nota b { font-size: 42px; color: var(--primaria); }
+.se-areas { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.se-area { display: flex; flex-direction: column; align-items: center; padding: 8px 14px; border-radius: 12px; border: 1.5px solid var(--cor); min-width: 110px; }
+.se-area b { font-size: 20px; color: var(--cor); }
+.se-tabela-envolve { width: 100%; overflow-x: auto; }
+.se-tabela { width: 100%; border-collapse: collapse; font-size: 14px; }
+.se-tabela th, .se-tabela td { padding: 7px 8px; border-bottom: 1px solid var(--borda); text-align: left; white-space: nowrap; }
+.se-tabela th { color: var(--suave); font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+div.q-alt { cursor: default; }

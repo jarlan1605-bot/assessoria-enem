@@ -321,7 +321,7 @@ textarea { resize: vertical; }
 
 .lista-dia { max-height: 560px; overflow-y: auto; }
 .lista-dia-topo { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
-.lista-dia-topo h2 { margin: 0; text-transform: capitalize; }
+.lista-dia-topo h2 { margin: 0; }
 .grupo-dia + .grupo-dia { margin-top: 14px; }
 .grupo-titulo { font-size: 13px; font-weight: 800; color: var(--suave); text-transform: capitalize; margin: 0 0 6px; }
 
@@ -2585,3 +2585,16 @@ div.q-alt { cursor: default; }
 .rk-ultimos li { display: flex; gap: 10px; align-items: center; }
 .rk-ultimos li span:first-child { flex: 1; }
 .rk-ultimos b { color: #2f9e44; }
+.rk-mes-destaques { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.rk-campeao { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 30px 14px 16px; border-radius: 18px; text-align: center; background: linear-gradient(160deg, #0f3a2c, #1f5f4a); color: #f7f2e8; border: 2px solid #f2b134; box-shadow: 0 16px 32px -18px rgba(0,0,0,.5); }
+.rk-campeao strong { font-size: 20px; color: #f2b134; }
+.rk-campeao .avatar { box-shadow: 0 0 0 4px #f2b134; }
+.rk-campeao-faixa { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); white-space: nowrap; background: #f2b134; color: #14231d; font-weight: 800; font-size: 12px; padding: 5px 12px; border-radius: 999px; }
+.rk-campeao.eu, .rk-lider.eu { outline: 3px solid #d6f36b; }
+.rk-lider { display: flex; flex-direction: column; justify-content: center; gap: 8px; padding: 14px; border-radius: 18px; border: 1.5px dashed var(--borda); }
+.rk-lider-linha { display: flex; align-items: center; gap: 10px; }
+.rk-lider-linha div, .rk-galeria-item div { display: flex; flex-direction: column; }
+.rk-galeria { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; margin-top: 12px; }
+.rk-galeria-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 12px; background: var(--superficie-2); }
+.rk-galeria-item span { }
+.rk-galeria-item.eu { outline: 2px solid var(--primaria); }

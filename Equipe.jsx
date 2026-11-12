@@ -364,7 +364,7 @@ function FormCadastro({ tipoInicial, mentores, meuId, ehCeo, onFechar, onCriado 
     setSalvando(true)
     setErro('')
     try {
-      await api('criar', {
+      const r = await api('criar', {
         papel,
         nome: nome.trim(),
         email: email.trim(),
@@ -372,7 +372,7 @@ function FormCadastro({ tipoInicial, mentores, meuId, ehCeo, onFechar, onCriado 
         mentor_id: papel === 'aluno' ? mentorId : undefined,
         limite_mensal: papel === 'aluno' ? Number(limite) : undefined,
       })
-      onCriado({ nome: nome.trim(), email: email.trim().toLowerCase(), senha, papel })
+      onCriado({ nome: nome.trim(), email: email.trim().toLowerCase(), senha, papel, emailEnviado: r?.emailEnviado })
     } catch (err) {
       setErro(err.message)
     }
@@ -457,7 +457,8 @@ function CartaoCredenciais({ dados, onFechar }) {
         <h2>{dados.novaSenha ? '🔑 Senha redefinida' : `✅ ${dados.papel === 'mentor' ? 'Mentor' : 'Aluno'} cadastrado`}</h2>
         <button className="botao fantasma pequeno" onClick={onFechar} aria-label="Fechar">✕</button>
       </div>
-      <p className="suave pequeno">Envie estes dados para {dados.nome || 'a pessoa'}. A senha não aparece de novo depois que você fechar.</p>
+      {dados.emailEnviado && <p className="aviso-ok">📧 Os dados de acesso já foram enviados para {dados.email}.</p>}
+      <p className="suave pequeno">{dados.emailEnviado ? 'Se quiser, mande também pelo WhatsApp.' : `Envie estes dados para ${dados.nome || 'a pessoa'}.`} A senha não aparece de novo depois que você fechar.</p>
       <pre className="credenciais-texto">{mensagem}</pre>
       <div className="linha-botoes">
         <a className="botao" href={`https://wa.me/?text=${encodeURIComponent(mensagem)}`} target="_blank" rel="noreferrer">Enviar no WhatsApp</a>

@@ -70,6 +70,7 @@ export default function InscricaoRetorno({ id, onEntrar, onFechar }) {
           <div><small>Login (e-mail)</small><strong>{conta.email}</strong></div>
           <div><small>Senha</small><strong className="insc-senha">{conta.senha}</strong></div>
         </div>
+        {conta.emailEnviado && <p className="insc-aviso">📧 Também mandamos esses dados para <b>{conta.email}</b>.</p>}
         <p className="insc-aviso">📸 Tire um print desta tela. Depois de entrar, você pode trocar a senha em <b>Meu perfil → Trocar senha</b>.</p>
         <ParceriaAdilson />
         <div className="insc-botoes">

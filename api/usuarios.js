@@ -2,6 +2,7 @@
 // O CEO faz tudo. O mentor só cadastra alunos para si mesmo e troca a senha dos próprios alunos.
 // A chave secreta fica SÓ aqui no servidor (variável SUPABASE_SERVICE_ROLE_KEY no Vercel) e nunca vai para o navegador.
 import { createClient } from '@supabase/supabase-js'
+import { enviarBoasVindas } from './_email.js'
 
 const URL_SUPABASE = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
 const CHAVE_SECRETA = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -80,7 +81,13 @@ export default async function handler(req, res) {
         await admin.auth.admin.deleteUser(id)
         return responder(res, 500, { erro: 'Não foi possível salvar o perfil: ' + erroPerfil.message })
       }
-      return responder(res, 200, { ok: true, id })
+      let mentorNome = ''
+      if (papel === 'aluno' && mentorId) {
+        const { data: m } = await admin.from('perfis').select('nome').eq('id', mentorId).single()
+        mentorNome = m?.nome || ''
+      }
+      const emailEnviado = await enviarBoasVindas({ para: email, nome, email, senha, papel, assessor: mentorNome })
+      return responder(res, 200, { ok: true, id, emailEnviado })
     }
 
     // 3) Redefinir senha de alguém

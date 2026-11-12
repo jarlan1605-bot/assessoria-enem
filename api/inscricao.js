@@ -6,7 +6,7 @@
 // Variáveis no Vercel: SUPABASE_SERVICE_ROLE_KEY e MP_ACCESS_TOKEN (VALOR_INSCRICAO é opcional, padrão 1800).
 import { randomInt } from 'node:crypto'
 import { createClient } from '@supabase/supabase-js'
-import { avisarEquipe } from './_email.js'
+import { avisarEquipe, enviarBoasVindas } from './_email.js'
 import { mpConfigurado, criarPagamentoInscricao, conferirInscricao, urlDoSite, VALOR_INSCRICAO } from './_mercadopago.js'
 
 const URL_SUPABASE = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
@@ -183,7 +183,8 @@ export default async function handler(req, res) {
         return responder(res, 500, { erro: 'Não foi possível salvar o perfil: ' + erroPerfil.message })
       }
       await admin.from('interessados').update({ aluno_id: id, status: 'matriculado' }).eq('id', ins.id)
-      return responder(res, 200, { ok: true, email: ins.email, senha, assessor: escolhido.nome })
+      const emailEnviado = await enviarBoasVindas({ para: ins.email, nome: ins.nome, email: ins.email, senha, papel: 'aluno', assessor: escolhido.nome })
+      return responder(res, 200, { ok: true, email: ins.email, senha, assessor: escolhido.nome, emailEnviado })
     }
 
     return responder(res, 400, { erro: 'Ação desconhecida.' })

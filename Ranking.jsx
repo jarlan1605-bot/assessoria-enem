@@ -14,16 +14,33 @@ function inicioDoMes() {
   const d = new Date()
   return new Date(d.getFullYear(), d.getMonth(), 1)
 }
-const PERIODOS = [['semana', 'Esta semana'], ['mes', 'Este mês'], ['geral', 'Geral']]
+function inicioDoSemestre() {
+  const d = new Date()
+  return new Date(d.getFullYear(), d.getMonth() < 6 ? 0 : 6, 1)
+}
+function inicioDoAno() {
+  return new Date(new Date().getFullYear(), 0, 1)
+}
+const PERIODOS = [['semana', 'Semana'], ['mes', 'Mês'], ['semestre', 'Semestre'], ['ano', 'Ano'], ['geral', 'Geral']]
+const DESDE = { semana: inicioDaSemana, mes: inicioDoMes, semestre: inicioDoSemestre, ano: inicioDoAno }
+const nomeMes = (iso) => {
+  const t = new Date(iso + 'T12:00:00').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })
+  return t.charAt(0).toUpperCase() + t.slice(1)
+}
 
 export default function Ranking({ perfil, ehMentor }) {
   const [periodo, setPeriodo] = useState('semana')
   const [lista, setLista] = useState(null)
   const [eventos, setEventos] = useState([])
   const [erro, setErro] = useState('')
+  const [campeoes, setCampeoes] = useState([])
 
   useEffect(() => {
-    const desde = periodo === 'semana' ? inicioDaSemana() : periodo === 'mes' ? inicioDoMes() : null
+    supabase.rpc('alunos_do_mes', { p_meses: 12 }).then(({ data }) => setCampeoes(data ?? []))
+  }, [])
+
+  useEffect(() => {
+    const desde = DESDE[periodo] ? DESDE[periodo]() : null
     setLista(null)
     supabase.rpc('ranking_xp', { p_desde: desde ? desde.toISOString() : null }).then(({ data, error }) => {
       if (error) setErro('O ranking ainda não foi ativado no banco (arquivo xp.sql).')
@@ -72,12 +89,14 @@ export default function Ranking({ perfil, ehMentor }) {
             <span className="suave pequeno">{total.toLocaleString('pt-BR')} XP · faltam {prog.falta.toLocaleString('pt-BR')} XP para o nível {prog.nivel + 1}</span>
           </div>
           <div className="rk-stats">
-            <div><b>{posicao ? `${posicao}º` : '–'}</b><span>{PERIODOS.find((p) => p[0] === periodo)[1].toLowerCase()}</span></div>
+            <div><b>{posicao ? `${posicao}º` : '–'}</b><span>no ranking ({PERIODOS.find((p) => p[0] === periodo)[1].toLowerCase()})</span></div>
             <div><b>🔥 {seq}</b><span>dias seguidos</span></div>
             <div><b>+{hojeXp}</b><span>XP hoje</span></div>
           </div>
         </div>
       )}
+
+      {campeoes.length > 0 && <AlunoDoMes campeoes={campeoes} meuId={perfil.id} />}
 
       <div className="cartao rk-bloco">
         <div className="rk-topo">
@@ -151,5 +170,49 @@ export default function Ranking({ perfil, ehMentor }) {
         </div>
       )}
     </section>
+  )
+}
+
+// Aluno do mês: o do mês passado em destaque, o líder do mês atual e a galeria do ano
+function AlunoDoMes({ campeoes, meuId }) {
+  const atual = new Date()
+  const chaveAtual = `${atual.getFullYear()}-${String(atual.getMonth() + 1).padStart(2, '0')}-01`
+  const lider = campeoes.find((c) => c.mes === chaveAtual)
+  const passados = campeoes.filter((c) => c.mes !== chaveAtual)
+  const ultimo = passados[0]
+  return (
+    <div className="cartao rk-bloco rk-mes">
+      <h3>👑 Aluno do mês</h3>
+      <div className="rk-mes-destaques">
+        {ultimo && (
+          <div className={ultimo.aluno_id === meuId ? 'rk-campeao eu' : 'rk-campeao'}>
+            <span className="rk-campeao-faixa">Aluno do mês · {nomeMes(ultimo.mes)}</span>
+            <Avatar src={ultimo.foto_url} nome={ultimo.nome} tamanho={76} />
+            <strong>{ultimo.nome}{ultimo.aluno_id === meuId ? ' (você!)' : ''}</strong>
+            <span>{Number(ultimo.xp).toLocaleString('pt-BR')} XP no mês</span>
+          </div>
+        )}
+        {lider && (
+          <div className={lider.aluno_id === meuId ? 'rk-lider eu' : 'rk-lider'}>
+            <span className="suave pequeno">Liderando {nomeMes(lider.mes).split(' ')[0].toLowerCase()} até agora</span>
+            <div className="rk-lider-linha">
+              <Avatar src={lider.foto_url} nome={lider.nome} tamanho={44} />
+              <div><strong>{lider.nome}</strong><span className="suave pequeno">{Number(lider.xp).toLocaleString('pt-BR')} XP</span></div>
+            </div>
+            <span className="pequeno">O mês fecha no dia 1º. Ainda dá tempo de passar! 🔥</span>
+          </div>
+        )}
+      </div>
+      {passados.length > 1 && (
+        <div className="rk-galeria">
+          {passados.map((c) => (
+            <div key={c.mes} className={c.aluno_id === meuId ? 'rk-galeria-item eu' : 'rk-galeria-item'}>
+              <Avatar src={c.foto_url} nome={c.nome} tamanho={34} />
+              <div><strong>{c.nome}</strong><span className="suave pequeno">{nomeMes(c.mes)} · {Number(c.xp).toLocaleString('pt-BR')} XP</span></div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }

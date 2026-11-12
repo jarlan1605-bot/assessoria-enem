@@ -193,3 +193,27 @@ select t.aluno_id, 'trilha:' || t.conteudo, 'trilha', 'Concluiu um conteúdo da 
 from public.trilha_conteudos t join public.perfis p on p.id = t.aluno_id and p.papel = 'aluno'
 where t.progresso >= 100
 on conflict (aluno_id, chave) do nothing;
+
+-- Aluno do mês: quem mais ganhou XP em cada mês (últimos p_meses meses)
+create or replace function public.alunos_do_mes(p_meses integer default 12)
+returns table (mes date, aluno_id uuid, nome text, foto_url text, xp bigint)
+language sql stable security definer set search_path = public as $$
+  with por_mes as (
+    select date_trunc('month', e.criado_em at time zone 'America/Sao_Paulo')::date as mes, e.aluno_id, sum(e.xp) as xp
+    from public.xp_eventos e
+    join public.perfis p on p.id = e.aluno_id and p.papel = 'aluno'
+    where e.criado_em >= (date_trunc('month', now() at time zone 'America/Sao_Paulo') - make_interval(months => greatest(p_meses, 1) - 1)) at time zone 'America/Sao_Paulo'
+    group by 1, 2
+  ), ordem as (
+    select *, row_number() over (partition by mes order by xp desc, aluno_id) as n from por_mes
+  )
+  select o.mes, o.aluno_id,
+         split_part(coalesce(nullif(trim(p.nome), ''), 'Aluno'), ' ', 1)
+           || coalesce(' ' || left(nullif(split_part(trim(p.nome), ' ', 2), ''), 1) || '.', ''),
+         p.foto_url, o.xp
+  from ordem o join public.perfis p on p.id = o.aluno_id
+  where o.n = 1 and auth.uid() is not null
+  order by o.mes desc;
+$$;
+revoke execute on function public.alunos_do_mes(integer) from public, anon;
+grant execute on function public.alunos_do_mes(integer) to authenticated;

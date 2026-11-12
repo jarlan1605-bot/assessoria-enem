@@ -32,6 +32,7 @@ import PagarMensalidade from './PagarMensalidade'
 import SimuladorProva from './SimuladorProva'
 import SimuladoEnem from './SimuladoEnem'
 import Ranking from './Ranking'
+import PainelAluno from './Painel'
 import XpNotificacoes from './XpNotificacoes'
 import { precisaVoce } from './cobranca'
 
@@ -70,7 +71,7 @@ export default function App() {
 }
 
 // Abas que mostram os dados de um aluno (o mentor escolhe o aluno no seletor)
-const POR_ALUNO = ['trilha', 'pontos', 'evolucao', 'horario', 'simulados', 'erros', 'redacao', 'relatorio']
+const POR_ALUNO = ['painel', 'trilha', 'pontos', 'evolucao', 'horario', 'simulados', 'erros', 'redacao', 'relatorio']
 
 function Painel({ usuario }) {
   const [perfil, setPerfil] = useState(null)
@@ -78,7 +79,7 @@ function Painel({ usuario }) {
   const [alunos, setAlunos] = useState([])
   const [alunoId, setAlunoId] = useState(null)
   const [aba, setAbaEstado] = useState(() => {
-    try { return localStorage.getItem('abaAtual') || 'comunidade' } catch { return 'comunidade' }
+    try { return localStorage.getItem('abaAtual') || 'painel' } catch { return 'painel' }
   })
   const [trocandoSenha, setTrocandoSenha] = useState(false)
   const [editandoPerfil, setEditandoPerfil] = useState(false)
@@ -90,6 +91,16 @@ function Painel({ usuario }) {
 
   const ehCeo = perfil?.papel === 'ceo'
   const ehMentor = perfil?.papel === 'mentor' || ehCeo
+
+  // Aluno: conta o tempo na plataforma (1 minuto por vez, só com a aba aberta e visível)
+  const ehAluno = perfil?.papel === 'aluno'
+  useEffect(() => {
+    if (!ehAluno) return
+    const t = setInterval(() => {
+      if (document.visibilityState === 'visible') supabase.rpc('registrar_tempo', { p_segundos: 60 }).then(() => {}, () => {})
+    }, 60000)
+    return () => clearInterval(t)
+  }, [ehAluno])
 
   // CEO: quantos alunos precisam ser cobrados hoje (aparece no menu e num aviso)
   useEffect(() => {
@@ -206,6 +217,7 @@ function Painel({ usuario }) {
     {
       titulo: 'Estudos',
       itens: [
+        ['painel', '📊', ehMentor ? 'Painel do aluno' : 'Meu painel'],
         ['trilha', '🧭', ehMentor ? 'Trilha de estudos' : 'Minha Trilha'],
         ['ranking', '🏆', 'Ranking'],
         ['pontos', '🎯', 'Onde estão seus pontos'],
@@ -298,6 +310,7 @@ function Painel({ usuario }) {
       horario: <Horario key={k} alunoId={k} editavel={ehMentor} aluno={alunoAtual} />,
       erros: <CadernoErros key={k} alunoId={k} ehMentor={ehMentor} />,
       redacao: <Redacao key={k} alunoId={k} ehMentor={ehMentor} alunos={alunos} />,
+      painel: <PainelAluno key={k} alunoId={k} aluno={alunoAtual} ehMentor={ehMentor} irPara={setAba} />,
       trilha: <Trilha key={k} alunoId={k} aluno={alunoAtual} ehMentor={ehMentor} />,
       pontos: <Pontos key={k} alunoId={k} aluno={alunoAtual} ehMentor={ehMentor} onIrCaderno={() => setAba('erros')} />,
       relatorio: <Relatorio key={k} aluno={alunoAtual} ehMentor={ehMentor} equipe={equipe} />,

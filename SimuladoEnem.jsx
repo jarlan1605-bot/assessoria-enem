@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { checarXp } from './xp'
+import CartaoResposta from './CartaoResposta'
 import { supabase } from './supabase'
 import { AREAS } from './constants'
 import { TextoQuestao } from './QuestaoCartao'
@@ -135,6 +136,7 @@ export default function SimuladoEnem({ perfil, ehMentor }) {
   const [minhas, setMinhas] = useState([])
   const [erro, setErro] = useState('')
   const [versao, setVersao] = useState(0)
+  const [foco, setFoco] = useState(false)
 
   const recarregar = useCallback(() => setVersao((v) => v + 1), [])
 
@@ -192,7 +194,7 @@ export default function SimuladoEnem({ perfil, ehMentor }) {
     <section className="secao se">
       {erro && <p className="erro">{erro}</p>}
 
-      {abertas.length > 0 && (
+      {!foco && abertas.length > 0 && (
         <div className="cartao se-aviso">
           <strong>Você tem uma prova em andamento</strong>
           {abertas.map((t) => (
@@ -205,14 +207,16 @@ export default function SimuladoEnem({ perfil, ehMentor }) {
         </div>
       )}
 
-      {ehMentor && <PainelEquipe provas={provas} carregando={!indice} onMudou={recarregar} />}
+      {!foco && ehMentor && <PainelEquipe provas={provas} carregando={!indice} onMudou={recarregar} />}
 
-      <Agendados agendados={agendados} minhas={minhas} onComecar={(id) => comecar(() => supabase.rpc('iniciar_simulado_agendado', { p_agendado: id }))} onVer={setVendo} />
+      {!foco && <Agendados agendados={agendados} minhas={minhas} onComecar={(id) => comecar(() => supabase.rpc('iniciar_simulado_agendado', { p_agendado: id }))} onVer={setVendo} />}
 
-      <SimuladoLivre provas={provas} carregando={!indice} agendados={agendados}
-        onComecar={(titulo, prova, composicao, ids, minutos) => comecar(() => supabase.rpc('iniciar_simulado_livre', { p_titulo: titulo, p_prova: prova, p_composicao: composicao, p_questao_ids: ids, p_minutos: minutos }))} />
+      {!foco && <SimuladoLivre provas={provas} carregando={!indice} agendados={agendados}
+        onComecar={(titulo, prova, composicao, ids, minutos) => comecar(() => supabase.rpc('iniciar_simulado_livre', { p_titulo: titulo, p_prova: prova, p_composicao: composicao, p_questao_ids: ids, p_minutos: minutos }))} />}
 
-      <MeusSimulados minhas={minhas} agendados={agendados} onVer={setVendo} />
+      <CartaoResposta ehMentor={ehMentor} onFoco={setFoco} />
+
+      {!foco && <MeusSimulados minhas={minhas} agendados={agendados} onVer={setVendo} />}
     </section>
   )
 }

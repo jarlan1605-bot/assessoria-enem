@@ -2465,3 +2465,9 @@ main.conteudo { padding: 22px clamp(16px, 3vw, 32px) 56px; border-bottom: 0; gap
 .vivo .login-retrato img { animation: vivo-zoom 14s ease-in-out infinite alternate; }
 @keyframes vivo-zoom { to { scale: 1.08; } }
 .vivo input:focus-visible, .vivo textarea:focus-visible, .vivo select:focus-visible { transition: box-shadow .2s ease; box-shadow: 0 0 0 4px color-mix(in srgb, var(--primaria, #1f5f4a) 22%, transparent); }
+
+/* questões vindas dos PDFs: alternativas dentro da imagem, botões só com a letra */
+.q-alts-letras { flex-direction: row; flex-wrap: wrap; gap: 10px; align-items: center; }
+.q-alts-letras::before { content: 'Marque:'; font-size: 13px; font-weight: 700; color: var(--suave); margin-right: 2px; }
+.q-alts-letras .q-alt { width: auto; padding: 8px 12px; gap: 8px; align-items: center; }
+.q-alts-letras .q-alt-pct { margin-left: 2px; }

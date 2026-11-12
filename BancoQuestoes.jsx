@@ -41,7 +41,7 @@ export default function BancoQuestoes({ perfil, ehMentor, alunos }) {
 
   const carregar = useCallback(async () => {
     const q = await buscarTudo(() =>
-      supabase.from('questoes').select(CAMPOS_INDICE).order('ano', { ascending: false }).order('prova').order('numero')
+      supabase.from('questoes').select(CAMPOS_INDICE).order('ano', { ascending: false }).order('prova').order('numero').order('id')
     )
     if (q.error) {
       setErro('Não foi possível abrir o banco de questões. O arquivo questoes.sql já foi rodado no Supabase?')

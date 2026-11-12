@@ -54,6 +54,21 @@ export function partesDoTexto(texto) {
   return partes
 }
 
+// Itálico e negrito vindos dos PDFs: ‹i›texto‹/i›  ‹b›texto‹/b›
+export function estilosDoTexto(t) {
+  const partes = []
+  let i = false
+  let b = false
+  for (const pedaco of String(t ?? '').split(/(‹\/?[ib]›)/)) {
+    const m = /^‹(\/?)([ib])›$/.exec(pedaco)
+    if (m) {
+      if (m[2] === 'i') i = !m[1]
+      else b = !m[1]
+    } else if (pedaco) partes.push({ t: pedaco, i, b })
+  }
+  return partes
+}
+
 export const imagensCitadas = (q) => {
   const usadas = new Set()
   for (const txt of [q.enunciado, ...Object.values(q.alternativas || {})]) {

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { checarXp } from './xp'
 import { supabase } from './supabase'
 import { AREAS } from './constants'
 import { TextoQuestao } from './QuestaoCartao'
@@ -426,6 +427,7 @@ function FazendoProva({ tentativaId, offset, onSair }) {
     setEntregando(false)
     if (error) { entregueRef.current = false; return setErro(msgErro(error)) }
     setFinal({ ...data, automatico })
+    checarXp()
   }, [tentativaId])
 
   useEffect(() => {

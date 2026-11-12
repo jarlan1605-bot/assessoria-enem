@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { checarXp } from './xp'
 import { supabase } from './supabase'
 import { AREAS } from './constants'
 import { hojeISO, somarDias } from './agenda'
@@ -75,6 +76,7 @@ export default function BancoQuestoes({ perfil, ehMentor, alunos }) {
       .single()
     if (error) return { error: 'Não foi possível registrar: ' + error.message }
     setRespostas((r) => [...r, data])
+    checarXp()
     return data
   }, [])
 

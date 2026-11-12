@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { checarXp } from './xp'
 import { supabase } from './supabase'
 import { DIAS, MATERIAS, corDaMateria, indiceDeHoje } from './constants'
 import { MESES, DIAS_CURTOS, hojeISO, somarDias } from './agenda'
@@ -144,6 +145,7 @@ export default function Horario({ alunoId, editavel, aluno }) {
     const { error } = novoStatus
       ? await supabase.from('checkins').upsert({ aluno_id: alunoId, horario_id: bloco.id, dia, status: novoStatus }, { onConflict: 'horario_id,dia' })
       : await supabase.from('checkins').delete().eq('horario_id', bloco.id).eq('dia', dia)
+    if (!error) checarXp()
     if (error) {
       setErro('Não foi possível salvar o check-in: ' + error.message)
       carregarCheckins()

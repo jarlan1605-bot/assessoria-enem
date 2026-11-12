@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { checarXp } from './xp'
 import { supabase } from './supabase'
 import { AREAS, MATERIAS, TIPOS_ERRO, MATERIAS_POR_AREA } from './constants'
 import { hojeISO, somarDias } from './agenda'
@@ -98,7 +99,7 @@ export default function CadernoErros({ alunoId, ehMentor }) {
       .update({ revisoes: n, dominado, proxima_revisao: dominado ? null : somarDias(hoje, PROXIMO_INTERVALO[n - 1]) })
       .eq('id', e.id)
     if (error) setErro(error.message)
-    else carregar()
+    else { carregar(); checarXp() }
   }
 
   async function aindaErro(e) {

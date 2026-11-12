@@ -31,6 +31,8 @@ import Interessados from './Interessados'
 import PagarMensalidade from './PagarMensalidade'
 import SimuladorProva from './SimuladorProva'
 import SimuladoEnem from './SimuladoEnem'
+import Ranking from './Ranking'
+import XpNotificacoes from './XpNotificacoes'
 import { precisaVoce } from './cobranca'
 
 export default function App() {
@@ -205,6 +207,7 @@ function Painel({ usuario }) {
       titulo: 'Estudos',
       itens: [
         ['trilha', '🧭', ehMentor ? 'Trilha de estudos' : 'Minha Trilha'],
+        ['ranking', '🏆', 'Ranking'],
         ['pontos', '🎯', 'Onde estão seus pontos'],
         ['evolucao', '📈', 'Evolução'],
         ['horario', '🗓️', 'Horário'],
@@ -246,6 +249,8 @@ function Painel({ usuario }) {
     conteudo = <Videoaulas ehMentor={ehMentor} ehCeo={ehCeo} meuId={perfil.id} equipe={equipe} />
   } else if (abaAtual === 'cronometro') {
     conteudo = <SimuladorProva />
+  } else if (abaAtual === 'ranking') {
+    conteudo = <Ranking perfil={perfil} ehMentor={ehMentor} />
   } else if (abaAtual === 'simulado-enem') {
     conteudo = <SimuladoEnem perfil={perfil} ehMentor={ehMentor} />
   } else if (abaAtual === 'interessados') {
@@ -310,6 +315,7 @@ function Painel({ usuario }) {
           </div>
         </div>
         <div className="topo-acoes">
+          {perfil.papel === 'aluno' && <XpNotificacoes perfil={perfil} onAbrir={() => setAba('ranking')} />}
           <button className="botao-perfil" onClick={() => setEditandoPerfil(true)} aria-label="Meu perfil">
             <Avatar src={perfil.foto_url} nome={perfil.nome || perfil.email} tamanho={32} />
             <span className="botao-perfil-texto">Meu perfil</span>

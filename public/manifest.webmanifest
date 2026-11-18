@@ -1,0 +1,11 @@
+{
+  "name": "Assessoria J&C",
+  "short_name": "Assessoria J&C",
+  "description": "Mentoria individual para o ENEM: horário de estudos, simulados, questões comentadas e acompanhamento de perto.",
+  "lang": "pt-BR",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#111111",
+  "icons": [{ "src": "/favicon.svg?v=2", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

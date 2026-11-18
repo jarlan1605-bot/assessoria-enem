@@ -11,6 +11,7 @@ export default function Login({ onVoltar }) {
   const [erro, setErro] = useState('')
   const [entrando, setEntrando] = useState(false)
   const [fotoMentor, setFotoMentor] = useState(null)
+  const [aviso, setAviso] = useState('')
 
   useEffect(() => {
     supabase.rpc('foto_do_mentor').then(({ data }) => setFotoMentor(data || null))
@@ -32,6 +33,15 @@ export default function Login({ onVoltar }) {
           : 'Não foi possível entrar. Tente de novo em instantes.'
       )
     }
+  }
+
+  async function esqueci() {
+    setErro('')
+    setAviso('')
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return setErro('Digite seu e-mail acima para receber o link de nova senha.')
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: window.location.origin })
+    if (error) return setErro('Não foi possível enviar agora. Tente de novo em alguns minutos ou fale com seu mentor.')
+    setAviso('Se esse e-mail estiver cadastrado, enviamos um link para criar uma nova senha. Confira também o spam.')
   }
 
   return (
@@ -85,12 +95,14 @@ export default function Login({ onVoltar }) {
                 required
               />
             </label>
-            {erro && <p className="erro">{erro}</p>}
+            {erro && <p className="erro" role="alert">{erro}</p>}
+            {aviso && <p className="suave" role="status">{aviso}</p>}
             <button className="botao primario" disabled={entrando}>
               {entrando ? 'Entrando…' : 'Entrar'}
             </button>
           </form>
           <p className="suave pequeno centro">Use o e-mail e a senha que seu mentor enviou.</p>
+          <p className="centro pequeno"><button type="button" className="link" onClick={esqueci}>Esqueci minha senha</button></p>
           {onVoltar && (
             <p className="centro pequeno" style={{ marginTop: 8 }}>
               <button type="button" className="link" onClick={onVoltar}>← Conhecer a mentoria</button>

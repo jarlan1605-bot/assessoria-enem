@@ -1,44 +1,48 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, lazy, Suspense } from 'react'
 import { supabase, configurado } from './supabase'
 import { NOME_SITE, NOME_MENTOR, FOTO_MENTOR } from './constants'
 import Login from './Login'
-import Horario from './Horario'
-import Simulados from './Simulados'
 import Avatar from './Avatar'
 import TrocarSenha from './TrocarSenha'
-import Agenda from './Agenda'
-import Aulas from './Aulas'
-import Videoaulas from './Videoaulas'
-import Pontos from './Pontos'
-import Trilha from './Trilha'
-import Perfil from './Perfil'
-import Comunidade from './Comunidade'
-import Evolucao from './Evolucao'
-import Equipe from './Equipe'
-import Mentores from './Mentores'
 import { gruposPorMentor } from './grupos'
 import Landing from './Landing'
-import Assessoria2027 from './Assessoria2027'
 import Contagem from './Contagem'
-import CadernoErros from './CadernoErros'
-import Redacao from './Redacao'
-import Relatorio from './Relatorio'
-import Financeiro from './Financeiro'
-import SiteEditor from './SiteEditor'
-import BancoQuestoes from './BancoQuestoes'
-import Materiais from './Materiais'
-import Interessados from './Interessados'
 import PagarMensalidade from './PagarMensalidade'
-import SimuladorProva from './SimuladorProva'
-import SimuladoEnem from './SimuladoEnem'
-import Ranking from './Ranking'
-import PainelAluno from './Painel'
-import VisaoGeral from './VisaoGeral'
 import XpNotificacoes from './XpNotificacoes'
 import { precisaVoce } from './cobranca'
+import ErrorBoundary from './ErrorBoundary'
+
+// Cada tela só é baixada quando alguém abre: a página inicial fica bem mais leve no celular.
+const Horario = lazy(() => import('./Horario'))
+const Simulados = lazy(() => import('./Simulados'))
+const Agenda = lazy(() => import('./Agenda'))
+const Aulas = lazy(() => import('./Aulas'))
+const Videoaulas = lazy(() => import('./Videoaulas'))
+const Pontos = lazy(() => import('./Pontos'))
+const Trilha = lazy(() => import('./Trilha'))
+const Perfil = lazy(() => import('./Perfil'))
+const Comunidade = lazy(() => import('./Comunidade'))
+const Evolucao = lazy(() => import('./Evolucao'))
+const Equipe = lazy(() => import('./Equipe'))
+const Mentores = lazy(() => import('./Mentores'))
+const Assessoria2027 = lazy(() => import('./Assessoria2027'))
+const CadernoErros = lazy(() => import('./CadernoErros'))
+const Redacao = lazy(() => import('./Redacao'))
+const Relatorio = lazy(() => import('./Relatorio'))
+const Financeiro = lazy(() => import('./Financeiro'))
+const SiteEditor = lazy(() => import('./SiteEditor'))
+const BancoQuestoes = lazy(() => import('./BancoQuestoes'))
+const Materiais = lazy(() => import('./Materiais'))
+const Interessados = lazy(() => import('./Interessados'))
+const SimuladorProva = lazy(() => import('./SimuladorProva'))
+const SimuladoEnem = lazy(() => import('./SimuladoEnem'))
+const Ranking = lazy(() => import('./Ranking'))
+const VisaoGeral = lazy(() => import('./VisaoGeral'))
+const PainelAluno = lazy(() => import('./Painel'))
 
 export default function App() {
   const [sessao, setSessao] = useState(undefined) // undefined = ainda verificando
+  const [recuperando, setRecuperando] = useState(false) // chegou pelo link do e-mail de "esqueci minha senha"
   const [verLogin, setVerLogin] = useState(() => window.location.hash === '#entrar')
   const busca = new URLSearchParams(window.location.search)
   // ?site mostra a página de apresentação; ?vagas abre direto no formulário de 2027 (link do Instagram)
@@ -47,7 +51,10 @@ export default function App() {
   useEffect(() => {
     if (!configurado) return
     supabase.auth.getSession().then(({ data }) => setSessao(data.session))
-    const { data } = supabase.auth.onAuthStateChange((_evento, s) => setSessao(s))
+    const { data } = supabase.auth.onAuthStateChange((evento, s) => {
+      if (evento === 'PASSWORD_RECOVERY') setRecuperando(true)
+      setSessao(s)
+    })
     return () => data.subscription.unsubscribe()
   }, [])
 
@@ -63,12 +70,17 @@ export default function App() {
   }
 
   // página pública com tudo o que a assessoria oferece (não depende de login)
-  if (window.location.pathname.replace(/\/$/, '') === '/assessoria') return <Assessoria2027 />
+  if (window.location.pathname.replace(/\/$/, '') === '/assessoria') return <Suspense fallback={<Carregando />}><Assessoria2027 /></Suspense>
   if (!configurado) return <FaltaConfigurar />
   if (forcarSite) return <Landing onEntrar={irParaLogin} />
   if (sessao === undefined) return <Carregando />
   if (!sessao) return verLogin ? <Login onVoltar={() => { window.location.hash = '' }} /> : <Landing onEntrar={irParaLogin} />
-  return <Painel usuario={sessao.user} />
+  return (
+    <>
+      <Painel usuario={sessao.user} />
+      {recuperando && <TrocarSenha onFechar={() => setRecuperando(false)} />}
+    </>
+  )
 }
 
 // Abas que mostram os dados de um aluno (o mentor escolhe o aluno no seletor)
@@ -78,6 +90,7 @@ function Painel({ usuario }) {
   const [perfil, setPerfil] = useState(null)
   const [erro, setErro] = useState('')
   const [alunos, setAlunos] = useState([])
+  const [erroAlunos, setErroAlunos] = useState('')
   const [alunoId, setAlunoId] = useState(null)
   const [aba, setAbaEstado] = useState(() => {
     try { return localStorage.getItem('abaAtual') || 'painel' } catch { return 'painel' }
@@ -93,14 +106,20 @@ function Painel({ usuario }) {
   const ehCeo = perfil?.papel === 'ceo'
   const ehMentor = perfil?.papel === 'mentor' || ehCeo
 
-  // Aluno: conta o tempo na plataforma (1 minuto por vez, só com a aba aberta e visível)
+  // Aluno: conta o tempo na plataforma (1 minuto por vez, só com a aba aberta, visível e com atividade nos últimos 2 minutos)
   const ehAluno = perfil?.papel === 'aluno'
   useEffect(() => {
     if (!ehAluno) return
+    let ultimaAtividade = Date.now()
+    const marcar = () => { ultimaAtividade = Date.now() }
+    const eventos = ['pointerdown', 'keydown', 'scroll', 'touchstart']
+    eventos.forEach((e) => window.addEventListener(e, marcar, { passive: true }))
     const t = setInterval(() => {
-      if (document.visibilityState === 'visible') supabase.rpc('registrar_tempo', { p_segundos: 60 }).then(() => {}, () => {})
+      if (document.visibilityState === 'visible' && Date.now() - ultimaAtividade < 120000) {
+        supabase.rpc('registrar_tempo', { p_segundos: 60 }).then(() => {}, () => {})
+      }
     }, 60000)
-    return () => clearInterval(t)
+    return () => { clearInterval(t); eventos.forEach((e) => window.removeEventListener(e, marcar)) }
   }, [ehAluno])
 
   // CEO: quantos alunos precisam ser cobrados hoje (aparece no menu e num aviso)
@@ -163,11 +182,13 @@ function Painel({ usuario }) {
   }, [usuario.id])
 
   const carregarAlunos = useCallback(async () => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('perfis')
       .select('*')
       .eq('papel', 'aluno')
       .order('nome')
+    if (error) { setErroAlunos('Não foi possível carregar os alunos. Verifique a internet e recarregue a página.'); return }
+    setErroAlunos('')
     const lista = data ?? []
     setAlunos(lista)
     setAlunoId((atual) => {
@@ -287,6 +308,14 @@ function Painel({ usuario }) {
     conteudo = <Agenda alunos={alunos} ehCeo={ehCeo} meuId={perfil.id} equipe={equipe} />
   } else if (abaAtual === 'aulas') {
     conteudo = <Aulas perfil={perfil} />
+  } else if (ehMentor && erroAlunos) {
+    conteudo = (
+      <div className="cartao vazio" role="alert">
+        <h2>Não deu para carregar os alunos</h2>
+        <p>{erroAlunos}</p>
+        <button className="botao primario" onClick={carregarAlunos}>Tentar de novo</button>
+      </div>
+    )
   } else if (ehMentor && alunos.length === 0) {
     conteudo = (
       <div className="cartao vazio">
@@ -402,17 +431,19 @@ function Painel({ usuario }) {
             </div>
           )}
 
-          {conteudo}
+          <ErrorBoundary chave={`${abaAtual}-${alunoId}`}>
+            <Suspense fallback={<Carregando />}>{conteudo}</Suspense>
+          </ErrorBoundary>
         </main>
       </div>
 
       {editandoPerfil && (
-        <Perfil
+        <Suspense fallback={null}><Perfil
           perfil={perfil}
           onAtualizado={(mudancas) => setPerfil((p) => ({ ...p, ...mudancas }))}
           onTrocarSenha={() => { setEditandoPerfil(false); setTrocandoSenha(true) }}
           onFechar={() => setEditandoPerfil(false)}
-        />
+        /></Suspense>
       )}
       {trocandoSenha && <TrocarSenha onFechar={() => setTrocandoSenha(false)} />}
     </div>

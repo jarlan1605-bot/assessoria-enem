@@ -256,7 +256,7 @@ begin
   select (r.criado_em at time zone 'America/Sao_Paulo')::date from public.respostas r where r.aluno_id = p_aluno group by 1 having count(*) >= 10
   union
   select (s.criado_em at time zone 'America/Sao_Paulo')::date from public.sessoes_foco s where s.aluno_id = p_aluno
-    group by 1 having sum(s.minutos) >= (select coalesce(meta_foco_min, 50) from public.perfis where id = p_aluno)
+    group by 1 having sum(s.minutos) >= (select coalesce(pf.meta_foco_min, 50) from public.perfis pf where pf.id = p_aluno)
   union
   select (e.criado_em at time zone 'America/Sao_Paulo')::date from public.xp_eventos e where e.aluno_id = p_aluno and e.tipo = 'revisao' group by 1 having count(*) >= 5
   union
@@ -271,10 +271,10 @@ declare hoje date := public.hoje_br(); seg date; dias date[]; atual int := 0; re
 begin
   if p_aluno is null or not public.pode_ver_aluno(p_aluno) then return null; end if;
   seg := hoje - (extract(isodow from hoje)::int - 1);
-  select coalesce(array_agg(distinct dia), '{}') into dias from public._dias_estudo(p_aluno) where dia <= hoje;
+  select coalesce(array_agg(distinct x.dia), '{}') into dias from public._dias_estudo(p_aluno) x where x.dia <= hoje;
   hoje_conta := hoje = any (dias);
-  with g as (select dia, dia - (row_number() over (order by dia))::int as grupo from unnest(dias) as dia),
-       s as (select grupo, count(*)::int n, max(dia) fim from g group by grupo)
+  with g as (select u.d, u.d - (row_number() over (order by u.d))::int as grupo from unnest(dias) as u(d)),
+       s as (select grupo, count(*)::int n, max(g.d) fim from g group by grupo)
   select coalesce(max(n), 0),
          coalesce(max(n) filter (where fim = hoje or (fim = hoje - 1 and not hoje_conta)), 0)
     into recorde, atual from s;
@@ -354,7 +354,7 @@ begin
     select distinct on (r.questao_id) r.correta from public.respostas r
     join public.lista_questoes lq on lq.lista_id = p_lista and lq.questao_id = r.questao_id
     where r.aluno_id = eu and r.lista_id = p_lista order by r.questao_id, r.criado_em desc
-  ) select count(*) filter (where correta), count(*) into a, t from ult;
+  ) select count(*) filter (where ult.correta), count(*) into a, t from ult;
   update public.lista_alunos set concluida_em = coalesce(concluida_em, now()), ultima_em = now(), acertos = a, total = n
   where lista_id = p_lista and aluno_id = eu;
   perform public._dar_xp(eu, 'lista:' || p_lista, 'lista', 'Terminou uma lista de questões', case when t >= n and n > 0 then 20 else 0 end);
@@ -368,7 +368,7 @@ create or replace function public.contato_mentor()
 returns jsonb language sql stable security definer set search_path = public as $$
   select jsonb_build_object(
     'nome', split_part(coalesce(m.nome, ''), ' ', 1),
-    'whatsapp', coalesce(nullif(m.whatsapp, ''), regexp_replace(coalesce((select whatsapp from public.site_config where id = 1), ''), '\D', '', 'g'))
+    'whatsapp', coalesce(nullif(m.whatsapp, ''), regexp_replace(coalesce((select sc.whatsapp from public.site_config sc where sc.id = 1), ''), '\D', '', 'g'))
   )
   from public.perfis a left join public.perfis m on m.id = a.mentor_id
   where a.id = auth.uid();
@@ -393,8 +393,8 @@ begin
     'dia_prova', (select count(*) from public.xp_eventos where aluno_id = p_aluno and tipo = 'simulado' and xp >= 100),
     'foco_min', (select coalesce(sum(minutos), 0) from public.sessoes_foco where aluno_id = p_aluno),
     'semana_perfeita', (
-      with c as (select dia, dia - (row_number() over (order by dia))::int g from public.missoes_dia where aluno_id = p_aluno and completo)
-      select case when coalesce(max(n), 0) >= 7 then 1 else 0 end from (select count(*) n from c group by g) x),
+      with c as (select md.dia, md.dia - (row_number() over (order by md.dia))::int g from public.missoes_dia md where md.aluno_id = p_aluno and md.completo)
+      select case when coalesce(max(x.n), 0) >= 7 then 1 else 0 end from (select count(*) n from c group by c.g) x),
     'lista80', (select count(*) from public.lista_alunos where aluno_id = p_aluno and concluida_em is not null and total >= 5 and acertos >= 0.8 * total),
     'dias_completos', (select count(*) from public.xp_eventos where aluno_id = p_aluno and tipo = 'dia'),
     'revisoes', (select count(*) from public.xp_eventos where aluno_id = p_aluno and tipo = 'revisao'),
@@ -410,15 +410,15 @@ begin
       ('redacao1', 'redacoes', 1), ('nivel5', 'nivel', 5)),
     ins as (
       insert into public.conquistas_aluno (aluno_id, codigo)
-      select p_aluno, codigo from cat where (s ->> chave)::numeric >= alvo
+      select p_aluno, cat.codigo from cat where (s ->> cat.chave)::numeric >= cat.alvo
       on conflict (aluno_id, codigo) do nothing
-      returning codigo)
-    select coalesce(jsonb_agg(codigo), '[]'::jsonb) into novas from ins;
+      returning conquistas_aluno.codigo)
+    select coalesce(jsonb_agg(ins.codigo), '[]'::jsonb) into novas from ins;
   else
     novas := '[]'::jsonb;
   end if;
   return jsonb_build_object('stats', s, 'novas', novas,
-    'ganhas', coalesce((select jsonb_object_agg(codigo, ganho_em) from public.conquistas_aluno where aluno_id = p_aluno), '{}'::jsonb));
+    'ganhas', coalesce((select jsonb_object_agg(ca.codigo, ca.ganho_em) from public.conquistas_aluno ca where ca.aluno_id = p_aluno), '{}'::jsonb));
 end $$;
 revoke execute on function public.atualizar_conquistas(uuid) from public, anon;
 grant execute on function public.atualizar_conquistas(uuid) to authenticated;

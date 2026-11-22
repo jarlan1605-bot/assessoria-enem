@@ -26,27 +26,10 @@ export const COMO_GANHAR = [
   ['📕', 'Caderno de erros', 'Cada revisão feita: +3'],
   ['✍️', 'Redação', 'Cada redação enviada: +30'],
   ['🧭', 'Trilha', 'Conteúdo concluído (100%): +15'],
+  ['⏱️', 'Sessão de foco', '+2 XP a cada 5 minutos de foco concluídos'],
+  ['🎉', 'Missões do dia', 'Todas as missões do dia: +40'],
+  ['📋', 'Lista de questões', 'Terminou uma lista inteira: +20'],
 ]
-
-// Conquistas calculadas a partir dos eventos de XP do aluno
-export function conquistas(eventos, xpTotal) {
-  const n = (tipo) => eventos.filter((e) => e.tipo === tipo).length
-  const acertos = eventos.filter((e) => e.tipo === 'questao' && e.xp === 4).length
-  const simDia = eventos.some((e) => e.tipo === 'simulado' && e.xp >= 100)
-  return [
-    ['🎯', 'Primeira questão', 'Respondeu a 1ª questão do banco', n('questao') >= 1],
-    ['💯', 'Centena', '100 questões respondidas', n('questao') >= 100],
-    ['🚀', 'Imparável', '500 questões respondidas', n('questao') >= 500],
-    ['🧠', 'Cabeça boa', '100 acertos no banco', acertos >= 100],
-    ['🏁', 'Estreia', 'Primeiro simulado entregue', n('simulado') >= 1],
-    ['🏆', 'Dia de prova', 'Fez um dia inteiro de simulado', simDia],
-    ['✅', 'Disciplina', 'Primeiro dia com o horário completo', n('dia') >= 1],
-    ['🔥', 'Em chamas', '7 dias seguidos de check-in', n('sequencia') >= 1],
-    ['📕', 'Revisor', '10 revisões no caderno de erros', n('revisao') >= 10],
-    ['✍️', 'Escritor(a)', 'Primeira redação enviada', n('redacao') >= 1],
-    ['⭐', 'Nível 5', 'Chegou ao nível 5', nivelDe(xpTotal) >= 5],
-  ]
-}
 
 // Dias seguidos com check-in (até hoje ou ontem)
 export function sequenciaAtual(eventos) {

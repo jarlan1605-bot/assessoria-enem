@@ -113,6 +113,10 @@ export default function Perfil({ perfil, onAtualizado, onTrocarSenha, onFechar }
           </label>
         )}
 
+        {(perfil.papel === 'mentor' || perfil.papel === 'ceo') && 'whatsapp' in perfil && (
+          <WhatsappMentor perfil={perfil} onAtualizado={onAtualizado} />
+        )}
+
         {msg.texto && <p className={msg.tipo === 'erro' ? 'erro' : 'aviso-ok'} role="status">{msg.texto}</p>}
 
         {(perfil.papel === 'mentor' || perfil.papel === 'ceo') && 'vitrine' in perfil && (
@@ -125,6 +129,34 @@ export default function Perfil({ perfil, onAtualizado, onTrocarSenha, onFechar }
         </div>
       </div>
     </div>
+  )
+}
+
+// WhatsApp do mentor: é para onde vai o botão "Precisa de ajuda?" dos seus alunos
+function WhatsappMentor({ perfil, onAtualizado }) {
+  const [zap, setZap] = useState(perfil.whatsapp || '')
+  const [estado, setEstado] = useState('')
+  async function salvar(e) {
+    e.preventDefault()
+    const limpo = zap.replace(/\D/g, '')
+    if (limpo && (limpo.length < 10 || limpo.length > 13)) return setEstado('Coloque o número com DDD, por exemplo (84) 99999-9999.')
+    setEstado('Salvando…')
+    const { error } = await supabase.from('perfis').update({ whatsapp: limpo }).eq('id', perfil.id)
+    if (error) return setEstado('Não foi possível salvar: ' + error.message)
+    onAtualizado({ whatsapp: limpo })
+    setEstado('Salvo! O botão de ajuda dos seus alunos abre este número.')
+  }
+  return (
+    <form className="form-coluna" onSubmit={salvar}>
+      <label>
+        Seu WhatsApp (botão de ajuda dos alunos)
+        <div className="linha-campo">
+          <input value={zap} inputMode="tel" placeholder="(84) 99999-9999" onChange={(e) => { setZap(e.target.value); setEstado('') }} />
+          {zap.replace(/\D/g, '') !== (perfil.whatsapp || '') && <button className="botao primario pequeno">Salvar</button>}
+        </div>
+      </label>
+      {estado && <p className="suave pequeno" role="status">{estado}</p>}
+    </form>
   )
 }
 

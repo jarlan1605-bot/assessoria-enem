@@ -37,7 +37,7 @@ export function Comentario({ q }) {
 */
 export default function QuestaoCartao({
   q, indice, ultima, noCaderno, ehMentor, estat, mostrarCorrecao = true,
-  onResponder, onCaderno, onEditar, compacto,
+  onResponder, onCaderno, onEditar, compacto, acoes,
 }) {
   const [escolha, setEscolha] = useState(null)
   const [resposta, setResposta] = useState(ultima || null) // { alternativa, correta, criado_em }
@@ -105,6 +105,7 @@ export default function QuestaoCartao({
           {ehMentor && !q.revisado && <span className="selo selo-fixado">a revisar</span>}
           {ehMentor && onEditar && <button className="link" onClick={() => onEditar(q)}>editar</button>}
         </div>
+        {acoes}
       </header>
 
       <TextoQuestao texto={q.enunciado} imagens={q.imagens} />

@@ -11,6 +11,7 @@ import PagarMensalidade from './PagarMensalidade'
 import XpNotificacoes from './XpNotificacoes'
 import { precisaVoce } from './cobranca'
 import ErrorBoundary from './ErrorBoundary'
+import BotaoWhatsapp from './BotaoWhatsapp'
 
 // Cada tela só é baixada quando alguém abre: a página inicial fica bem mais leve no celular.
 const Horario = lazy(() => import('./Horario'))
@@ -39,6 +40,10 @@ const SimuladoEnem = lazy(() => import('./SimuladoEnem'))
 const Ranking = lazy(() => import('./Ranking'))
 const VisaoGeral = lazy(() => import('./VisaoGeral'))
 const PainelAluno = lazy(() => import('./Painel'))
+const Hoje = lazy(() => import('./Hoje'))
+const Foco = lazy(() => import('./Foco'))
+const Listas = lazy(() => import('./Listas'))
+const Conquistas = lazy(() => import('./Conquistas'))
 
 export default function App() {
   const [sessao, setSessao] = useState(undefined) // undefined = ainda verificando
@@ -84,7 +89,7 @@ export default function App() {
 }
 
 // Abas que mostram os dados de um aluno (o mentor escolhe o aluno no seletor)
-const POR_ALUNO = ['painel', 'trilha', 'pontos', 'evolucao', 'horario', 'simulados', 'erros', 'redacao', 'relatorio']
+const POR_ALUNO = ['hoje', 'foco', 'conquistas', 'painel', 'trilha', 'pontos', 'evolucao', 'horario', 'simulados', 'erros', 'redacao', 'relatorio']
 
 function Painel({ usuario }) {
   const [perfil, setPerfil] = useState(null)
@@ -92,8 +97,12 @@ function Painel({ usuario }) {
   const [alunos, setAlunos] = useState([])
   const [erroAlunos, setErroAlunos] = useState('')
   const [alunoId, setAlunoId] = useState(null)
+  // Cada vez que entra no site, começa pela tela Hoje; dentro da mesma visita, lembra a aba aberta
   const [aba, setAbaEstado] = useState(() => {
-    try { return localStorage.getItem('abaAtual') || 'painel' } catch { return 'painel' }
+    try {
+      if (!sessionStorage.getItem('visitaIniciada')) { sessionStorage.setItem('visitaIniciada', '1'); return 'hoje' }
+      return localStorage.getItem('abaAtual') || 'hoje'
+    } catch { return 'hoje' }
   })
   const [trocandoSenha, setTrocandoSenha] = useState(false)
   const [editandoPerfil, setEditandoPerfil] = useState(false)
@@ -239,6 +248,10 @@ function Painel({ usuario }) {
     {
       titulo: 'Estudos',
       itens: [
+        ['hoje', '☀️', ehMentor ? 'Hoje do aluno' : 'Hoje'],
+        ['foco', '⏱️', ehMentor ? 'Foco do aluno' : 'Foco'],
+        ['listas', '📋', 'Listas de questões'],
+        ['conquistas', '🎖️', ehMentor ? 'Conquistas do aluno' : 'Minhas conquistas'],
         ...(ehMentor ? [['visao-geral', '👀', 'Todos os alunos']] : []),
         ['painel', '📊', ehMentor ? 'Painel do aluno' : 'Meu painel'],
         ['trilha', '🧭', ehMentor ? 'Trilha de estudos' : 'Minha Trilha'],
@@ -262,7 +275,7 @@ function Painel({ usuario }) {
         : []),
   ]
   const abasValidas = grupos.flatMap((g) => g.itens.map((i) => i[0]))
-  const abaAtual = abasValidas.includes(aba) ? aba : 'comunidade'
+  const abaAtual = abasValidas.includes(aba) ? aba : 'hoje'
 
   const alunoAtual = ehMentor ? alunos.find((a) => a.id === alunoId) : perfil
   const meuMentor = !ehMentor ? equipe.find((m) => m.id === perfil.mentor_id) : null
@@ -285,7 +298,9 @@ function Painel({ usuario }) {
   } else if (abaAtual === 'cronometro') {
     conteudo = <SimuladorProva />
   } else if (abaAtual === 'ranking') {
-    conteudo = <Ranking perfil={perfil} ehMentor={ehMentor} />
+    conteudo = <Ranking perfil={perfil} ehMentor={ehMentor} irPara={setAba} />
+  } else if (abaAtual === 'listas') {
+    conteudo = <Listas perfil={perfil} ehMentor={ehMentor} alunos={alunos} />
   } else if (abaAtual === 'simulado-enem') {
     conteudo = <SimuladoEnem perfil={perfil} ehMentor={ehMentor} />
   } else if (abaAtual === 'interessados') {
@@ -338,6 +353,9 @@ function Painel({ usuario }) {
   } else {
     const k = alunoAtual.id
     conteudo = {
+      hoje: <Hoje key={k} alunoId={k} aluno={alunoAtual} ehMentor={ehMentor} irPara={setAba} config={config} />,
+      foco: <Foco key={k} alunoId={k} ehMentor={ehMentor} irPara={setAba} />,
+      conquistas: <Conquistas key={k} alunoId={k} aluno={alunoAtual} ehMentor={ehMentor} />,
       simulados: <Simulados key={k} alunoId={k} onVerEvolucao={() => setAba('evolucao')} />,
       evolucao: <Evolucao key={k} alunoId={k} ehMentor={ehMentor} onLancar={() => setAba('simulados')} />,
       horario: <Horario key={k} alunoId={k} editavel={ehMentor} aluno={alunoAtual} />,
@@ -446,6 +464,7 @@ function Painel({ usuario }) {
         /></Suspense>
       )}
       {trocandoSenha && <TrocarSenha onFechar={() => setTrocandoSenha(false)} />}
+      {perfil.papel === 'aluno' && <BotaoWhatsapp perfil={perfil} />}
     </div>
   )
 }

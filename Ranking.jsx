@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from './supabase'
 import Avatar from './Avatar'
-import { COMO_GANHAR, conquistas, progressoNivel, sequenciaAtual, nivelDe } from './xp'
+import { COMO_GANHAR, progressoNivel, sequenciaAtual, nivelDe } from './xp'
+import { minutosTexto } from './estudo'
 
 function inicioDaSemana() {
   const d = new Date()
@@ -28,7 +29,75 @@ const nomeMes = (iso) => {
   return t.charAt(0).toUpperCase() + t.slice(1)
 }
 
-export default function Ranking({ perfil, ehMentor }) {
+export default function Ranking({ perfil, ehMentor, irPara }) {
+  const [tipo, setTipo] = useState('xp')
+  return (
+    <>
+      <div className="abas rk-tipo" role="tablist" aria-label="Tipo de ranking">
+        <button role="tab" aria-selected={tipo === 'xp'} className={tipo === 'xp' ? 'aba ativa' : 'aba'} onClick={() => setTipo('xp')}>⚡ XP</button>
+        <button role="tab" aria-selected={tipo === 'foco'} className={tipo === 'foco' ? 'aba ativa' : 'aba'} onClick={() => setTipo('foco')}>⏱ Horas de foco</button>
+      </div>
+      {tipo === 'xp' ? <RankingXp perfil={perfil} ehMentor={ehMentor} irPara={irPara} /> : <RankingFoco perfil={perfil} ehMentor={ehMentor} />}
+    </>
+  )
+}
+
+// Ranking de horas de foco: só o nome escolhido e as horas
+function RankingFoco({ perfil, ehMentor }) {
+  const [periodo, setPeriodo] = useState('semana')
+  const [lista, setLista] = useState(null)
+  const [privado, setPrivado] = useState(perfil.ranking_foco || 'primeiro')
+  const [erro, setErro] = useState('')
+  useEffect(() => {
+    setLista(null)
+    const desde = periodo === 'semana' ? inicioDaSemana() : inicioDoMes()
+    supabase.rpc('ranking_foco', { p_desde: desde.toISOString() }).then(({ data, error }) => {
+      if (error) setErro('O ranking de foco ainda não foi ativado no banco (arquivo gamificacao.sql).')
+      setLista(data ?? [])
+    })
+  }, [periodo])
+  async function mudarPrivacidade(v) {
+    setPrivado(v)
+    const { error } = await supabase.from('perfis').update({ ranking_foco: v }).eq('id', perfil.id)
+    if (error) setErro('Não foi possível salvar: ' + error.message)
+  }
+  return (
+    <section className="secao rk">
+      <div className="cartao rk-bloco">
+        <div className="rk-topo">
+          <h3>⏱ Quem mais focou</h3>
+          <div className="rk-periodos">
+            {[['semana', 'Semana'], ['mes', 'Mês']].map(([k, n]) => (
+              <button key={k} className={periodo === k ? 'rk-periodo ativo' : 'rk-periodo'} onClick={() => setPeriodo(k)}>{n}</button>
+            ))}
+          </div>
+        </div>
+        {erro && <p className="erro">{erro}</p>}
+        {lista === null ? <p className="suave">Carregando…</p> : lista.length === 0 ? <p className="suave">Ninguém registrou sessões de foco neste período ainda. Seja o primeiro!</p> : (
+          <ol className="rk-lista">
+            {lista.map((l, i) => (
+              <li key={i} className={l.eu ? 'eu' : ''}>
+                <span className="rk-pos">{i < 3 ? ['🥇', '🥈', '🥉'][i] : i + 1}</span>
+                <span className="rk-nome">{l.nome}{l.eu ? ' (você)' : ''}</span>
+                <b className="rk-xp">{minutosTexto(Number(l.minutos))}</b>
+              </li>
+            ))}
+          </ol>
+        )}
+        {!ehMentor && (
+          <label className="rk-privacidade">Como você aparece:
+            <select value={privado} onChange={(e) => mudarPrivacidade(e.target.value)}>
+              <option value="primeiro">Só o primeiro nome</option>
+              <option value="anonimo">Anônimo</option>
+            </select>
+          </label>
+        )}
+      </div>
+    </section>
+  )
+}
+
+function RankingXp({ perfil, ehMentor, irPara }) {
   const [periodo, setPeriodo] = useState('semana')
   const [lista, setLista] = useState(null)
   const [eventos, setEventos] = useState([])
@@ -69,7 +138,6 @@ export default function Ranking({ perfil, ehMentor }) {
     return eventos.filter((e) => new Date(e.criado_em).toDateString() === h).reduce((s, e) => s + e.xp, 0)
   }, [eventos])
   const posicao = lista ? lista.findIndex((l) => l.aluno_id === perfil.id) + 1 : 0
-  const medalhas = conquistas(eventos, total)
   const top = (lista ?? []).slice(0, 3)
   const ordemPodio = [top[1], top[0], top[2]]
 
@@ -136,18 +204,9 @@ export default function Ranking({ perfil, ehMentor }) {
       </div>
 
       {!ehMentor && (
-        <div className="cartao rk-bloco">
-          <h3>🎖️ Conquistas</h3>
-          <div className="rk-medalhas">
-            {medalhas.map(([e, nome, desc, ok]) => (
-              <div key={nome} className={ok ? 'rk-medalha ok' : 'rk-medalha'} title={desc}>
-                <span>{ok ? e : '🔒'}</span>
-                <strong>{nome}</strong>
-                <small>{desc}</small>
-              </div>
-            ))}
-          </div>
-        </div>
+        <button className="cartao rk-bloco rk-ir-conquistas" onClick={() => irPara?.('conquistas')}>
+          <span aria-hidden="true">🎖️</span><strong>Minhas conquistas</strong><span className="suave">Ver medalhas, datas e o que falta →</span>
+        </button>
       )}
 
       <div className="cartao rk-bloco">

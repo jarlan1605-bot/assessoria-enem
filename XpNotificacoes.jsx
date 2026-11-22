@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { supabase } from './supabase'
 import { nivelDe, tituloDoNivel } from './xp'
 
-const EMOJI = { questao: '🧠', checkin: '✅', dia: '🗓️', sequencia: '🔥', simulado: '🏁', revisao: '📕', redacao: '✍️', trilha: '🧭' }
+const EMOJI = { questao: '🧠', checkin: '✅', dia: '🗓️', sequencia: '🔥', simulado: '🏁', revisao: '📕', redacao: '✍️', trilha: '🧭', foco: '⏱️', missoes: '🎉', lista: '📋' }
 
 // Chip de XP no topo + avisos "Parabéns, você ganhou X XP" (só para alunos)
 export default function XpNotificacoes({ perfil, onAbrir }) {
@@ -62,9 +62,11 @@ export default function XpNotificacoes({ perfil, onAbrir }) {
     const t = setInterval(checar, 20000)
     const ouvir = () => setTimeout(checar, 700)
     window.addEventListener('xp:checar', ouvir)
+    const conquista = (e) => mostrar({ id: 'conq' + e.detail.codigo, emoji: e.detail.icone, titulo: 'Conquista desbloqueada!', texto: e.detail.nome, xp: null, grande: true })
+    window.addEventListener('conquista:nova', conquista)
     const foco = () => checar()
     window.addEventListener('focus', foco)
-    return () => { clearInterval(t); window.removeEventListener('xp:checar', ouvir); window.removeEventListener('focus', foco) }
+    return () => { clearInterval(t); window.removeEventListener('xp:checar', ouvir); window.removeEventListener('focus', foco); window.removeEventListener('conquista:nova', conquista) }
   }, [chave, carregar, checar])
 
   return (

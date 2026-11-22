@@ -1,0 +1,22 @@
+-- Índices nas chaves estrangeiras que estavam sem índice e search_path fixo em 2 funções (aviso do Supabase).
+alter function public.carimbar_questao() set search_path = public, pg_temp;
+alter function public._importar_ebook set search_path = public, pg_temp;
+create index if not exists avisos_autor_id_idx on public.avisos(autor_id);
+create index if not exists erros_questao_id_idx on public.erros(questao_id);
+create index if not exists gabarito_respostas_gabarito_id_idx on public.gabarito_respostas(gabarito_id);
+create index if not exists gabaritos_externos_criado_por_idx on public.gabaritos_externos(criado_por);
+create index if not exists interessados_aluno_id_idx on public.interessados(aluno_id);
+create index if not exists interessados_mentor_id_idx on public.interessados(mentor_id);
+create index if not exists interessados_mentor_preferido_idx on public.interessados(mentor_preferido);
+create index if not exists metas_aluno_id_idx on public.metas(aluno_id);
+create index if not exists questoes_autor_id_idx on public.questoes(autor_id);
+create index if not exists redacoes_corretor_id_idx on public.redacoes(corretor_id);
+create index if not exists relatorios_autor_id_idx on public.relatorios(autor_id);
+create index if not exists simulado_resultados_agendado_id_idx on public.simulado_resultados(agendado_id);
+create index if not exists simulado_resultados_aluno_id_idx on public.simulado_resultados(aluno_id);
+create index if not exists simulado_tentativas_agendado_id_idx on public.simulado_tentativas(agendado_id);
+create index if not exists simulados_agendados_criado_por_idx on public.simulados_agendados(criado_por);
+create index if not exists sisu_cenarios_aluno_id_idx on public.sisu_cenarios(aluno_id);
+create index if not exists sugestoes_estudo_pedido_por_idx on public.sugestoes_estudo(pedido_por);
+create index if not exists videoaulas_autor_id_idx on public.videoaulas(autor_id);
+create index if not exists videoaulas_vistas_aula_id_idx on public.videoaulas_vistas(aula_id);

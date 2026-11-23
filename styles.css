@@ -2943,3 +2943,8 @@ div.q-alt { cursor: default; }
   .ofensiva.ativa .ofensiva-chama, .anel-valor, .hoje-bonus, .hoje-esqueleto div { animation: none !important; }
   .hoje-barra i, .missao-check svg, .pomodoro-valor { transition: none !important; }
 }
+
+/* Aba Simulados: partes (Fazer simulado, Notas, Provas, Cronômetro) */
+.sub-abas { overflow-x: auto; scrollbar-width: none; margin-bottom: 16px; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
+.sub-abas::-webkit-scrollbar { display: none; }
+.sub-abas .aba { flex: none; }

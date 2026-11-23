@@ -89,6 +89,16 @@ export default function App() {
 }
 
 // Abas que mostram os dados de um aluno (o mentor escolhe o aluno no seletor)
+// Aba Simulados: tudo de simulado num lugar só, dividido em partes
+const SUB_SIMULADOS = [
+  ['fazer', '🏁', 'Fazer simulado'],
+  ['notas', '📝', 'Notas e desempenho'],
+  ['provas', '📚', 'Provas e gabaritos'],
+  ['cronometro', '⏱️', 'Cronômetro de prova'],
+]
+// abas antigas que agora são partes da aba Simulados
+const ABAS_ANTIGAS = { 'simulado-enem': 'fazer', materiais: 'provas', cronometro: 'cronometro' }
+
 const POR_ALUNO = ['hoje', 'foco', 'conquistas', 'painel', 'trilha', 'pontos', 'evolucao', 'horario', 'simulados', 'erros', 'redacao', 'relatorio']
 
 function Painel({ usuario }) {
@@ -153,9 +163,21 @@ function Painel({ usuario }) {
     return () => clearInterval(t)
   }, [ehCeo, aba])
 
+  const [subSimulado, setSubSimuladoEstado] = useState(() => {
+    try { return localStorage.getItem('subSimulado') || 'fazer' } catch { return 'fazer' }
+  })
+  function setSubSimulado(sub) {
+    setSubSimuladoEstado(sub)
+    try { localStorage.setItem('subSimulado', sub) } catch { /* sem armazenamento */ }
+  }
+
+  // aceita 'simulados:notas' (abre direto numa parte) e os nomes antigos ('simulado-enem', 'materiais', 'cronometro')
   function setAba(id) {
-    setAbaEstado(id)
-    try { localStorage.setItem('abaAtual', id) } catch { /* sem armazenamento */ }
+    let [abaNova, sub] = String(id).split(':')
+    if (ABAS_ANTIGAS[abaNova]) { sub = ABAS_ANTIGAS[abaNova]; abaNova = 'simulados' }
+    if (abaNova === 'simulados' && sub) setSubSimulado(sub)
+    setAbaEstado(abaNova)
+    try { localStorage.setItem('abaAtual', abaNova) } catch { /* sem armazenamento */ }
     window.scrollTo({ top: 0 })
   }
 
@@ -259,11 +281,8 @@ function Painel({ usuario }) {
         ['pontos', '🎯', 'Onde estão seus pontos'],
         ['evolucao', '📈', 'Evolução'],
         ['horario', '🗓️', 'Horário'],
-        ['simulados', '📝', 'Simulados'],
+        ['simulados', '🏁', 'Simulados'],
         ['questoes', '🧠', 'Banco de questões'],
-        ['simulado-enem', '🏁', 'Simulado ENEM'],
-        ['materiais', '📚', 'Simulados e provas'],
-        ['cronometro', '⏱️', 'Simulador do ENEM'],
         ['erros', '📕', 'Caderno de erros'],
         ['redacao', '✍️', 'Redação'],
       ],
@@ -275,7 +294,8 @@ function Painel({ usuario }) {
         : []),
   ]
   const abasValidas = grupos.flatMap((g) => g.itens.map((i) => i[0]))
-  const abaAtual = abasValidas.includes(aba) ? aba : 'hoje'
+  const abaAtual = abasValidas.includes(aba) ? aba : ABAS_ANTIGAS[aba] ? 'simulados' : 'hoje'
+  const subAtual = SUB_SIMULADOS.some((x) => x[0] === subSimulado) ? subSimulado : (ABAS_ANTIGAS[aba] || 'fazer')
 
   const alunoAtual = ehMentor ? alunos.find((a) => a.id === alunoId) : perfil
   const meuMentor = !ehMentor ? equipe.find((m) => m.id === perfil.mentor_id) : null
@@ -286,7 +306,7 @@ function Painel({ usuario }) {
     : ehMentor
       ? 'Painel do mentor'
       : `Olá, ${primeiroNome}!${meuMentor ? ` · Mentor: ${(meuMentor.nome || '').split(' ')[0]}` : ''}`
-  const porAluno = POR_ALUNO.includes(abaAtual)
+  const porAluno = POR_ALUNO.includes(abaAtual) && !(abaAtual === 'simulados' && subAtual !== 'notas')
   const grupoAtual = grupos.find((g) => g.itens.some((i) => i[0] === abaAtual))
   const itemAtual = grupoAtual?.itens.find((i) => i[0] === abaAtual)
 
@@ -295,17 +315,17 @@ function Painel({ usuario }) {
     conteudo = <Comunidade ehMentor={ehMentor} ehCeo={ehCeo} meuId={perfil.id} equipe={equipe} fotoPadrao={fotoDaMarca} />
   } else if (abaAtual === 'videoaulas') {
     conteudo = <Videoaulas ehMentor={ehMentor} ehCeo={ehCeo} meuId={perfil.id} equipe={equipe} />
-  } else if (abaAtual === 'cronometro') {
+  } else if (abaAtual === 'simulados' && subAtual === 'cronometro') {
     conteudo = <SimuladorProva />
   } else if (abaAtual === 'ranking') {
     conteudo = <Ranking perfil={perfil} ehMentor={ehMentor} irPara={setAba} />
   } else if (abaAtual === 'listas') {
     conteudo = <Listas perfil={perfil} ehMentor={ehMentor} alunos={alunos} />
-  } else if (abaAtual === 'simulado-enem') {
+  } else if (abaAtual === 'simulados' && subAtual === 'fazer') {
     conteudo = <SimuladoEnem perfil={perfil} ehMentor={ehMentor} />
   } else if (abaAtual === 'interessados') {
     conteudo = <Interessados equipe={equipe} />
-  } else if (abaAtual === 'materiais') {
+  } else if (abaAtual === 'simulados' && subAtual === 'provas') {
     conteudo = <Materiais ehCeo={ehCeo} />
   } else if (abaAtual === 'questoes') {
     conteudo = <BancoQuestoes perfil={perfil} ehMentor={ehMentor} alunos={alunos} />
@@ -357,7 +377,7 @@ function Painel({ usuario }) {
       foco: <Foco key={k} alunoId={k} ehMentor={ehMentor} irPara={setAba} />,
       conquistas: <Conquistas key={k} alunoId={k} aluno={alunoAtual} ehMentor={ehMentor} />,
       simulados: <Simulados key={k} alunoId={k} onVerEvolucao={() => setAba('evolucao')} />,
-      evolucao: <Evolucao key={k} alunoId={k} ehMentor={ehMentor} onLancar={() => setAba('simulados')} />,
+      evolucao: <Evolucao key={k} alunoId={k} ehMentor={ehMentor} onLancar={() => setAba('simulados:notas')} />,
       horario: <Horario key={k} alunoId={k} editavel={ehMentor} aluno={alunoAtual} />,
       erros: <CadernoErros key={k} alunoId={k} ehMentor={ehMentor} />,
       redacao: <Redacao key={k} alunoId={k} ehMentor={ehMentor} alunos={alunos} />,
@@ -433,6 +453,16 @@ function Painel({ usuario }) {
                 <h1>{itemAtual[2]}</h1>
               </div>
             </header>
+          )}
+
+          {abaAtual === 'simulados' && (
+            <div className="abas sub-abas nao-imprimir" role="tablist" aria-label="Partes de Simulados">
+              {SUB_SIMULADOS.map(([id, icone, nome]) => (
+                <button key={id} role="tab" aria-selected={subAtual === id} className={subAtual === id ? 'aba ativa' : 'aba'} onClick={() => setSubSimulado(id)}>
+                  <span aria-hidden="true">{icone}</span> {nome}
+                </button>
+              ))}
+            </div>
           )}
 
           {ehMentor && porAluno && (

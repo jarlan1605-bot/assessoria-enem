@@ -6,6 +6,7 @@ import { ConquistasVisao } from './Conquistas'
 import { ResolverLista, ImpressaoLista } from './Listas'
 import { cartaoDia, cartaoConquista, cartaoLista, cartaoSemana } from './cartoesStory'
 import { CONQUISTAS } from './estudo'
+import MenuCelular from './MenuCelular'
 
 const aluno = { id: 'demo', nome: 'Ana Beatriz Souza', papel: 'aluno' }
 const resumo = {
@@ -100,6 +101,18 @@ export default function Demo() {
       {tela === 'lista' && <ResolverLista demo perfil={aluno} lista={{ id: null, titulo: 'Lista — Introdução à Célula' }} questoes={questoes} onVoltar={() => {}} />}
       {tela === 'pdf' && <ImpressaoLista semImprimir lista={{ titulo: 'Lista — Introdução à Célula', prazo: '2026-11-30' }} aluno={aluno} questoes={questoes} gabarito />}
       {tela === 'cartoes' && <Cartoes />}
+      {tela === 'menu' && (
+        <>
+          <HojeVisao dados={d} aluno={aluno} config={{ data_enem_1: '2027-11-07T13:30:00-03:00' }} irPara={() => {}} onMarcarBloco={() => {}} />
+          <MenuCelular abaAtual="hoje" onIr={() => {}} atalhos={['hoje', 'questoes', 'simulados', 'progresso']} grupos={[
+            { titulo: 'Início', itens: [['hoje', '☀️', 'Hoje']] },
+            { titulo: 'Planejar', itens: [['horario', '🗓️', 'Horário'], ['trilha', '🧭', 'Minha trilha'], ['foco', '⏱️', 'Foco']] },
+            { titulo: 'Praticar', itens: [['questoes', '🧠', 'Banco de questões'], ['listas', '📋', 'Listas de questões'], ['simulados', '🏁', 'Simulados'], ['erros', '📕', 'Caderno de erros'], ['redacao', '✍️', 'Redação']] },
+            { titulo: 'Acompanhar', itens: [['progresso', '📊', 'Meu progresso'], ['pontos', '🎯', 'Onde estão os pontos'], ['ranking', '🏆', 'Ranking'], ['conquistas', '🎖️', 'Conquistas']] },
+            { titulo: 'Mentoria', itens: [['comunidade', '📣', 'Comunidade'], ['videoaulas', '🎬', 'Aulas e mentorias'], ['aulas', '🎓', 'Marcar aula'], ['relatorio', '📄', 'Relatório']] },
+          ]} />
+        </>
+      )}
     </main></div></div>
   )
 }

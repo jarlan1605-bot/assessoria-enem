@@ -12,6 +12,7 @@ import XpNotificacoes from './XpNotificacoes'
 import { precisaVoce } from './cobranca'
 import ErrorBoundary from './ErrorBoundary'
 import BotaoWhatsapp from './BotaoWhatsapp'
+import MenuCelular from './MenuCelular'
 
 // Cada tela só é baixada quando alguém abre: a página inicial fica bem mais leve no celular.
 const Horario = lazy(() => import('./Horario'))
@@ -89,17 +90,26 @@ export default function App() {
 }
 
 // Abas que mostram os dados de um aluno (o mentor escolhe o aluno no seletor)
-// Aba Simulados: tudo de simulado num lugar só, dividido em partes
-const SUB_SIMULADOS = [
-  ['fazer', '🏁', 'Fazer simulado'],
-  ['notas', '📝', 'Notas e desempenho'],
-  ['provas', '📚', 'Provas e gabaritos'],
-  ['cronometro', '⏱️', 'Cronômetro de prova'],
-]
-// abas antigas que agora são partes da aba Simulados
-const ABAS_ANTIGAS = { 'simulado-enem': 'fazer', materiais: 'provas', cronometro: 'cronometro' }
+// Abas com partes: tudo de simulado num lugar só, e o progresso do aluno num lugar só
+const SUBABAS = {
+  simulados: [
+    ['fazer', '🏁', 'Fazer simulado'],
+    ['notas', '📝', 'Notas e desempenho'],
+    ['provas', '📚', 'Provas e gabaritos'],
+    ['cronometro', '⏱️', 'Cronômetro de prova'],
+  ],
+  progresso: [
+    ['resumo', '📊', 'Resumo geral'],
+    ['evolucao', '📈', 'Evolução nos simulados'],
+  ],
+}
+// abas antigas que agora são partes de outra aba
+const ABAS_ANTIGAS = {
+  'simulado-enem': ['simulados', 'fazer'], materiais: ['simulados', 'provas'], cronometro: ['simulados', 'cronometro'],
+  painel: ['progresso', 'resumo'], evolucao: ['progresso', 'evolucao'],
+}
 
-const POR_ALUNO = ['hoje', 'foco', 'conquistas', 'painel', 'trilha', 'pontos', 'evolucao', 'horario', 'simulados', 'erros', 'redacao', 'relatorio']
+const POR_ALUNO = ['hoje', 'foco', 'conquistas', 'progresso', 'trilha', 'pontos', 'horario', 'simulados', 'erros', 'redacao', 'relatorio']
 
 function Painel({ usuario }) {
   const [perfil, setPerfil] = useState(null)
@@ -163,19 +173,23 @@ function Painel({ usuario }) {
     return () => clearInterval(t)
   }, [ehCeo, aba])
 
-  const [subSimulado, setSubSimuladoEstado] = useState(() => {
-    try { return localStorage.getItem('subSimulado') || 'fazer' } catch { return 'fazer' }
+  // parte aberta em cada aba com partes (o site lembra)
+  const [subs, setSubs] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('subAbas') || '{}') } catch { return {} }
   })
-  function setSubSimulado(sub) {
-    setSubSimuladoEstado(sub)
-    try { localStorage.setItem('subSimulado', sub) } catch { /* sem armazenamento */ }
+  function setSub(abaDaParte, sub) {
+    setSubs((x) => {
+      const novo = { ...x, [abaDaParte]: sub }
+      try { localStorage.setItem('subAbas', JSON.stringify(novo)) } catch { /* sem armazenamento */ }
+      return novo
+    })
   }
 
-  // aceita 'simulados:notas' (abre direto numa parte) e os nomes antigos ('simulado-enem', 'materiais', 'cronometro')
+  // aceita 'simulados:notas' (abre direto numa parte) e os nomes antigos ('simulado-enem', 'painel', 'evolucao'...)
   function setAba(id) {
     let [abaNova, sub] = String(id).split(':')
-    if (ABAS_ANTIGAS[abaNova]) { sub = ABAS_ANTIGAS[abaNova]; abaNova = 'simulados' }
-    if (abaNova === 'simulados' && sub) setSubSimulado(sub)
+    if (ABAS_ANTIGAS[abaNova]) [abaNova, sub] = ABAS_ANTIGAS[abaNova]
+    if (SUBABAS[abaNova] && sub) setSub(abaNova, sub)
     setAbaEstado(abaNova)
     try { localStorage.setItem('abaAtual', abaNova) } catch { /* sem armazenamento */ }
     window.scrollTo({ top: 0 })
@@ -286,10 +300,9 @@ function Painel({ usuario }) {
       ],
     },
     {
-      titulo: sufixo('Meu progresso', 'Progresso do aluno'),
+      titulo: 'Acompanhar',
       itens: [
-        ['painel', '📊', sufixo('Meu painel', 'Painel do aluno')],
-        ['evolucao', '📈', 'Evolução'],
+        ['progresso', '📊', sufixo('Meu progresso', 'Progresso do aluno')],
         ['pontos', '🎯', 'Onde estão os pontos'],
         ['ranking', '🏆', 'Ranking'],
         ['conquistas', '🎖️', sufixo('Conquistas', 'Conquistas do aluno')],
@@ -311,8 +324,9 @@ function Painel({ usuario }) {
         : []),
   ]
   const abasValidas = grupos.flatMap((g) => g.itens.map((i) => i[0]))
-  const abaAtual = abasValidas.includes(aba) ? aba : ABAS_ANTIGAS[aba] ? 'simulados' : 'hoje'
-  const subAtual = SUB_SIMULADOS.some((x) => x[0] === subSimulado) ? subSimulado : (ABAS_ANTIGAS[aba] || 'fazer')
+  const abaAtual = abasValidas.includes(aba) ? aba : ABAS_ANTIGAS[aba] ? ABAS_ANTIGAS[aba][0] : 'hoje'
+  const partes = SUBABAS[abaAtual] || null
+  const subAtual = partes ? (partes.some((x) => x[0] === subs[abaAtual]) ? subs[abaAtual] : (ABAS_ANTIGAS[aba]?.[1] || partes[0][0])) : null
 
   const alunoAtual = ehMentor ? alunos.find((a) => a.id === alunoId) : perfil
   const meuMentor = !ehMentor ? equipe.find((m) => m.id === perfil.mentor_id) : null
@@ -393,12 +407,13 @@ function Painel({ usuario }) {
       hoje: <Hoje key={k} alunoId={k} aluno={alunoAtual} ehMentor={ehMentor} irPara={setAba} config={config} />,
       foco: <Foco key={k} alunoId={k} ehMentor={ehMentor} irPara={setAba} />,
       conquistas: <Conquistas key={k} alunoId={k} aluno={alunoAtual} ehMentor={ehMentor} />,
-      simulados: <Simulados key={k} alunoId={k} onVerEvolucao={() => setAba('evolucao')} />,
-      evolucao: <Evolucao key={k} alunoId={k} ehMentor={ehMentor} onLancar={() => setAba('simulados:notas')} />,
+      simulados: <Simulados key={k} alunoId={k} onVerEvolucao={() => setAba('progresso:evolucao')} />,
       horario: <Horario key={k} alunoId={k} editavel={ehMentor} aluno={alunoAtual} />,
       erros: <CadernoErros key={k} alunoId={k} ehMentor={ehMentor} />,
       redacao: <Redacao key={k} alunoId={k} ehMentor={ehMentor} alunos={alunos} />,
-      painel: <PainelAluno key={k} alunoId={k} aluno={alunoAtual} ehMentor={ehMentor} irPara={setAba} />,
+      progresso: subAtual === 'evolucao'
+        ? <Evolucao key={k} alunoId={k} ehMentor={ehMentor} onLancar={() => setAba('simulados:notas')} />
+        : <PainelAluno key={k} alunoId={k} aluno={alunoAtual} ehMentor={ehMentor} irPara={setAba} />,
       trilha: <Trilha key={k} alunoId={k} aluno={alunoAtual} ehMentor={ehMentor} />,
       pontos: <Pontos key={k} alunoId={k} aluno={alunoAtual} ehMentor={ehMentor} onIrCaderno={() => setAba('erros')} />,
       relatorio: <Relatorio key={k} aluno={alunoAtual} ehMentor={ehMentor} equipe={equipe} />,
@@ -472,10 +487,10 @@ function Painel({ usuario }) {
             </header>
           )}
 
-          {abaAtual === 'simulados' && (
-            <div className="abas sub-abas nao-imprimir" role="tablist" aria-label="Partes de Simulados">
-              {SUB_SIMULADOS.map(([id, icone, nome]) => (
-                <button key={id} role="tab" aria-selected={subAtual === id} className={subAtual === id ? 'aba ativa' : 'aba'} onClick={() => setSubSimulado(id)}>
+          {partes && (
+            <div className="abas sub-abas nao-imprimir" role="tablist" aria-label={`Partes de ${itemAtual?.[2] || ''}`}>
+              {partes.map(([id, icone, nome]) => (
+                <button key={id} role="tab" aria-selected={subAtual === id} className={subAtual === id ? 'aba ativa' : 'aba'} onClick={() => setSub(abaAtual, id)}>
                   <span aria-hidden="true">{icone}</span> {nome}
                 </button>
               ))}
@@ -501,6 +516,14 @@ function Painel({ usuario }) {
           </ErrorBoundary>
         </main>
       </div>
+
+      <MenuCelular
+        grupos={grupos}
+        atalhos={ehMentor ? ['visao-geral', 'hoje', 'progresso', 'agenda'] : ['hoje', 'questoes', 'simulados', 'progresso']}
+        abaAtual={abaAtual}
+        onIr={setAba}
+        badges={{ financeiro: aCobrar, interessados: novosInteressados }}
+      />
 
       {editandoPerfil && (
         <Suspense fallback={null}><Perfil

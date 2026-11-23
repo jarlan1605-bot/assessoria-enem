@@ -21,7 +21,22 @@ const desempenho = [
   { area: 'natureza', materia: 'Física', total: 38, acertos: 15 }, { area: 'natureza', materia: 'Química', total: 33, acertos: 17 },
 ]
 const ofensiva = { atual: 12, recorde: 19, hoje_contou: false, semana: [true, true, true, true, false, false, false] }
-const dadosHoje = { resumo, ofensiva, desempenho, ultimaLista: null, semana: { questoes: 214, focoMin: 545, completos: 3 } }
+const hojeD = new Date().toLocaleDateString('sv-SE', { timeZone: 'America/Sao_Paulo' })
+const mesIni = hojeD.slice(0, 8) + '01'
+const diasMes = Array.from({ length: Number(hojeD.slice(8, 10)) }, (_, i) => mesIni.slice(0, 8) + String(i + 1).padStart(2, '0')).filter((d, i) => i % 5 !== 3)
+const top = [{ aluno_id: 'x1', nome: 'Lucas M.', xp: 640 }, { aluno_id: 'x2', nome: 'Bia R.', xp: 590 }, { aluno_id: 'demo', nome: 'Ana B.', xp: 552 }]
+const dadosHoje = {
+  resumo, ofensiva, desempenho, ultimaLista: null, semana: { questoes: 214, focoMin: 545, completos: 3 },
+  ranking: { semana: { pos: 3, total: 15, xp: 552, falta: 39, acima: 'Bia R.', top }, mes: { pos: 2, total: 15, xp: 1840, top } },
+  mes: { questoes: 486, acertos: 341, focoMin: 1210, dias: diasMes, diasPassados: Number(hojeD.slice(8, 10)), ultimoDia: new Date(Number(hojeD.slice(0, 4)), Number(hojeD.slice(5, 7)), 0).getDate(), mesIni },
+  horario: [
+    { id: 'b1', inicio: '07:00', fim: '07:50', materia: 'Escola/Cursinho', conteudo: '', status: null },
+    { id: 'b2', inicio: '08:00', fim: '09:00', materia: 'Química', conteudo: 'Estequiometria', status: 'feito' },
+    { id: 'b3', inicio: '09:15', fim: '10:15', materia: 'Biologia', conteudo: 'Introdução à Célula', status: null },
+    { id: 'b4', inicio: '14:00', fim: '15:30', materia: 'Matemática', conteudo: 'Funções do 1º grau', status: null },
+    { id: 'b5', inicio: '19:00', fim: '20:00', materia: 'Redação', conteudo: 'Treino de introdução', status: null },
+  ],
+}
 const sessoes = [
   ['Química', 50, 0], ['Biologia', 25, 0], ['Matemática', 50, 1], ['Física', 25, 1], ['Matemática', 50, 2], ['Português', 25, 3], ['Química', 25, 3],
 ].map(([materia, minutos, d]) => ({ materia, minutos, criado_em: new Date(Date.now() - (3 - d) * 864e5).toISOString() }))

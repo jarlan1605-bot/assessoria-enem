@@ -257,7 +257,44 @@ function Painel({ usuario }) {
   if (!perfil) return <Carregando />
   if (perfil.papel === 'aluno' && perfil.suspenso) return <AcessoSuspenso perfil={perfil} />
 
+  // Menu em poucos grupos curtos, na ordem do dia do aluno: começar → planejar → praticar → ver o progresso → falar com a mentoria
+  const sufixo = (aluno, mentor) => (ehMentor ? mentor : aluno)
   const grupos = [
+    {
+      titulo: 'Início',
+      itens: [
+        ...(ehMentor ? [['visao-geral', '👀', 'Todos os alunos']] : []),
+        ['hoje', '☀️', sufixo('Hoje', 'Hoje do aluno')],
+      ],
+    },
+    {
+      titulo: 'Planejar',
+      itens: [
+        ['horario', '🗓️', 'Horário'],
+        ['trilha', '🧭', sufixo('Minha trilha', 'Trilha de estudos')],
+        ['foco', '⏱️', sufixo('Foco', 'Foco do aluno')],
+      ],
+    },
+    {
+      titulo: 'Praticar',
+      itens: [
+        ['questoes', '🧠', 'Banco de questões'],
+        ['listas', '📋', 'Listas de questões'],
+        ['simulados', '🏁', 'Simulados'],
+        ['erros', '📕', 'Caderno de erros'],
+        ['redacao', '✍️', 'Redação'],
+      ],
+    },
+    {
+      titulo: sufixo('Meu progresso', 'Progresso do aluno'),
+      itens: [
+        ['painel', '📊', sufixo('Meu painel', 'Painel do aluno')],
+        ['evolucao', '📈', 'Evolução'],
+        ['pontos', '🎯', 'Onde estão os pontos'],
+        ['ranking', '🏆', 'Ranking'],
+        ['conquistas', '🎖️', sufixo('Conquistas', 'Conquistas do aluno')],
+      ],
+    },
     {
       titulo: 'Mentoria',
       itens: [
@@ -265,26 +302,6 @@ function Painel({ usuario }) {
         ['videoaulas', '🎬', 'Aulas e mentorias'],
         ehMentor ? ['agenda', '📅', 'Agenda'] : ['aulas', '🎓', 'Marcar aula'],
         ['relatorio', '📄', 'Relatório'],
-      ],
-    },
-    {
-      titulo: 'Estudos',
-      itens: [
-        ['hoje', '☀️', ehMentor ? 'Hoje do aluno' : 'Hoje'],
-        ['foco', '⏱️', ehMentor ? 'Foco do aluno' : 'Foco'],
-        ['listas', '📋', 'Listas de questões'],
-        ['conquistas', '🎖️', ehMentor ? 'Conquistas do aluno' : 'Minhas conquistas'],
-        ...(ehMentor ? [['visao-geral', '👀', 'Todos os alunos']] : []),
-        ['painel', '📊', ehMentor ? 'Painel do aluno' : 'Meu painel'],
-        ['trilha', '🧭', ehMentor ? 'Trilha de estudos' : 'Minha Trilha'],
-        ['ranking', '🏆', 'Ranking'],
-        ['pontos', '🎯', 'Onde estão seus pontos'],
-        ['evolucao', '📈', 'Evolução'],
-        ['horario', '🗓️', 'Horário'],
-        ['simulados', '🏁', 'Simulados'],
-        ['questoes', '🧠', 'Banco de questões'],
-        ['erros', '📕', 'Caderno de erros'],
-        ['redacao', '✍️', 'Redação'],
       ],
     },
     ...(ehCeo

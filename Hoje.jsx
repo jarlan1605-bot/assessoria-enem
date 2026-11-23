@@ -6,8 +6,40 @@ import {
   conferirTudo, soltarConfete, compartilharImagem,
 } from './estudo'
 import { cartaoDia, cartaoSemana } from './cartoesStory'
+import { corDaMateria } from './constants'
 
 const DIAS_SEMANA = ['S', 'T', 'Q', 'Q', 'S', 'S', 'D']
+const diaBR = (iso) => hojeISO(new Date(iso))
+
+// Posição do aluno no ranking de XP e quanto falta para passar o próximo
+function posicaoNoRanking(lista, alunoId) {
+  const i = lista.findIndex((l) => l.aluno_id === alunoId)
+  if (i < 0) return { pos: null, total: lista.length, xp: 0, top: lista.slice(0, 3) }
+  const eu = lista[i]
+  const acima = i > 0 ? lista[i - 1] : null
+  return { pos: i + 1, total: lista.length, xp: Number(eu.xp), falta: acima ? Number(acima.xp) - Number(eu.xp) + 1 : 0, acima: acima?.nome || null, top: lista.slice(0, 3) }
+}
+
+// Números do mês: questões, acerto, foco e em quais dias estudou
+function resumoDoMes(resp, foco, checks, mesIni) {
+  const dias = new Set()
+  const porDia = {}
+  for (const r of resp) { const d = diaBR(r.criado_em); porDia[d] = (porDia[d] || 0) + 1 }
+  for (const [d, n] of Object.entries(porDia)) if (n >= 10) dias.add(d)
+  for (const c of checks) dias.add(c.dia)
+  for (const f of foco) dias.add(diaBR(f.criado_em))
+  const hoje = hojeISO()
+  const ultimoDia = new Date(Number(mesIni.slice(0, 4)), Number(mesIni.slice(5, 7)), 0).getDate()
+  return {
+    questoes: resp.length,
+    acertos: resp.filter((r) => r.correta).length,
+    focoMin: foco.reduce((s, x) => s + x.minutos, 0),
+    dias: [...dias].filter((d) => d.startsWith(mesIni.slice(0, 8))),
+    diasPassados: Number(hoje.slice(8, 10)),
+    ultimoDia,
+    mesIni,
+  }
+}
 
 // Tela "Hoje": a tela inicial do aluno (o mentor também vê a do aluno escolhido)
 export default function Hoje({ alunoId, aluno, ehMentor, irPara, config }) {
@@ -18,7 +50,11 @@ export default function Hoje({ alunoId, aluno, ehMentor, irPara, config }) {
   const carregar = useCallback(async () => {
     const segunda = (() => { const h = hojeISO(); const d = new Date(h + 'T12:00:00'); return somarDias(h, -((d.getDay() + 6) % 7)) })()
     const desdeSeg = new Date(segunda + 'T00:00:00-03:00').toISOString()
-    const [resumo, ofensiva, desemp, lista, semQ, semF, semM] = await Promise.all([
+    const hoje = hojeISO()
+    const mesIni = hoje.slice(0, 8) + '01'
+    const desdeMes = new Date(mesIni + 'T00:00:00-03:00').toISOString()
+    const diaSemana = (new Date(hoje + 'T12:00:00').getDay() + 6) % 7 // 0 = segunda
+    const [resumo, ofensiva, desemp, lista, semQ, semF, semM, rkSem, rkMes, mesResp, mesFoco, mesCheck, blocosHoje, checkHoje] = await Promise.all([
       supabase.rpc('resumo_dia', { p_aluno: alunoId }),
       supabase.rpc('ofensiva', { p_aluno: alunoId }),
       supabase.rpc('desempenho_materias', { p_aluno: alunoId }),
@@ -26,6 +62,13 @@ export default function Hoje({ alunoId, aluno, ehMentor, irPara, config }) {
       supabase.from('respostas').select('id', { count: 'exact', head: true }).eq('aluno_id', alunoId).gte('criado_em', desdeSeg),
       supabase.from('sessoes_foco').select('minutos').eq('aluno_id', alunoId).gte('criado_em', desdeSeg),
       supabase.from('missoes_dia').select('dia').eq('aluno_id', alunoId).eq('completo', true).gte('dia', segunda),
+      supabase.rpc('ranking_xp', { p_desde: desdeSeg }),
+      supabase.rpc('ranking_xp', { p_desde: desdeMes }),
+      supabase.from('respostas').select('criado_em, correta').eq('aluno_id', alunoId).gte('criado_em', desdeMes).limit(10000),
+      supabase.from('sessoes_foco').select('minutos, criado_em').eq('aluno_id', alunoId).gte('criado_em', desdeMes),
+      supabase.from('checkins').select('dia').eq('aluno_id', alunoId).gte('dia', mesIni).in('status', ['feito', 'parcial']),
+      supabase.from('horarios').select('id, inicio, fim, materia, conteudo, conta_estudo').eq('aluno_id', alunoId).eq('mes', mesIni).eq('dia', diaSemana).order('inicio'),
+      supabase.from('checkins').select('horario_id, status').eq('aluno_id', alunoId).eq('dia', hoje),
     ])
     if (resumo.error || !resumo.data) {
       setErro(resumo.error?.message?.includes('resumo_dia') || resumo.error?.code === 'PGRST202'
@@ -40,6 +83,12 @@ export default function Hoje({ alunoId, aluno, ehMentor, irPara, config }) {
       desempenho: desemp.data ?? [],
       ultimaLista: lista.data?.[0] || null,
       semana: { questoes: semQ.count ?? 0, focoMin: (semF.data ?? []).reduce((s, x) => s + x.minutos, 0), completos: (semM.data ?? []).length },
+      ranking: { semana: posicaoNoRanking(rkSem.data ?? [], alunoId), mes: posicaoNoRanking(rkMes.data ?? [], alunoId) },
+      mes: resumoDoMes(mesResp.data ?? [], mesFoco.data ?? [], mesCheck.data ?? [], mesIni),
+      horario: (() => {
+        const st = Object.fromEntries((checkHoje.data ?? []).map((c) => [c.horario_id, c.status]))
+        return (blocosHoje.data ?? []).map((b) => ({ ...b, inicio: b.inicio.slice(0, 5), fim: b.fim.slice(0, 5), status: st[b.id] || null }))
+      })(),
     })
   }, [alunoId])
 
@@ -119,9 +168,9 @@ export function HojeVisao({ dados, aluno, ehMentor, config, erro, bonus, onMarca
         </div>
       )}
 
-      <ContinuarCartao proximo={proximo} lista={dados.ultimaLista} irPara={irPara} ehMentor={ehMentor} />
+      <ResumoRapido o={dados.ofensiva} rk={dados.ranking?.semana} feitas={feitas} total={missoes.length} xp={r.xp} irPara={irPara} />
 
-      <OfensivaCartao o={dados.ofensiva} />
+      <ContinuarCartao proximo={proximo} lista={dados.ultimaLista} irPara={irPara} ehMentor={ehMentor} />
 
       <div className="cartao hoje-missoes">
         <div className="hoje-missoes-topo">
@@ -161,6 +210,15 @@ export function HojeVisao({ dados, aluno, ehMentor, config, erro, bonus, onMarca
           ))}
         </ul>
         {ehMentor && onSalvarMetas && <MetasDoAluno r={r} onSalvar={onSalvarMetas} />}
+      </div>
+
+      {dados.horario && <HorarioHoje blocos={dados.horario} irPara={irPara} />}
+
+      <OfensivaCartao o={dados.ofensiva} />
+
+      <div className="hoje-duplo">
+        {dados.ranking && <RankingCartao rk={dados.ranking} irPara={irPara} ehMentor={ehMentor} />}
+        {dados.mes && <MesCartao m={dados.mes} xpMes={dados.ranking?.mes?.xp ?? 0} />}
       </div>
 
       <AnelQuestoes linhas={dados.desempenho} />
@@ -285,5 +343,116 @@ function MetasDoAluno({ r, onSalvar }) {
       <label>Minutos de foco<input type="number" min="5" max="600" step="5" value={f} onChange={(e) => setF(e.target.value)} /></label>
       <button className="botao primario pequeno">Salvar metas</button>
     </form>
+  )
+}
+
+// Olhada rápida: os 4 números que mais importam hoje
+function ResumoRapido({ o, rk, feitas, total, xp, irPara }) {
+  const itens = [
+    { k: 'ofensiva', icone: '🔥', valor: o.atual, rotulo: o.atual === 1 ? 'dia seguido' : 'dias seguidos', alerta: !o.hoje_contou },
+    { k: 'missoes', icone: '🎯', valor: `${feitas}/${total}`, rotulo: 'missões hoje' },
+    { k: 'ranking', icone: '🏆', valor: rk?.pos ? `${rk.pos}º` : '–', rotulo: 'na semana', ir: 'ranking' },
+    { k: 'xp', icone: '⚡', valor: `+${xp}`, rotulo: 'XP hoje' },
+  ]
+  return (
+    <ul className="resumo-rapido" aria-label="Resumo de hoje">
+      {itens.map((i) => (
+        <li key={i.k} className={i.alerta ? 'alerta' : ''}>
+          {i.ir ? (
+            <button onClick={() => irPara?.(i.ir)}><span aria-hidden="true">{i.icone}</span><b>{i.valor}</b><small>{i.rotulo}</small></button>
+          ) : (
+            <div><span aria-hidden="true">{i.icone}</span><b>{i.valor}</b><small>{i.rotulo}</small></div>
+          )}
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+// Horário de hoje em linha do tempo, com o "agora" marcado
+export function HorarioHoje({ blocos, irPara, agora = new Date() }) {
+  const min = (hhmm) => Number(hhmm.slice(0, 2)) * 60 + Number(hhmm.slice(3, 5))
+  const hora = new Date(agora.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }))
+  const atual = hora.getHours() * 60 + hora.getMinutes()
+  return (
+    <div className="cartao horario-hoje">
+      <div className="hoje-missoes-topo">
+        <div><span className="hoje-kicker">Horário de hoje</span><h2>{blocos.length ? `${blocos.length} ${blocos.length === 1 ? 'bloco' : 'blocos'} no seu dia` : 'Dia livre no horário'}</h2></div>
+        <button className="botao pequeno" onClick={() => irPara?.('horario')}>Ver semana</button>
+      </div>
+      {!blocos.length ? (
+        <p className="suave pequeno">Seu mentor ainda não colocou blocos para hoje. Aproveite para fazer questões ou uma sessão de foco.</p>
+      ) : (
+        <ol className="linha-tempo">
+          {blocos.map((b) => {
+            const estado = b.status === 'feito' ? 'feito' : atual >= min(b.inicio) && atual < min(b.fim) ? 'agora' : atual >= min(b.fim) ? 'passou' : 'depois'
+            return (
+              <li key={b.id} className={`lt-item ${estado}`} style={{ '--cor': corDaMateria(b.materia) }}>
+                <span className="lt-hora">{b.inicio}<small>{b.fim}</small></span>
+                <span className="lt-ponto" aria-hidden="true" />
+                <div className="lt-texto">
+                  <strong>{b.materia}{estado === 'agora' && <em className="lt-agora">agora</em>}{estado === 'feito' && <em className="lt-feito">✓ feito</em>}</strong>
+                  {b.conteudo && <span>{b.conteudo}</span>}
+                </div>
+              </li>
+            )
+          })}
+        </ol>
+      )}
+    </div>
+  )
+}
+
+// Ranking: posição na semana, quanto falta para subir e posição no mês
+export function RankingCartao({ rk, irPara, ehMentor }) {
+  const s = rk.semana
+  return (
+    <div className="cartao ranking-cartao">
+      <span className="hoje-kicker">Ranking de XP</span>
+      {s.pos ? (
+        <>
+          <h2 className="ranking-pos"><b>{s.pos}º</b> <span>de {s.total} na semana</span></h2>
+          <p className="suave pequeno">
+            {s.pos === 1 ? (ehMentor ? 'Lidera a semana! 👑' : 'Você lidera a semana! Segure a coroa 👑') : `Faltam ${s.falta} XP para passar ${s.acima}.`}
+            {rk.mes.pos ? ` · ${rk.mes.pos}º no mês` : ''}
+          </p>
+        </>
+      ) : <p className="suave">Ainda sem pontos nesta semana.</p>}
+      <ol className="ranking-mini">
+        {s.top.map((l, i) => (
+          <li key={l.aluno_id}><span>{['🥇', '🥈', '🥉'][i]}</span><span className="rm-nome">{l.nome}</span><b>{Number(l.xp).toLocaleString('pt-BR')} XP</b></li>
+        ))}
+      </ol>
+      <button className="link" onClick={() => irPara?.('ranking')}>Ver ranking completo →</button>
+    </div>
+  )
+}
+
+// O mês: números e um calendário com os dias em que estudou
+export function MesCartao({ m, xpMes }) {
+  const nome = new Date(m.mesIni + 'T12:00:00').toLocaleDateString('pt-BR', { month: 'long' })
+  const pct = m.questoes ? Math.round((m.acertos / m.questoes) * 100) : null
+  const primeiroDiaSemana = (new Date(m.mesIni + 'T12:00:00').getDay() + 6) % 7
+  const estudou = new Set(m.dias)
+  const hoje = hojeISO()
+  return (
+    <div className="cartao mes-cartao">
+      <span className="hoje-kicker">Seu mês · {nome}</span>
+      <h2><b>{m.dias.length}</b> de {m.diasPassados} dias estudados</h2>
+      <dl className="mes-numeros">
+        <div><dt>Questões</dt><dd>{m.questoes}</dd></div>
+        <div><dt>Acerto</dt><dd>{pct === null ? '–' : `${pct}%`}</dd></div>
+        <div><dt>Foco</dt><dd>{minutosTexto(m.focoMin)}</dd></div>
+        <div><dt>XP</dt><dd>{Number(xpMes).toLocaleString('pt-BR')}</dd></div>
+      </dl>
+      <div className="mes-calendario" role="img" aria-label={`Estudou em ${m.dias.length} dias deste mês`}>
+        {DIAS_SEMANA.map((d, i) => <span key={'c' + i} className="mc-cab">{d}</span>)}
+        {Array.from({ length: primeiroDiaSemana }, (_, i) => <span key={'v' + i} />)}
+        {Array.from({ length: m.ultimoDia }, (_, i) => {
+          const dia = m.mesIni.slice(0, 8) + String(i + 1).padStart(2, '0')
+          return <span key={dia} className={['mc-dia', estudou.has(dia) ? 'ok' : '', dia === hoje ? 'hoje' : '', dia > hoje ? 'futuro' : ''].join(' ')}>{i + 1}</span>
+        })}
+      </div>
+    </div>
   )
 }

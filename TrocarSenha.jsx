@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { supabase } from './supabase'
 
-export default function TrocarSenha({ onFechar }) {
+export default function TrocarSenha({ onFechar, obrigatoria = false }) {
   const [senha, setSenha] = useState('')
   const [confirma, setConfirma] = useState('')
   const [msg, setMsg] = useState('')
@@ -13,7 +13,7 @@ export default function TrocarSenha({ onFechar }) {
     if (senha.length < 6) return setMsg('A senha precisa ter pelo menos 6 caracteres.')
     if (senha !== confirma) return setMsg('As duas senhas não são iguais.')
     setSalvando(true)
-    const { error } = await supabase.auth.updateUser({ password: senha })
+    const { error } = await supabase.auth.updateUser({ password: senha, data: { trocar_senha: false } })
     setSalvando(false)
     if (error) return setMsg('Não foi possível trocar a senha: ' + error.message)
     setOk(true)
@@ -21,9 +21,10 @@ export default function TrocarSenha({ onFechar }) {
   }
 
   return (
-    <div className="fundo-modal" onClick={onFechar}>
+    <div className="fundo-modal" onClick={obrigatoria ? undefined : onFechar}>
       <div className="cartao modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
-        <h2>Trocar senha</h2>
+        <h2>{obrigatoria ? 'Crie a sua senha' : 'Trocar senha'}</h2>
+        {obrigatoria && !ok && <p className="suave">Por segurança, troque a senha que chegou por e-mail por uma só sua antes de continuar.</p>}
         {ok ? (
           <>
             <p>{msg}</p>
@@ -41,7 +42,7 @@ export default function TrocarSenha({ onFechar }) {
             </label>
             {msg && <p className="erro">{msg}</p>}
             <div className="linha-botoes">
-              <button type="button" className="botao fantasma" onClick={onFechar}>Cancelar</button>
+              {!obrigatoria && <button type="button" className="botao fantasma" onClick={onFechar}>Cancelar</button>}
               <button className="botao primario" disabled={salvando}>{salvando ? 'Salvando…' : 'Salvar'}</button>
             </div>
           </form>

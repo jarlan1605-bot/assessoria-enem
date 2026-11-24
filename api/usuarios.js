@@ -63,7 +63,7 @@ export default async function handler(req, res) {
         email,
         password: senha,
         email_confirm: true,
-        user_metadata: { nome },
+        user_metadata: { nome, trocar_senha: true }, // pede uma senha nova no primeiro acesso
       })
       if (error) {
         const ja = /already|registered|exists/i.test(error.message)
@@ -101,7 +101,7 @@ export default async function handler(req, res) {
           return responder(res, 403, { erro: 'Você só pode trocar a senha dos seus alunos.' })
         }
       }
-      const { error } = await admin.auth.admin.updateUserById(corpo.id, { password: senha })
+      const { error } = await admin.auth.admin.updateUserById(corpo.id, { password: senha, user_metadata: { trocar_senha: true } })
       if (error) return responder(res, 400, { erro: 'Não foi possível trocar a senha: ' + error.message })
       return responder(res, 200, { ok: true })
     }

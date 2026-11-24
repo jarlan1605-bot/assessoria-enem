@@ -39,6 +39,7 @@ Rode, **nesta ordem**, os arquivos que ainda não rodou. Cada um só acrescenta 
 13. `trilha.sql` (Minha Trilha)
 14. `xp.sql` (XP e ranking), se ainda não rodou
 15. `gamificacao.sql` ← o novo: tela **Hoje** (missões do dia e ofensiva), **Foco** (pomodoro e ranking de horas), **Listas de questões**, **Minha pasta**, **Minhas conquistas** e o botão de WhatsApp. Precisa do `xp.sql` e do `questoes.sql` antes.
+16. `seguranca_2026_11.sql` (endurecimento de segurança e desempenho; já aplicado)
 
 ### 2) GitHub → enviar os arquivos
 **Add file → Upload files**, selecione todos os arquivos soltos desta pasta e clique em **Commit changes**. Os arquivos com o mesmo nome são substituídos.

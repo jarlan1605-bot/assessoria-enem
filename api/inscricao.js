@@ -71,6 +71,15 @@ export default async function handler(req, res) {
       if (zap.length < 10 || zap.length > 13) return responder(res, 400, { erro: 'Coloque um WhatsApp com DDD.' })
       if (!texto(corpo.situacao, 60)) return responder(res, 400, { erro: 'Conte em que fase dos estudos você está.' })
 
+      // Proteção contra robôs: no máximo 3 inscrições do mesmo WhatsApp por hora e 30 inscrições novas no site a cada 10 minutos
+      const umaHora = new Date(Date.now() - 3600e3).toISOString()
+      const dezMin = new Date(Date.now() - 600e3).toISOString()
+      const [{ count: doMesmo }, { count: noSite }] = await Promise.all([
+        admin.from('interessados').select('id', { count: 'exact', head: true }).eq('whatsapp', zap).gte('criado_em', umaHora),
+        admin.from('interessados').select('id', { count: 'exact', head: true }).gte('criado_em', dezMin),
+      ])
+      if ((doMesmo ?? 0) >= 3 || (noSite ?? 0) >= 30) return responder(res, 429, { erro: 'Muitas inscrições em pouco tempo. Espere alguns minutos e tente de novo, ou chame a gente no WhatsApp.' })
+
       const { data: ja } = await admin.from('perfis').select('id').eq('email', email).maybeSingle()
       if (ja) return responder(res, 400, { erro: 'Já existe uma conta com esse e-mail. Se você já é aluno, entre pela Área do aluno.' })
 
@@ -169,7 +178,7 @@ export default async function handler(req, res) {
       }
 
       const senha = senhaAleatoria()
-      const { data: criado, error } = await admin.auth.admin.createUser({ email: ins.email, password: senha, email_confirm: true, user_metadata: { nome: ins.nome } })
+      const { data: criado, error } = await admin.auth.admin.createUser({ email: ins.email, password: senha, email_confirm: true, user_metadata: { nome: ins.nome, trocar_senha: true } })
       if (error) {
         await admin.from('interessados').update({ mentor_id: null }).eq('id', ins.id)
         const ja = /already|registered|exists/i.test(error.message)

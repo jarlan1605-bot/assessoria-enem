@@ -125,6 +125,7 @@ function Painel({ usuario }) {
     } catch { return 'hoje' }
   })
   const [trocandoSenha, setTrocandoSenha] = useState(false)
+  const [senhaObrigatoria, setSenhaObrigatoria] = useState(!!usuario.user_metadata?.trocar_senha)
   const [editandoPerfil, setEditandoPerfil] = useState(false)
   const [fotoMentor, setFotoMentor] = useState(null)
   const [equipe, setEquipe] = useState([]) // mentores e CEO (nome e foto)
@@ -534,6 +535,7 @@ function Painel({ usuario }) {
         /></Suspense>
       )}
       {trocandoSenha && <TrocarSenha onFechar={() => setTrocandoSenha(false)} />}
+      {senhaObrigatoria && !trocandoSenha && <TrocarSenha obrigatoria onFechar={() => setSenhaObrigatoria(false)} />}
       {perfil.papel === 'aluno' && <BotaoWhatsapp perfil={perfil} />}
     </div>
   )

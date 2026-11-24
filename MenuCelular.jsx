@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 
 // Celular: barra fixa embaixo com os 4 atalhos mais usados + "Mais" (abre o menu completo por grupos)
-export default function MenuCelular({ grupos, atalhos, abaAtual, onIr, badges = {} }) {
+export default function MenuCelular({ grupos, atalhos, abaAtual, onIr, badges = {}, onSair }) {
   const avisos = Object.values(badges).reduce((a, b) => a + (b || 0), 0)
   const [aberto, setAberto] = useState(false)
   const todos = grupos.flatMap((g) => g.itens)
@@ -54,6 +54,7 @@ export default function MenuCelular({ grupos, atalhos, abaAtual, onIr, badges = 
                 </div>
               </section>
             ))}
+            {onSair && <button className="folha-sair" onClick={() => { setAberto(false); onSair() }}>Sair da conta</button>}
           </div>
         </div>
       )}

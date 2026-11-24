@@ -29,6 +29,7 @@ export const COMO_GANHAR = [
   ['⏱️', 'Sessão de foco', '+2 XP a cada 5 minutos de foco concluídos'],
   ['🎉', 'Missões do dia', 'Todas as missões do dia: +40'],
   ['📋', 'Lista de questões', 'Terminou uma lista inteira: +20'],
+  ['⏱️', 'Hora do foco', 'Por dia: 1h = 16 XP · 3h = 58 · 5h = 130 · 8h = 248 · 10h = 460'],
 ]
 
 // Dias seguidos com check-in (até hoje ou ontem)

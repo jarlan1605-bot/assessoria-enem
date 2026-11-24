@@ -13,6 +13,7 @@ import { precisaVoce } from './cobranca'
 import ErrorBoundary from './ErrorBoundary'
 import BotaoWhatsapp from './BotaoWhatsapp'
 import MenuCelular from './MenuCelular'
+import HoraDoFoco from './HoraDoFoco'
 
 // Cada tela só é baixada quando alguém abre: a página inicial fica bem mais leve no celular.
 const Horario = lazy(() => import('./Horario'))
@@ -432,12 +433,13 @@ function Painel({ usuario }) {
           </div>
         </div>
         <div className="topo-acoes">
+          {perfil.papel === 'aluno' && <HoraDoFoco />}
           {perfil.papel === 'aluno' && <XpNotificacoes perfil={perfil} onAbrir={() => setAba('ranking')} />}
           <button className="botao-perfil" onClick={() => setEditandoPerfil(true)} aria-label="Meu perfil">
             <Avatar src={perfil.foto_url} nome={perfil.nome || perfil.email} tamanho={32} />
             <span className="botao-perfil-texto">Meu perfil</span>
           </button>
-          <button className="botao fantasma" onClick={() => supabase.auth.signOut()}>Sair</button>
+          <button className="botao fantasma topo-sair" onClick={() => supabase.auth.signOut()}>Sair</button>
         </div>
       </header>
 
@@ -524,6 +526,7 @@ function Painel({ usuario }) {
         abaAtual={abaAtual}
         onIr={setAba}
         badges={{ financeiro: aCobrar, interessados: novosInteressados }}
+        onSair={() => supabase.auth.signOut()}
       />
 
       {editandoPerfil && (

@@ -7,6 +7,8 @@ import { ResolverLista, ImpressaoLista } from './Listas'
 import { cartaoDia, cartaoConquista, cartaoLista, cartaoSemana } from './cartoesStory'
 import { CONQUISTAS } from './estudo'
 import MenuCelular from './MenuCelular'
+import HoraDoFoco from './HoraDoFoco'
+import Avatar from './Avatar'
 
 const aluno = { id: 'demo', nome: 'Ana Beatriz Souza', papel: 'aluno' }
 const resumo = {
@@ -101,6 +103,17 @@ export default function Demo() {
       {tela === 'lista' && <ResolverLista demo perfil={aluno} lista={{ id: null, titulo: 'Lista — Introdução à Célula' }} questoes={questoes} onVoltar={() => {}} />}
       {tela === 'pdf' && <ImpressaoLista semImprimir lista={{ titulo: 'Lista — Introdução à Célula', prazo: '2026-11-30' }} aluno={aluno} questoes={questoes} gabarito />}
       {tela === 'cartoes' && <Cartoes />}
+      {tela === 'topo' && (
+        <header className="topo" style={{ margin: '-16px -16px 16px' }}>
+          <div className="topo-marca"><Avatar nome="Jarlan" tamanho={40} /><div><strong>Assessoria J&amp;C</strong><span className="suave pequeno">Olá, Ana! · Mentor: Jarlan</span></div></div>
+          <div className="topo-acoes">
+            <HoraDoFoco demo />
+            <button className="xp-chip"><span>⚡ 1.240 XP</span><b>Nv 5</b></button>
+            <button className="botao-perfil"><Avatar nome="Ana" tamanho={32} /><span className="botao-perfil-texto">Meu perfil</span></button>
+            <button className="botao fantasma">Sair</button>
+          </div>
+        </header>
+      )}
       {tela === 'menu' && (
         <>
           <HojeVisao dados={d} aluno={aluno} config={{ data_enem_1: '2027-11-07T13:30:00-03:00' }} irPara={() => {}} onMarcarBloco={() => {}} />

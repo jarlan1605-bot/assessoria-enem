@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { supabase } from './supabase'
 import { nivelDe, tituloDoNivel } from './xp'
 
-const EMOJI = { questao: '🧠', checkin: '✅', dia: '🗓️', sequencia: '🔥', simulado: '🏁', revisao: '📕', redacao: '✍️', trilha: '🧭', foco: '⏱️', missoes: '🎉', lista: '📋' }
+const EMOJI = { questao: '🧠', checkin: '✅', dia: '🗓️', sequencia: '🔥', simulado: '🏁', revisao: '📕', redacao: '✍️', trilha: '🧭', foco: '⏱️', missoes: '🎉', lista: '📋', estudo: '⏱️' }
 
 // Chip de XP no topo + avisos "Parabéns, você ganhou X XP" (só para alunos)
 export default function XpNotificacoes({ perfil, onAbrir }) {

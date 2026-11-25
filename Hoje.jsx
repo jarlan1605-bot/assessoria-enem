@@ -54,7 +54,7 @@ export default function Hoje({ alunoId, aluno, ehMentor, irPara, config }) {
     const mesIni = hoje.slice(0, 8) + '01'
     const desdeMes = new Date(mesIni + 'T00:00:00-03:00').toISOString()
     const diaSemana = (new Date(hoje + 'T12:00:00').getDay() + 6) % 7 // 0 = segunda
-    const [resumo, ofensiva, desemp, lista, semQ, semF, semM, rkSem, rkMes, mesResp, mesFoco, mesCheck, blocosHoje, checkHoje] = await Promise.all([
+    const [resumo, ofensiva, desemp, lista, semQ, semF, semM, rkSem, rkMes, mesResp, mesFoco, mesCheck, blocosHoje, checkHoje, estudo] = await Promise.all([
       supabase.rpc('resumo_dia', { p_aluno: alunoId }),
       supabase.rpc('ofensiva', { p_aluno: alunoId }),
       supabase.rpc('desempenho_materias', { p_aluno: alunoId }),
@@ -69,6 +69,7 @@ export default function Hoje({ alunoId, aluno, ehMentor, irPara, config }) {
       supabase.from('checkins').select('dia').eq('aluno_id', alunoId).gte('dia', mesIni).in('status', ['feito', 'parcial']),
       supabase.from('horarios').select('id, inicio, fim, materia, conteudo, conta_estudo').eq('aluno_id', alunoId).eq('mes', mesIni).eq('dia', diaSemana).order('inicio'),
       supabase.from('checkins').select('horario_id, status').eq('aluno_id', alunoId).eq('dia', hoje),
+      supabase.rpc('estudo_hoje', { p_aluno: alunoId }),
     ])
     if (resumo.error || !resumo.data) {
       setErro(resumo.error?.message?.includes('resumo_dia') || resumo.error?.code === 'PGRST202'
@@ -83,6 +84,7 @@ export default function Hoje({ alunoId, aluno, ehMentor, irPara, config }) {
       desempenho: desemp.data ?? [],
       ultimaLista: lista.data?.[0] || null,
       semana: { questoes: semQ.count ?? 0, focoMin: (semF.data ?? []).reduce((s, x) => s + x.minutos, 0), completos: (semM.data ?? []).length },
+      estudoMin: estudo.data?.minutos ?? null,
       ranking: { semana: posicaoNoRanking(rkSem.data ?? [], alunoId), mes: posicaoNoRanking(rkMes.data ?? [], alunoId) },
       mes: resumoDoMes(mesResp.data ?? [], mesFoco.data ?? [], mesCheck.data ?? [], mesIni),
       horario: (() => {
@@ -168,7 +170,7 @@ export function HojeVisao({ dados, aluno, ehMentor, config, erro, bonus, onMarca
         </div>
       )}
 
-      <ResumoRapido o={dados.ofensiva} rk={dados.ranking?.semana} feitas={feitas} total={missoes.length} xp={r.xp} irPara={irPara} />
+      <ResumoRapido o={dados.ofensiva} rk={dados.ranking?.semana} feitas={feitas} total={missoes.length} xp={r.xp} estudoMin={dados.estudoMin} irPara={irPara} />
 
       <ContinuarCartao proximo={proximo} lista={dados.ultimaLista} irPara={irPara} ehMentor={ehMentor} />
 
@@ -347,12 +349,14 @@ function MetasDoAluno({ r, onSalvar }) {
 }
 
 // Olhada rápida: os 4 números que mais importam hoje
-function ResumoRapido({ o, rk, feitas, total, xp, irPara }) {
+function ResumoRapido({ o, rk, feitas, total, xp, estudoMin, irPara }) {
   const itens = [
     { k: 'ofensiva', icone: '🔥', valor: o.atual, rotulo: o.atual === 1 ? 'dia seguido' : 'dias seguidos', alerta: !o.hoje_contou },
     { k: 'missoes', icone: '🎯', valor: `${feitas}/${total}`, rotulo: 'missões hoje' },
     { k: 'ranking', icone: '🏆', valor: rk?.pos ? `${rk.pos}º` : '–', rotulo: 'na semana', ir: 'ranking' },
-    { k: 'xp', icone: '⚡', valor: `+${xp}`, rotulo: 'XP hoje' },
+    estudoMin !== null && estudoMin !== undefined
+      ? { k: 'estudo', icone: '⏱️', valor: minutosTexto(estudoMin), rotulo: 'estudo hoje' }
+      : { k: 'xp', icone: '⚡', valor: `+${xp}`, rotulo: 'XP hoje' },
   ]
   return (
     <ul className="resumo-rapido" aria-label="Resumo de hoje">

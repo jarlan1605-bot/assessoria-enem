@@ -9,6 +9,10 @@
     {
       "source": "/assessoria",
       "destination": "/index.html"
+    },
+    {
+      "source": "/feedback",
+      "destination": "/index.html"
     }
   ],
   "headers": [

@@ -42,6 +42,8 @@ const SimuladoEnem = lazy(() => import('./SimuladoEnem'))
 const Ranking = lazy(() => import('./Ranking'))
 const VisaoGeral = lazy(() => import('./VisaoGeral'))
 const PainelAluno = lazy(() => import('./Painel'))
+const Feedback = lazy(() => import('./Feedback'))
+const FeedbacksCeo = lazy(() => import('./FeedbacksCeo'))
 const Hoje = lazy(() => import('./Hoje'))
 const Foco = lazy(() => import('./Foco'))
 const Listas = lazy(() => import('./Listas'))
@@ -79,6 +81,8 @@ export default function App() {
   // página pública com tudo o que a assessoria oferece (não depende de login)
   if (window.location.pathname.replace(/\/$/, '') === '/assessoria') return <Suspense fallback={<Carregando />}><Assessoria2027 /></Suspense>
   if (!configurado) return <FaltaConfigurar />
+  // formulário público de feedback (não precisa de login)
+  if (window.location.pathname.replace(/\/$/, '') === '/feedback') return <Suspense fallback={<Carregando />}><Feedback /></Suspense>
   if (forcarSite) return <Landing onEntrar={irParaLogin} />
   if (sessao === undefined) return <Carregando />
   if (!sessao) return verLogin ? <Login onVoltar={() => { window.location.hash = '' }} /> : <Landing onEntrar={irParaLogin} />
@@ -320,7 +324,7 @@ function Painel({ usuario }) {
       ],
     },
     ...(ehCeo
-      ? [{ titulo: 'Gestão', itens: [['equipe', '🏢', 'Equipe'], ['mentores', '🧑‍🏫', 'Mentores'], ['financeiro', '💰', 'Financeiro'], ['site', '🌐', 'Página de vendas'], ['interessados', '📝', 'Interessados 2027']] }]
+      ? [{ titulo: 'Gestão', itens: [['equipe', '🏢', 'Equipe'], ['mentores', '🧑‍🏫', 'Mentores'], ['financeiro', '💰', 'Financeiro'], ['site', '🌐', 'Página de vendas'], ['interessados', '📝', 'Interessados 2027'], ['feedbacks', '💬', 'Feedbacks']] }]
       : ehMentor
         ? [{ titulo: 'Gestão', itens: [['equipe', '👥', 'Meus alunos']] }]
         : []),
@@ -356,6 +360,8 @@ function Painel({ usuario }) {
     conteudo = <Listas perfil={perfil} ehMentor={ehMentor} alunos={alunos} />
   } else if (abaAtual === 'simulados' && subAtual === 'fazer') {
     conteudo = <SimuladoEnem perfil={perfil} ehMentor={ehMentor} />
+  } else if (abaAtual === 'feedbacks') {
+    conteudo = <FeedbacksCeo />
   } else if (abaAtual === 'interessados') {
     conteudo = <Interessados equipe={equipe} />
   } else if (abaAtual === 'simulados' && subAtual === 'provas') {
